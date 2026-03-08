@@ -676,6 +676,30 @@ body::before {
 }
 .service-card:hover .service-link { gap: 10px; }
 
+/* Service card background image */
+.service-card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.12;
+  transition: opacity 0.5s ease, transform 0.5s var(--ease-out-expo);
+  pointer-events: none;
+  z-index: 0;
+}
+.service-card:hover .service-card-bg {
+  opacity: 0.22;
+  transform: scale(1.05);
+}
+.service-card .service-icon,
+.service-card h3,
+.service-card p,
+.service-card .service-link {
+  position: relative;
+  z-index: 1;
+}
+
 /* ═══════════════════════════════════
    WHY CHOOSE US
    ═══════════════════════════════════ */
@@ -945,6 +969,103 @@ body::before {
 }
 
 /* ═══════════════════════════════════
+   CLIENTS / LOGO CLOUD
+   ═══════════════════════════════════ */
+.clients-section {
+  padding: 80px 0 60px;
+  position: relative;
+}
+.clients-heading {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.clients-heading .section-label {
+  margin-bottom: 12px;
+}
+.clients-heading h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.clients-heading h2 span {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.clients-divider {
+  height: 1px;
+  max-width: 320px;
+  margin: 20px auto 36px;
+  background: linear-gradient(to right, transparent, var(--glass-border), var(--teal-deep), var(--glass-border), transparent);
+}
+.logo-cloud {
+  overflow: hidden;
+  padding: 12px 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+.logo-track {
+  display: flex;
+  align-items: center;
+  gap: 64px;
+  width: max-content;
+  animation: logo-scroll 35s linear infinite;
+}
+.logo-track:hover {
+  animation-play-state: paused;
+}
+@keyframes logo-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.logo-item {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  opacity: 0.45;
+  transition: opacity 0.4s ease;
+  filter: grayscale(1) brightness(2);
+}
+.logo-item:hover {
+  opacity: 0.85;
+}
+.logo-item svg {
+  height: 100%;
+  width: auto;
+}
+.logo-item .logo-text {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--white);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.logo-item .logo-text.serif {
+  font-family: var(--font-display);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: 1.35rem;
+}
+.clients-divider-bottom {
+  height: 1px;
+  max-width: 320px;
+  margin: 36px auto 0;
+  background: linear-gradient(to right, transparent, var(--glass-border), var(--teal-deep), var(--glass-border), transparent);
+}
+@media (max-width: 768px) {
+  .clients-section { padding: 60px 0 40px; }
+  .logo-track { gap: 40px; }
+  .logo-item { height: 24px; }
+  .logo-item .logo-text { font-size: 1rem; }
+  .logo-item .logo-text.serif { font-size: 1.1rem; }
+}
+
+/* ═══════════════════════════════════
    CTA BANNER
    ═══════════════════════════════════ */
 .cta-banner {
@@ -1104,6 +1225,180 @@ body::before {
   .services-grid .service-card:nth-child(5) { grid-column: auto; }
 }
 
+/* ═══════════════════════════════════
+   ENHANCED ANIMATIONS & EFFECTS
+   ═══════════════════════════════════ */
+
+/* ── Gold shimmer on hero italic text ── */
+.hero h1 em {
+  background: linear-gradient(
+    120deg,
+    var(--teal-light) 0%,
+    var(--teal-light) 35%,
+    var(--gold-light) 50%,
+    var(--teal-light) 65%,
+    var(--teal-light) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 200% center; }
+}
+
+/* ── Animated border beam on service cards ── */
+.service-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam-angle, 0deg),
+    transparent 0%,
+    transparent 75%,
+    var(--teal) 80%,
+    var(--gold) 85%,
+    transparent 90%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+  animation: beam-rotate 4s linear infinite;
+}
+.service-card:hover::after { opacity: 1; }
+@property --beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes beam-rotate {
+  from { --beam-angle: 0deg; }
+  to { --beam-angle: 360deg; }
+}
+
+/* ── Service card hover glow ── */
+.service-card {
+  position: relative;
+}
+.service-card:hover {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 80px rgba(95, 148, 164, 0.08);
+}
+
+/* ── Cursor glow follower ── */
+.cursor-glow {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(95, 148, 164, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  transition: left 0.15s ease-out, top 0.15s ease-out, opacity 0.3s ease;
+  opacity: 0;
+  will-change: left, top;
+}
+.cursor-glow.active { opacity: 1; }
+
+/* ── Floating hero cards ── */
+.hero-card:nth-child(1) { animation: float-1 6s ease-in-out infinite; }
+.hero-card:nth-child(2) { animation: float-2 5s ease-in-out infinite 0.5s; }
+.hero-card:nth-child(3) { animation: float-3 7s ease-in-out infinite 1s; }
+@keyframes float-1 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes float-2 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes float-3 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.hero-card:hover { transform: scale(1.03) !important; }
+
+/* ── Hero stat floating ── */
+.hero-stat {
+  animation: float-stat 4s ease-in-out infinite;
+}
+@keyframes float-stat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ── CTA animated gradient ── */
+.cta-inner {
+  background: linear-gradient(135deg, var(--charcoal), var(--slate), rgba(95, 148, 164, 0.15), var(--charcoal));
+  background-size: 300% 300%;
+  animation: cta-gradient 8s ease infinite;
+}
+@keyframes cta-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Feature card hover glow ── */
+.feature-card:hover {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2), 0 0 40px rgba(95, 148, 164, 0.06);
+}
+
+/* ── Testimonial card hover glow ── */
+.testimonial-card:hover {
+  box-shadow: 0 16px 50px rgba(0,0,0,0.25), 0 0 60px rgba(232, 184, 61, 0.05);
+}
+
+/* ── Button ripple/pulse on primary buttons ── */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light), var(--gold));
+  background-size: 200% 200%;
+  animation: btn-glow 3s ease infinite;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.btn-primary:hover::after { opacity: 1; }
+@keyframes btn-glow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ── Marquee hover pause ── */
+.marquee-section:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* ── Smooth entrance for hero badge dot ── */
+.hero-badge-dot {
+  box-shadow: 0 0 8px rgba(232, 184, 61, 0.4);
+}
+
+/* ── Section divider glow enhancement ── */
+.services::before,
+.testimonials::before {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(95, 148, 164, 0.3), rgba(232, 184, 61, 0.2), rgba(95, 148, 164, 0.3), transparent);
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1117,6 +1412,9 @@ body::before {
 </style>
 </head>
 <body>
+
+<!-- Cursor glow follower -->
+<div class="cursor-glow" id="cursorGlow"></div>
 
 <!-- ═══════ HEADER ═══════ -->
 <header class="site-header" id="siteHeader">
@@ -1177,22 +1475,15 @@ body::before {
       </div>
       <div class="hero-visual reveal reveal-delay-2">
         <div class="hero-card">
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(95,148,164,0.1) 0%, rgba(14,14,24,0.6) 100%);z-index:1;"></div>
-          <div style="width:100%;height:100%;background:linear-gradient(165deg, #2a4a5a 0%, #1a2a38 40%, #0e1820 100%);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:64px;height:64px;opacity:0.15;color:#5f94a4" fill="currentColor" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          </div>
+          <img src="images/selfie-mirror.webp" alt="Selfie Mirror Photo Booth with LED lights" class="hero-card-img">
           <span class="hero-card-label">Selfie Mirror</span>
         </div>
         <div class="hero-card">
-          <div style="width:100%;height:100%;background:linear-gradient(165deg, #3a2a1a 0%, #2a1a10 100%);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:40px;height:40px;opacity:0.15;color:#e8b83d" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-          </div>
+          <img src="images/360-booth.webp" alt="360 Video Photo Booth with colorful lighting" class="hero-card-img">
           <span class="hero-card-label">360° Booth</span>
         </div>
         <div class="hero-card">
-          <div style="width:100%;height:100%;background:linear-gradient(165deg, #1a2a30 0%, #0e1e24 100%);display:flex;align-items:center;justify-content:center;">
-            <svg style="width:40px;height:40px;opacity:0.15;color:#7db8c9" fill="currentColor" viewBox="0 0 24 24"><path d="M21 6h-4l-2-3H9L7 6H3a2 2 0 00-2 2v11a2 2 0 002 2h18a2 2 0 002-2V8a2 2 0 00-2-2z"/><circle cx="12" cy="13" r="3"/></svg>
-          </div>
+          <img src="images/glam-booth.webp" alt="Couple having fun in the glam photo booth" class="hero-card-img">
           <span class="hero-card-label">Open Air</span>
         </div>
         <div class="hero-stat">
@@ -1236,7 +1527,8 @@ body::before {
     </div>
     <div class="services-grid">
 
-      <a href="https://www.photoboothguys.ie/products/open-air-photo-booth" class="service-card reveal">
+      <a href="https://www.photoboothguys.ie/products/open-air-photo-booth" class="service-card reveal" style="overflow:hidden;">
+        <img src="images/open-air-booth.webp" alt="" class="service-card-bg">
         <div class="service-icon teal">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
@@ -1248,7 +1540,8 @@ body::before {
         </span>
       </a>
 
-      <a href="https://www.photoboothguys.ie/products/selfie-mirror" class="service-card reveal reveal-delay-1">
+      <a href="https://www.photoboothguys.ie/products/selfie-mirror" class="service-card reveal reveal-delay-1" style="overflow:hidden;">
+        <img src="images/selfie-mirror.webp" alt="" class="service-card-bg">
         <div class="service-icon gold">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M6 21v-1a6 6 0 0112 0v1"/></svg>
         </div>
@@ -1260,7 +1553,8 @@ body::before {
         </span>
       </a>
 
-      <a href="https://www.photoboothguys.ie/products/360-photo-booth" class="service-card reveal reveal-delay-2">
+      <a href="https://www.photoboothguys.ie/products/360-photo-booth" class="service-card reveal reveal-delay-2" style="overflow:hidden;">
+        <img src="images/360-booth.webp" alt="" class="service-card-bg">
         <div class="service-icon teal">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
         </div>
@@ -1272,7 +1566,8 @@ body::before {
         </span>
       </a>
 
-      <a href="https://www.photoboothguys.ie/products/vintage-tripod-photo-booth" class="service-card reveal reveal-delay-3">
+      <a href="https://www.photoboothguys.ie/products/vintage-tripod-photo-booth" class="service-card reveal reveal-delay-3" style="overflow:hidden;">
+        <img src="images/vintage-tripod.webp" alt="" class="service-card-bg">
         <div class="service-icon gold">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
         </div>
@@ -1284,7 +1579,8 @@ body::before {
         </span>
       </a>
 
-      <a href="https://www.photoboothguys.ie/products/magazine-photo-booth" class="service-card reveal reveal-delay-4">
+      <a href="https://www.photoboothguys.ie/products/magazine-photo-booth" class="service-card reveal reveal-delay-4" style="overflow:hidden;">
+        <img src="images/magazine-booth.webp" alt="" class="service-card-bg">
         <div class="service-icon teal">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         </div>
@@ -1471,6 +1767,48 @@ body::before {
   </div>
 </section>
 
+<!-- ═══════ CLIENTS / LOGO CLOUD ═══════ -->
+<section class="clients-section">
+  <div class="container">
+    <div class="clients-heading reveal">
+      <div class="section-label">Our Clients</div>
+      <h2><span>Trusted by </span>Ireland's Best Brands</h2>
+    </div>
+    <div class="clients-divider"></div>
+    <div class="logo-cloud reveal reveal-delay-1">
+      <div class="logo-track">
+        <!-- Set 1 -->
+        <div class="logo-item"><svg width="52" height="28" viewBox="0 0 52 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M51.2293 8.37685C51.2293 7.76429 50.7317 7.26562 50.1181 7.26562C49.5033 7.26562 49.0068 7.76429 49.0068 8.37685V10.7143C49.0068 11.3302 49.5033 11.8288 50.1181 11.8288C50.7317 11.8288 51.2293 11.3302 51.2293 10.7143V8.37685ZM45.1136 5.30654C45.1136 4.69288 44.6172 4.19531 43.988 4.19531C43.3744 4.19531 42.8779 4.69288 42.8779 5.30654V10.7123C42.8779 11.3282 43.3744 11.8268 43.988 11.8268C44.6172 11.8268 45.1136 11.3282 45.1136 10.7123V5.30654ZM38.9853 1.11012C38.9853 0.495352 38.4877 0 37.8741 0C37.2604 0 36.7617 0.495352 36.7617 1.11012V12.93C36.7617 13.5481 37.2604 14.0446 37.8741 14.0446C38.4877 14.0446 38.9853 13.5481 38.9853 12.93V1.11012ZM32.8551 5.30654C32.8551 4.69288 32.3587 4.19531 31.7439 4.19531C31.1291 4.19531 30.6338 4.69288 30.6338 5.30654V10.7123C30.6338 11.3282 31.1291 11.8268 31.7439 11.8268C32.3587 11.8268 32.8551 11.3282 32.8551 10.7123V5.30654ZM26.7254 8.37685C26.7254 7.76429 26.23 7.26562 25.6197 7.26562C25.0038 7.26562 24.5029 7.76429 24.5029 8.37685V10.7143C24.5029 11.3302 25.0038 11.8288 25.6197 11.8288C26.23 11.8288 26.7254 11.3302 26.7254 10.7143V8.37685ZM20.6103 5.30654C20.6103 4.69288 20.1083 4.19531 19.4936 4.19531C18.8788 4.19531 18.3779 4.69288 18.3779 5.30654V10.7123C18.3779 11.3282 18.8788 11.8268 19.4936 11.8268C20.1083 11.8268 20.6103 11.3282 20.6103 10.7123V5.30654ZM14.4801 1.11012C14.4801 0.495352 13.9814 0 13.3655 0C12.7541 0 12.251 0.495352 12.251 1.11012V12.93C12.251 13.5481 12.7541 14.0446 13.3655 14.0446C13.9814 14.0446 14.4801 13.5481 14.4801 12.93V1.11012ZM8.35617 5.30654C8.35617 4.69288 7.85418 4.19531 7.24273 4.19531C6.62686 4.19531 6.12598 4.69288 6.12598 5.30654V10.7123C6.12598 11.3282 6.62686 11.8268 7.24273 11.8268C7.85418 11.8268 8.35617 11.3282 8.35617 10.7123V5.30654ZM2.23019 8.37685C2.23019 7.76429 1.72931 7.26562 1.11454 7.26562C0.500881 7.26562 0 7.76429 0 8.37685V10.7143C0 11.3302 0.500881 11.8288 1.11454 11.8288C1.72931 11.8288 2.23019 11.3302 2.23019 10.7143V8.37685ZM25.2545 18.0665C25.186 18.0488 24.1588 17.7812 23.0642 17.7812C20.9954 17.7812 19.7471 18.9002 19.7471 20.5643C19.7471 22.0404 20.7897 22.7735 22.0436 23.1693C22.1818 23.2157 22.3864 23.2777 22.5213 23.3241C23.0807 23.4988 23.523 23.7598 23.523 24.2109C23.523 24.7151 23.0089 25.0413 21.8921 25.0413C20.9114 25.0413 19.9693 24.7615 19.7692 24.7106V26.7606C19.8809 26.7849 20.9998 27.0028 22.1951 27.0028C23.9133 27.0028 25.8804 26.252 25.8804 24.0163C25.8804 22.9316 25.2158 21.9331 23.7585 21.4687L23.1382 21.2719C22.7689 21.1547 22.1088 20.9657 22.1088 20.4239C22.1088 19.9949 22.5987 19.6941 23.4998 19.6941C24.276 19.6941 25.2203 19.955 25.2545 19.9683V18.0665ZM41.9169 20.0469C43.246 20.0469 44.2389 21.0951 44.2389 22.3887C44.2389 23.6824 43.246 24.7306 41.9169 24.7306C40.5824 24.7306 39.5928 23.6824 39.5928 22.3887C39.5928 21.0951 40.5824 20.0469 41.9169 20.0469ZM46.6202 22.3898C46.6202 19.8445 44.6542 17.7812 41.9176 17.7812C39.1788 17.7812 37.2129 19.8445 37.2129 22.3898C37.2129 24.934 39.1788 26.9983 41.9176 26.9983C44.6542 26.9983 46.6202 24.934 46.6202 22.3898ZM11.4013 18.0975C11.1901 18.0378 10.4095 17.7812 9.35242 17.7812C6.62025 17.7812 4.6123 19.7284 4.6123 22.3898C4.6123 25.2569 6.82701 26.9983 9.35242 26.9983C10.3564 26.9983 11.1215 26.7606 11.4013 26.6821V24.2916C11.3051 24.3458 10.5709 24.7637 9.51275 24.7637C8.01674 24.7637 7.05147 23.7111 7.05147 22.3898C7.05147 21.0243 8.05876 20.0148 9.51275 20.0148C10.5886 20.0148 11.3117 20.4427 11.4013 20.4891V18.0975ZM34.8467 18.0975C34.6355 18.0378 33.8538 17.7812 32.799 17.7812C30.0624 17.7812 28.0566 19.7284 28.0566 22.3898C28.0566 25.2569 30.2725 26.9983 32.799 26.9983C33.7974 26.9983 34.5648 26.7606 34.8467 26.6821V24.2916C34.7483 24.3458 34.0141 24.7637 32.9582 24.7637C31.4633 24.7637 30.498 23.7111 30.498 22.3898C30.498 21.0243 31.5053 20.0148 32.9582 20.0148C34.0318 20.0148 34.7572 20.4427 34.8467 20.4891V18.0975ZM14.4893 26.8406H16.736V17.9375H14.4893V26.8406Z" fill="#ffffff"/></svg></div>
+        <div class="logo-item"><span class="logo-text">VODAFONE</span></div>
+        <div class="logo-item"><span class="logo-text serif">Steve Madden</span></div>
+        <div class="logo-item"><span class="logo-text">IRFU</span></div>
+        <div class="logo-item"><span class="logo-text">ALDI</span></div>
+        <div class="logo-item"><span class="logo-text serif">Guinness Storehouse</span></div>
+        <div class="logo-item"><svg width="76" height="20" viewBox="0 0 76 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M64.8 0.4H67.2V14.6H75.2V16.8H64.8V0.4ZM57.8 16.8H55.4V0.4H57.8V16.8ZM43.6 16.8V0.4H46V7.2H54V0.4H56.4V16.8H54V9.4H46V16.8H43.6Z" fill="white"/><rect x="0" y="0" width="19" height="19" rx="4" fill="white"/><path d="M5.7 7.4H8.1V14.8H5.7V7.4ZM6.9 3.4C7.7 3.4 8.4 4 8.4 4.9C8.4 5.8 7.7 6.4 6.9 6.4C6.1 6.4 5.4 5.8 5.4 4.9C5.4 4 6.1 3.4 6.9 3.4ZM10 7.4H12.3V8.4C12.8 7.6 13.8 7.2 14.8 7.2C16.9 7.2 18 8.6 18 10.8V14.8H15.6V11.2C15.6 10.1 15.1 9.3 14 9.3C12.9 9.3 12.3 10.1 12.3 11.3V14.8H10V7.4Z" fill="#0e0e18"/></svg></div>
+        <div class="logo-item"><span class="logo-text serif">Diageo</span></div>
+        <div class="logo-item"><span class="logo-text">MICROSOFT</span></div>
+        <div class="logo-item"><span class="logo-text serif">Image Skincare</span></div>
+        <div class="logo-item"><span class="logo-text">GOOGLE</span></div>
+        <div class="logo-item"><span class="logo-text">TEK<span style="font-weight:400;text-transform:lowercase">enable</span></span></div>
+        <!-- Set 2 (duplicate for seamless loop) -->
+        <div class="logo-item"><svg width="52" height="28" viewBox="0 0 52 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M51.2293 8.37685C51.2293 7.76429 50.7317 7.26562 50.1181 7.26562C49.5033 7.26562 49.0068 7.76429 49.0068 8.37685V10.7143C49.0068 11.3302 49.5033 11.8288 50.1181 11.8288C50.7317 11.8288 51.2293 11.3302 51.2293 10.7143V8.37685ZM45.1136 5.30654C45.1136 4.69288 44.6172 4.19531 43.988 4.19531C43.3744 4.19531 42.8779 4.69288 42.8779 5.30654V10.7123C42.8779 11.3282 43.3744 11.8268 43.988 11.8268C44.6172 11.8268 45.1136 11.3282 45.1136 10.7123V5.30654ZM38.9853 1.11012C38.9853 0.495352 38.4877 0 37.8741 0C37.2604 0 36.7617 0.495352 36.7617 1.11012V12.93C36.7617 13.5481 37.2604 14.0446 37.8741 14.0446C38.4877 14.0446 38.9853 13.5481 38.9853 12.93V1.11012ZM32.8551 5.30654C32.8551 4.69288 32.3587 4.19531 31.7439 4.19531C31.1291 4.19531 30.6338 4.69288 30.6338 5.30654V10.7123C30.6338 11.3282 31.1291 11.8268 31.7439 11.8268C32.3587 11.8268 32.8551 11.3282 32.8551 10.7123V5.30654ZM26.7254 8.37685C26.7254 7.76429 26.23 7.26562 25.6197 7.26562C25.0038 7.26562 24.5029 7.76429 24.5029 8.37685V10.7143C24.5029 11.3302 25.0038 11.8288 25.6197 11.8288C26.23 11.8288 26.7254 11.3302 26.7254 10.7143V8.37685ZM20.6103 5.30654C20.6103 4.69288 20.1083 4.19531 19.4936 4.19531C18.8788 4.19531 18.3779 4.69288 18.3779 5.30654V10.7123C18.3779 11.3282 18.8788 11.8268 19.4936 11.8268C20.1083 11.8268 20.6103 11.3282 20.6103 10.7123V5.30654ZM14.4801 1.11012C14.4801 0.495352 13.9814 0 13.3655 0C12.7541 0 12.251 0.495352 12.251 1.11012V12.93C12.251 13.5481 12.7541 14.0446 13.3655 14.0446C13.9814 14.0446 14.4801 13.5481 14.4801 12.93V1.11012ZM8.35617 5.30654C8.35617 4.69288 7.85418 4.19531 7.24273 4.19531C6.62686 4.19531 6.12598 4.69288 6.12598 5.30654V10.7123C6.12598 11.3282 6.62686 11.8268 7.24273 11.8268C7.85418 11.8268 8.35617 11.3282 8.35617 10.7123V5.30654ZM2.23019 8.37685C2.23019 7.76429 1.72931 7.26562 1.11454 7.26562C0.500881 7.26562 0 7.76429 0 8.37685V10.7143C0 11.3302 0.500881 11.8288 1.11454 11.8288C1.72931 11.8288 2.23019 11.3302 2.23019 10.7143V8.37685ZM25.2545 18.0665C25.186 18.0488 24.1588 17.7812 23.0642 17.7812C20.9954 17.7812 19.7471 18.9002 19.7471 20.5643C19.7471 22.0404 20.7897 22.7735 22.0436 23.1693C22.1818 23.2157 22.3864 23.2777 22.5213 23.3241C23.0807 23.4988 23.523 23.7598 23.523 24.2109C23.523 24.7151 23.0089 25.0413 21.8921 25.0413C20.9114 25.0413 19.9693 24.7615 19.7692 24.7106V26.7606C19.8809 26.7849 20.9998 27.0028 22.1951 27.0028C23.9133 27.0028 25.8804 26.252 25.8804 24.0163C25.8804 22.9316 25.2158 21.9331 23.7585 21.4687L23.1382 21.2719C22.7689 21.1547 22.1088 20.9657 22.1088 20.4239C22.1088 19.9949 22.5987 19.6941 23.4998 19.6941C24.276 19.6941 25.2203 19.955 25.2545 19.9683V18.0665ZM41.9169 20.0469C43.246 20.0469 44.2389 21.0951 44.2389 22.3887C44.2389 23.6824 43.246 24.7306 41.9169 24.7306C40.5824 24.7306 39.5928 23.6824 39.5928 22.3887C39.5928 21.0951 40.5824 20.0469 41.9169 20.0469ZM46.6202 22.3898C46.6202 19.8445 44.6542 17.7812 41.9176 17.7812C39.1788 17.7812 37.2129 19.8445 37.2129 22.3898C37.2129 24.934 39.1788 26.9983 41.9176 26.9983C44.6542 26.9983 46.6202 24.934 46.6202 22.3898ZM11.4013 18.0975C11.1901 18.0378 10.4095 17.7812 9.35242 17.7812C6.62025 17.7812 4.6123 19.7284 4.6123 22.3898C4.6123 25.2569 6.82701 26.9983 9.35242 26.9983C10.3564 26.9983 11.1215 26.7606 11.4013 26.6821V24.2916C11.3051 24.3458 10.5709 24.7637 9.51275 24.7637C8.01674 24.7637 7.05147 23.7111 7.05147 22.3898C7.05147 21.0243 8.05876 20.0148 9.51275 20.0148C10.5886 20.0148 11.3117 20.4427 11.4013 20.4891V18.0975ZM34.8467 18.0975C34.6355 18.0378 33.8538 17.7812 32.799 17.7812C30.0624 17.7812 28.0566 19.7284 28.0566 22.3898C28.0566 25.2569 30.2725 26.9983 32.799 26.9983C33.7974 26.9983 34.5648 26.7606 34.8467 26.6821V24.2916C34.7483 24.3458 34.0141 24.7637 32.9582 24.7637C31.4633 24.7637 30.498 23.7111 30.498 22.3898C30.498 21.0243 31.5053 20.0148 32.9582 20.0148C34.0318 20.0148 34.7572 20.4427 34.8467 20.4891V18.0975ZM14.4893 26.8406H16.736V17.9375H14.4893V26.8406Z" fill="#ffffff"/></svg></div>
+        <div class="logo-item"><span class="logo-text">VODAFONE</span></div>
+        <div class="logo-item"><span class="logo-text serif">Steve Madden</span></div>
+        <div class="logo-item"><span class="logo-text">IRFU</span></div>
+        <div class="logo-item"><span class="logo-text">ALDI</span></div>
+        <div class="logo-item"><span class="logo-text serif">Guinness Storehouse</span></div>
+        <div class="logo-item"><svg width="76" height="20" viewBox="0 0 76 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M64.8 0.4H67.2V14.6H75.2V16.8H64.8V0.4ZM57.8 16.8H55.4V0.4H57.8V16.8ZM43.6 16.8V0.4H46V7.2H54V0.4H56.4V16.8H54V9.4H46V16.8H43.6Z" fill="white"/><rect x="0" y="0" width="19" height="19" rx="4" fill="white"/><path d="M5.7 7.4H8.1V14.8H5.7V7.4ZM6.9 3.4C7.7 3.4 8.4 4 8.4 4.9C8.4 5.8 7.7 6.4 6.9 6.4C6.1 6.4 5.4 5.8 5.4 4.9C5.4 4 6.1 3.4 6.9 3.4ZM10 7.4H12.3V8.4C12.8 7.6 13.8 7.2 14.8 7.2C16.9 7.2 18 8.6 18 10.8V14.8H15.6V11.2C15.6 10.1 15.1 9.3 14 9.3C12.9 9.3 12.3 10.1 12.3 11.3V14.8H10V7.4Z" fill="#0e0e18"/></svg></div>
+        <div class="logo-item"><span class="logo-text serif">Diageo</span></div>
+        <div class="logo-item"><span class="logo-text">MICROSOFT</span></div>
+        <div class="logo-item"><span class="logo-text serif">Image Skincare</span></div>
+        <div class="logo-item"><span class="logo-text">GOOGLE</span></div>
+        <div class="logo-item"><span class="logo-text">TEK<span style="font-weight:400;text-transform:lowercase">enable</span></span></div>
+      </div>
+    </div>
+    <div class="clients-divider-bottom"></div>
+  </div>
+</section>
+
 <!-- ═══════ CTA BANNER ═══════ -->
 <section class="cta-banner">
   <div class="container">
@@ -1586,6 +1924,57 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       e.preventDefault();
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  });
+});
+
+// ── Cursor glow follower ──
+const glow = document.getElementById('cursorGlow');
+let glowActive = false;
+document.addEventListener('mousemove', (e) => {
+  if (!glowActive) { glow.classList.add('active'); glowActive = true; }
+  glow.style.left = e.clientX + 'px';
+  glow.style.top = e.clientY + 'px';
+});
+document.addEventListener('mouseleave', () => {
+  glow.classList.remove('active');
+  glowActive = false;
+});
+
+// ── Counter animation for hero stat ──
+function animateCounter(el, target, suffix) {
+  const duration = 2000;
+  const start = performance.now();
+  const step = (now) => {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target).toLocaleString() + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+const statEl = document.querySelector('.hero-stat-number');
+if (statEl) {
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(statEl, 2500, '+');
+        statObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  statObserver.observe(statEl);
+}
+
+// ── Service card tilt on mouse move ──
+document.querySelectorAll('.service-card').forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    card.style.transform = `translateY(-6px) perspective(600px) rotateX(${y * -4}deg) rotateY(${x * 4}deg)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
   });
 });
 </script>
