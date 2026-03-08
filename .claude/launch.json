@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "website",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\nvm4w\\nodejs\\node_modules\\npm\\bin\\npx-cli.js", "serve", "."],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photobooth Guys | Premium Photo Booth & Selfie Mirror Hire Ireland</title>
+<meta name="description" content="Ireland's #1 prestige photo booth & selfie mirror rental company. Open air booths, 360 video, selfie mirrors — perfect for weddings, corporate events & parties. Nationwide coverage.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --coal: #0e0e18;
+  --charcoal: #1a1a2e;
+  --slate: #2a2a42;
+  --teal: #5f94a4;
+  --teal-light: #7db8c9;
+  --teal-deep: #3d6f7e;
+  --gold: #e8b83d;
+  --gold-light: #f5d06b;
+  --gold-muted: #c49a2e;
+  --cream: #f4f0ea;
+  --white: #ffffff;
+  --text-muted: #9a9ab0;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--coal);
+  color: var(--cream);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Selection ── */
+::selection { background: var(--teal); color: var(--white); }
+
+/* ── Scroll reveal base ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ── Container ── */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (min-width: 768px) {
+  .container { padding: 0 48px; }
+}
+
+/* ═══════════════════════════════════
+   HEADER / NAV
+   ═══════════════════════════════════ */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0 24px;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease, padding 0.4s ease;
+}
+.site-header.scrolled {
+  background: rgba(14, 14, 24, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1280px;
+  margin: 0 auto;
+  height: 80px;
+  transition: height 0.4s ease;
+}
+.site-header.scrolled .nav-inner { height: 64px; }
+
+.logo {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+.logo-img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+.site-header.scrolled .logo-img { height: 42px; }
+
+.nav-links {
+  display: none;
+  list-style: none;
+  gap: 32px;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .nav-links { display: flex; }
+}
+.nav-links a {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--gold);
+  transition: width 0.3s var(--ease-out-expo);
+}
+.nav-links a:hover { color: var(--white); }
+.nav-links a:hover::after { width: 100%; }
+
+.btn-book {
+  display: none;
+  padding: 10px 28px;
+  background: var(--gold);
+  color: var(--coal);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out-expo);
+  white-space: nowrap;
+}
+.btn-book:hover {
+  background: var(--gold-light);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(232, 184, 61, 0.3);
+}
+@media (min-width: 1024px) {
+  .btn-book { display: inline-flex; }
+}
+
+/* Mobile menu toggle */
+.menu-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  z-index: 1010;
+}
+@media (min-width: 1024px) {
+  .menu-toggle { display: none; }
+}
+.menu-toggle span {
+  width: 24px;
+  height: 2px;
+  background: var(--white);
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+.menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.menu-toggle.active span:nth-child(2) { opacity: 0; }
+.menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+/* Mobile menu */
+.mobile-menu {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 14, 24, 0.97);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  z-index: 1005;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.mobile-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.mobile-menu a {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--cream);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.mobile-menu a:hover { color: var(--gold); }
+.mobile-menu .btn-book-mobile {
+  margin-top: 16px;
+  padding: 14px 40px;
+  background: var(--gold);
+  color: var(--coal);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 100px;
+}
+
+/* ═══════════════════════════════════
+   HERO
+   ═══════════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 120px 0 80px;
+}
+
+/* Ambient glow */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(95, 148, 164, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  left: -15%;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 184, 61, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+@media (min-width: 1024px) {
+  .hero-inner { grid-template-columns: 1fr 1fr; gap: 64px; }
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 8px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+}
+.hero-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--white);
+  margin-bottom: 24px;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--teal-light);
+  font-weight: 400;
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 480px;
+  margin-bottom: 36px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 32px;
+  background: var(--gold);
+  color: var(--coal);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s var(--ease-out-expo);
+}
+.btn-primary:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(232, 184, 61, 0.3);
+}
+.btn-primary svg { transition: transform 0.3s ease; }
+.btn-primary:hover svg { transform: translateX(3px); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 32px;
+  background: transparent;
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 100px;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  transition: all 0.35s var(--ease-out-expo);
+}
+.btn-secondary:hover {
+  border-color: var(--teal-light);
+  color: var(--teal-light);
+  background: rgba(95, 148, 164, 0.08);
+}
+
+/* Hero photo grid */
+.hero-visual {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  aspect-ratio: 1;
+  max-width: 520px;
+  margin: 0 auto;
+}
+@media (min-width: 1024px) {
+  .hero-visual { margin: 0 0 0 auto; }
+}
+
+.hero-card {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+.hero-card:hover { transform: scale(1.03); }
+
+.hero-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-card:nth-child(1) {
+  grid-row: 1 / 3;
+  background: linear-gradient(165deg, #2a4a5a, #1a2a38);
+  border: 1px solid rgba(95, 148, 164, 0.2);
+}
+.hero-card:nth-child(2) {
+  background: linear-gradient(165deg, #3a2a1a, #2a1a10);
+  border: 1px solid rgba(232, 184, 61, 0.15);
+}
+.hero-card:nth-child(3) {
+  background: linear-gradient(165deg, #1a2a30, #0e1e24);
+  border: 1px solid rgba(95, 148, 164, 0.15);
+}
+
+.hero-card-label {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 6px 14px;
+  background: rgba(14, 14, 24, 0.75);
+  backdrop-filter: blur(10px);
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--cream);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Floating stat card */
+.hero-stat {
+  position: absolute;
+  bottom: -20px;
+  left: -20px;
+  background: rgba(26, 26, 46, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 18px 22px;
+  z-index: 2;
+  display: none;
+}
+@media (min-width: 768px) {
+  .hero-stat { display: block; }
+}
+.hero-stat-number {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+.hero-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
+/* ═══════════════════════════════════
+   MARQUEE / SOCIAL PROOF
+   ═══════════════════════════════════ */
+.marquee-section {
+  padding: 32px 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  overflow: hidden;
+  background: rgba(255,255,255,0.01);
+}
+.marquee-track {
+  display: flex;
+  gap: 48px;
+  animation: marquee 30s linear infinite;
+  width: max-content;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-item {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: 0.02em;
+}
+.marquee-item .sep {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold-muted);
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════════
+   SERVICES / BOOTHS
+   ═══════════════════════════════════ */
+.services {
+  padding: 120px 0;
+  position: relative;
+}
+.services::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+.section-subtitle {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 540px;
+}
+
+.services-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+.services-header .section-subtitle { margin: 0 auto; }
+
+.services-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 640px) {
+  .services-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1024px) {
+  .services-grid { grid-template-columns: repeat(3, 1fr); }
+  .services-grid .service-card:nth-child(4) { grid-column: 1 / 2; }
+  .services-grid .service-card:nth-child(5) { grid-column: 2 / 3; }
+}
+
+.service-card {
+  position: relative;
+  padding: 36px 28px;
+  border-radius: 20px;
+  background: linear-gradient(170deg, rgba(42, 42, 66, 0.5), rgba(26, 26, 46, 0.3));
+  border: 1px solid var(--glass-border);
+  transition: all 0.4s var(--ease-out-expo);
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.service-card:hover {
+  border-color: rgba(95, 148, 164, 0.25);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  background: linear-gradient(170deg, rgba(42, 42, 66, 0.7), rgba(26, 26, 46, 0.5));
+}
+.service-card:hover::before { opacity: 1; }
+
+.service-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  position: relative;
+}
+.service-icon.teal {
+  background: rgba(95, 148, 164, 0.12);
+  color: var(--teal-light);
+  border: 1px solid rgba(95, 148, 164, 0.15);
+}
+.service-icon.gold {
+  background: rgba(232, 184, 61, 0.1);
+  color: var(--gold);
+  border: 1px solid rgba(232, 184, 61, 0.12);
+}
+
+.service-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.service-card p {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.service-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--teal-light);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  transition: gap 0.3s ease;
+}
+.service-card:hover .service-link { gap: 10px; }
+
+/* ═══════════════════════════════════
+   WHY CHOOSE US
+   ═══════════════════════════════════ */
+.why-us {
+  padding: 120px 0;
+  background: linear-gradient(180deg, rgba(42, 42, 66, 0.15), transparent 30%, transparent 70%, rgba(42, 42, 66, 0.15));
+  position: relative;
+}
+
+.why-us-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 64px;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .why-us-layout { grid-template-columns: 1fr 1.2fr; }
+}
+
+.why-us-left { position: relative; }
+@media (min-width: 1024px) {
+  .why-us-left { position: sticky; top: 120px; }
+}
+
+.why-us-left .section-title { margin-bottom: 20px; }
+.why-us-left .section-subtitle { margin-bottom: 32px; }
+
+.why-us-highlight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+.why-us-highlight-icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-muted));
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+}
+.why-us-highlight-text h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 3px;
+}
+.why-us-highlight-text p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .features-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.feature-card {
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: rgba(26, 26, 46, 0.5);
+  border: 1px solid var(--glass-border);
+  transition: all 0.35s var(--ease-out-expo);
+}
+.feature-card:hover {
+  border-color: rgba(95, 148, 164, 0.2);
+  transform: translateY(-3px);
+  background: rgba(26, 26, 46, 0.7);
+}
+
+.feature-check {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(95, 148, 164, 0.12);
+  border: 1px solid rgba(95, 148, 164, 0.2);
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  color: var(--teal-light);
+}
+
+.feature-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.feature-card p {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════
+   TESTIMONIALS
+   ═══════════════════════════════════ */
+.testimonials {
+  padding: 120px 0;
+  position: relative;
+}
+.testimonials::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+
+.testimonials-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 768px) {
+  .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.testimonial-card {
+  padding: 32px 28px;
+  border-radius: 20px;
+  background: linear-gradient(170deg, rgba(42, 42, 66, 0.4), rgba(26, 26, 46, 0.2));
+  border: 1px solid var(--glass-border);
+  transition: all 0.35s var(--ease-out-expo);
+  position: relative;
+}
+.testimonial-card:hover {
+  border-color: rgba(232, 184, 61, 0.15);
+  transform: translateY(-4px);
+}
+.testimonial-card::before {
+  content: '\201C';
+  font-family: var(--font-display);
+  font-size: 4rem;
+  color: var(--gold-muted);
+  opacity: 0.2;
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  line-height: 1;
+}
+
+.stars {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 16px;
+}
+.star {
+  width: 16px;
+  height: 16px;
+  color: var(--gold);
+}
+
+.testimonial-card blockquote {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--cream);
+  font-style: italic;
+  margin-bottom: 20px;
+}
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.testimonial-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--teal-deep), var(--teal));
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--white);
+}
+.testimonial-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.testimonial-event {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.review-rating {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-left: 6px;
+}
+.review-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--teal-light);
+  letter-spacing: 0.02em;
+  margin-top: 12px;
+  opacity: 0.7;
+  transition: opacity 0.3s ease, gap 0.3s ease;
+}
+.testimonial-card:hover .review-source { opacity: 1; gap: 8px; }
+
+/* ── Google review elements ── */
+.google-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 16px;
+}
+.google-g {
+  flex-shrink: 0;
+}
+.google-g-sm {
+  flex-shrink: 0;
+}
+.google-summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.google-summary-text span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.google-summary-stars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.google-summary-stars strong {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-left: 6px;
+}
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.review-header .stars {
+  margin-bottom: 0;
+}
+
+/* ═══════════════════════════════════
+   CTA BANNER
+   ═══════════════════════════════════ */
+.cta-banner {
+  padding: 100px 0;
+}
+.cta-inner {
+  position: relative;
+  padding: 64px 40px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, var(--charcoal), var(--slate));
+  border: 1px solid var(--glass-border);
+  text-align: center;
+  overflow: hidden;
+}
+.cta-inner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 60%;
+  height: 200%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(95, 148, 164, 0.1), transparent 60%);
+  pointer-events: none;
+}
+.cta-inner::after {
+  content: '';
+  position: absolute;
+  bottom: -40%;
+  right: -10%;
+  width: 50%;
+  height: 180%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 184, 61, 0.06), transparent 60%);
+  pointer-events: none;
+}
+
+.cta-inner .section-label { position: relative; z-index: 1; }
+.cta-inner h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.02em;
+}
+.cta-inner p {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+.cta-inner .btn-primary { position: relative; z-index: 1; }
+
+/* ═══════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════ */
+.site-footer {
+  padding: 64px 0 32px;
+  border-top: 1px solid var(--glass-border);
+  background: rgba(14, 14, 24, 0.5);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  margin-bottom: 48px;
+}
+@media (min-width: 768px) {
+  .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
+}
+
+.footer-brand .logo { margin-bottom: 16px; }
+.footer-brand p {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 280px;
+  margin-bottom: 20px;
+}
+
+.social-links {
+  display: flex;
+  gap: 12px;
+}
+.social-link {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+.social-link:hover {
+  border-color: var(--teal);
+  color: var(--teal-light);
+  background: rgba(95, 148, 164, 0.1);
+}
+
+.footer-col h4 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 10px; }
+.footer-col a {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.footer-col a:hover { color: var(--cream); }
+
+.footer-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding-top: 32px;
+  border-top: 1px solid var(--glass-border);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+@media (min-width: 768px) {
+  .footer-bottom { flex-direction: row; justify-content: space-between; }
+}
+
+/* ═══════════════════════════════════
+   BOTTOM-OF-PAGE CTA (last resort)
+   ═══════════════════════════════════ */
+
+/* ── Responsive adjustments ── */
+@media (max-width: 640px) {
+  .hero h1 { font-size: 2.2rem; }
+  .hero-visual { max-width: 360px; gap: 8px; }
+  .hero-card-label { font-size: 0.65rem; padding: 4px 10px; }
+  .cta-inner { padding: 48px 24px; }
+  .service-card { padding: 28px 20px; }
+  .testimonial-card { padding: 24px 20px; }
+  .services-grid .service-card:nth-child(4),
+  .services-grid .service-card:nth-child(5) { grid-column: auto; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+  html { scroll-behavior: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ HEADER ═══════ -->
+<header class="site-header" id="siteHeader">
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <img src="logo.png" alt="Photobooth Guys" class="logo-img">
+    </a>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="https://www.photoboothguys.ie/wedding-photo-booth-hire">Wedding Booths</a></li>
+        <li><a href="#why-us">About</a></li>
+        <li><a href="https://www.photoboothguys.ie/faq">FAQ</a></li>
+        <li><a href="https://www.photoboothguys.ie/contact">Contact</a></li>
+        <li><a href="https://www.photoboothguys.ie/blog">Blog</a></li>
+      </ul>
+    </nav>
+    <a href="https://checkout.photoboothguys.ie/quote" class="btn-book">Book Now</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#services" onclick="closeMobile()">Services</a>
+  <a href="https://www.photoboothguys.ie/wedding-photo-booth-hire">Wedding Booths</a>
+  <a href="#why-us" onclick="closeMobile()">About</a>
+  <a href="https://www.photoboothguys.ie/faq">FAQ</a>
+  <a href="https://www.photoboothguys.ie/contact">Contact</a>
+  <a href="https://www.photoboothguys.ie/blog">Blog</a>
+  <a href="https://checkout.photoboothguys.ie/quote" class="btn-book-mobile">Book Now</a>
+</div>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="hero-badge reveal">
+          <span class="hero-badge-dot"></span>
+          Ireland's #1 Photobooth Rental
+        </div>
+        <h1 class="reveal reveal-delay-1">
+          Photo Booth &<br><em>Selfie Mirror</em> Hire<br>For Every Occasion
+        </h1>
+        <p class="hero-sub reveal reveal-delay-2">
+          The prestige photobooth and selfie mirror rental company in Ireland. Premium products, instant sharing, unforgettable memories — for weddings, corporate events, birthdays and more.
+        </p>
+        <div class="hero-actions reveal reveal-delay-3">
+          <a href="#services" class="btn-primary">
+            See Our Booths
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5-5-5-5"/></svg>
+          </a>
+          <a href="https://checkout.photoboothguys.ie/quote" class="btn-secondary">Get A Quote</a>
+        </div>
+      </div>
+      <div class="hero-visual reveal reveal-delay-2">
+        <div class="hero-card">
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(95,148,164,0.1) 0%, rgba(14,14,24,0.6) 100%);z-index:1;"></div>
+          <div style="width:100%;height:100%;background:linear-gradient(165deg, #2a4a5a 0%, #1a2a38 40%, #0e1820 100%);display:flex;align-items:center;justify-content:center;">
+            <svg style="width:64px;height:64px;opacity:0.15;color:#5f94a4" fill="currentColor" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span class="hero-card-label">Selfie Mirror</span>
+        </div>
+        <div class="hero-card">
+          <div style="width:100%;height:100%;background:linear-gradient(165deg, #3a2a1a 0%, #2a1a10 100%);display:flex;align-items:center;justify-content:center;">
+            <svg style="width:40px;height:40px;opacity:0.15;color:#e8b83d" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <span class="hero-card-label">360° Booth</span>
+        </div>
+        <div class="hero-card">
+          <div style="width:100%;height:100%;background:linear-gradient(165deg, #1a2a30 0%, #0e1e24 100%);display:flex;align-items:center;justify-content:center;">
+            <svg style="width:40px;height:40px;opacity:0.15;color:#7db8c9" fill="currentColor" viewBox="0 0 24 24"><path d="M21 6h-4l-2-3H9L7 6H3a2 2 0 00-2 2v11a2 2 0 002 2h18a2 2 0 002-2V8a2 2 0 00-2-2z"/><circle cx="12" cy="13" r="3"/></svg>
+          </div>
+          <span class="hero-card-label">Open Air</span>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-number">2,500+</div>
+          <div class="hero-stat-label">Events Covered Nationwide</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SOCIAL PROOF MARQUEE ═══════ -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">Weddings <span class="sep"></span></span>
+    <span class="marquee-item">Corporate Events <span class="sep"></span></span>
+    <span class="marquee-item">Birthday Parties <span class="sep"></span></span>
+    <span class="marquee-item">Brand Activations <span class="sep"></span></span>
+    <span class="marquee-item">Debs & Graduations <span class="sep"></span></span>
+    <span class="marquee-item">Charity Galas <span class="sep"></span></span>
+    <span class="marquee-item">Christmas Parties <span class="sep"></span></span>
+    <span class="marquee-item">Festivals <span class="sep"></span></span>
+    <span class="marquee-item">Weddings <span class="sep"></span></span>
+    <span class="marquee-item">Corporate Events <span class="sep"></span></span>
+    <span class="marquee-item">Birthday Parties <span class="sep"></span></span>
+    <span class="marquee-item">Brand Activations <span class="sep"></span></span>
+    <span class="marquee-item">Debs & Graduations <span class="sep"></span></span>
+    <span class="marquee-item">Charity Galas <span class="sep"></span></span>
+    <span class="marquee-item">Christmas Parties <span class="sep"></span></span>
+    <span class="marquee-item">Festivals <span class="sep"></span></span>
+  </div>
+</div>
+
+<!-- ═══════ SERVICES / BOOTHS ═══════ -->
+<section class="services" id="services">
+  <div class="container">
+    <div class="services-header">
+      <div class="section-label reveal">Our Collection</div>
+      <h2 class="section-title reveal reveal-delay-1">Photo Booths For Every Event</h2>
+      <p class="section-subtitle reveal reveal-delay-2">From intimate weddings to large-scale corporate activations, we have the perfect booth to match your vision and wow your guests.</p>
+    </div>
+    <div class="services-grid">
+
+      <a href="https://www.photoboothguys.ie/products/open-air-photo-booth" class="service-card reveal">
+        <div class="service-icon teal">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </div>
+        <h3>Open Air Photo Booth</h3>
+        <p>Our flagship open-air booth with high-resolution DSLR camera, professional lighting, and custom backdrops. Prints in seconds.</p>
+        <span class="service-link">
+          Learn More
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg>
+        </span>
+      </a>
+
+      <a href="https://www.photoboothguys.ie/products/selfie-mirror" class="service-card reveal reveal-delay-1">
+        <div class="service-icon gold">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M6 21v-1a6 6 0 0112 0v1"/></svg>
+        </div>
+        <h3>Selfie Mirror</h3>
+        <p>An interactive full-length magic mirror experience with touchscreen animations, voice guidance, and instant prints your guests will love.</p>
+        <span class="service-link">
+          Learn More
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg>
+        </span>
+      </a>
+
+      <a href="https://www.photoboothguys.ie/products/360-photo-booth" class="service-card reveal reveal-delay-2">
+        <div class="service-icon teal">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        </div>
+        <h3>360° Video Booth</h3>
+        <p>The ultimate viral content creator. Guests step onto the platform while our camera captures a stunning slow-motion 360° video.</p>
+        <span class="service-link">
+          Learn More
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg>
+        </span>
+      </a>
+
+      <a href="https://www.photoboothguys.ie/products/vintage-tripod-photo-booth" class="service-card reveal reveal-delay-3">
+        <div class="service-icon gold">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        </div>
+        <h3>Vintage Tripod Booth</h3>
+        <p>A sleek, minimalist DSLR booth on an elegant tripod stand. Perfect for intimate settings and smaller venues with big style.</p>
+        <span class="service-link">
+          Learn More
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg>
+        </span>
+      </a>
+
+      <a href="https://www.photoboothguys.ie/products/magazine-photo-booth" class="service-card reveal reveal-delay-4">
+        <div class="service-icon teal">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        </div>
+        <h3>Magazine Photo Booth</h3>
+        <p>Turn your guests into cover stars. Our magazine-style booth creates stunning editorial layouts with custom branding and headlines.</p>
+        <span class="service-link">
+          Learn More
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg>
+        </span>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ WHY CHOOSE US ═══════ -->
+<section class="why-us" id="why-us">
+  <div class="container">
+    <div class="why-us-layout">
+      <div class="why-us-left">
+        <div class="section-label reveal">Why Us</div>
+        <h2 class="section-title reveal reveal-delay-1">Why Choose<br>Photobooth Guys?</h2>
+        <p class="section-subtitle reveal reveal-delay-2">We don't just set up a booth — we create an experience. Every detail is tailored to make your event extraordinary.</p>
+        <div class="why-us-highlight reveal reveal-delay-3">
+          <div class="why-us-highlight-icon">★</div>
+          <div class="why-us-highlight-text">
+            <h4>Rated 5 Stars Across Ireland</h4>
+            <p>Trusted by thousands of happy couples and event planners</p>
+          </div>
+        </div>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card reveal">
+          <div class="feature-check">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" transform="scale(0.7)"/></svg>
+          </div>
+          <h4>Customisable Options</h4>
+          <p>Choose from open-air booths, selfie mirrors, 360 video, and magazine-style — all with custom backdrops and branding.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-check">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" transform="scale(0.7)"/></svg>
+          </div>
+          <h4>Instant Print & Sharing</h4>
+          <p>Guests take home printed photos and share them instantly via SMS, email, or social media with branded overlays.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-check">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" transform="scale(0.7)"/></svg>
+          </div>
+          <h4>Perfect for Any Event</h4>
+          <p>Weddings, corporate events, birthdays, brand activations — we've got the perfect booth for every celebration.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-check">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" transform="scale(0.7)"/></svg>
+          </div>
+          <h4>Wedding Guest Book</h4>
+          <p>Every wedding booking includes a beautifully compiled guest book with prints and personal messages from your guests.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="feature-check">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" transform="scale(0.7)"/></svg>
+          </div>
+          <h4>Professional Attendants</h4>
+          <p>A dedicated attendant manages your booth all night — keeping the fun going and ensuring everything runs perfectly.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-5">
+          <div class="feature-check">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" transform="scale(0.7)"/></svg>
+          </div>
+          <h4>Nationwide Coverage</h4>
+          <p>We cover all of Ireland — Dublin, Cork, Galway, Limerick, and everywhere in between. No location too far.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ GOOGLE REVIEWS ═══════ -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="testimonials-header">
+      <div class="section-label reveal">Verified Reviews</div>
+      <h2 class="section-title reveal reveal-delay-1">Loved By Our Clients</h2>
+      <div class="google-summary reveal reveal-delay-2">
+        <svg class="google-g" viewBox="0 0 24 24" width="28" height="28"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        <div class="google-summary-text">
+          <div class="google-summary-stars">
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <strong>5.0</strong>
+          </div>
+          <span>Based on Google & WeddingsOnline reviews</span>
+        </div>
+      </div>
+    </div>
+    <div class="testimonials-grid">
+
+      <a href="https://www.google.com/search?q=photobooth+guys+ireland+reviews" target="_blank" rel="noopener" class="testimonial-card reveal" style="text-decoration:none;color:inherit;">
+        <div class="review-header">
+          <svg class="google-g-sm" viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <div class="stars">
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+        </div>
+        <blockquote>The Photobooth guys are absolutely amazing!! All our guests loved it, and the boomerangs were a big hit!! They also included a lovely album for us with a copy of all the pictures.</blockquote>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">R&C</div>
+          <div>
+            <div class="testimonial-name">Rebecca & Cormac</div>
+            <div class="testimonial-event">Wedding</div>
+          </div>
+        </div>
+        <span class="review-source">Read on Google <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg></span>
+      </a>
+
+      <a href="https://www.google.com/search?q=photobooth+guys+ireland+reviews" target="_blank" rel="noopener" class="testimonial-card reveal reveal-delay-1" style="text-decoration:none;color:inherit;">
+        <div class="review-header">
+          <svg class="google-g-sm" viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <div class="stars">
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+        </div>
+        <blockquote>These boys are super professional and love what they do. They genuinely seem to enjoy meeting people and take great pride in the business they've created.</blockquote>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">RN</div>
+          <div>
+            <div class="testimonial-name">R&oacute;is&iacute;n Nic Dhiarmada</div>
+            <div class="testimonial-event">Wedding</div>
+          </div>
+        </div>
+        <span class="review-source">Read on Google <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg></span>
+      </a>
+
+      <a href="https://www.google.com/search?q=photobooth+guys+ireland+reviews" target="_blank" rel="noopener" class="testimonial-card reveal reveal-delay-2" style="text-decoration:none;color:inherit;">
+        <div class="review-header">
+          <svg class="google-g-sm" viewBox="0 0 24 24" width="20" height="20"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <div class="stars">
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="star" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+        </div>
+        <blockquote>Very easy to deal with. Liam and Barry were great on the day. The photobooth they provide is great quality and does boomerangs too which our guests loved.</blockquote>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">DK</div>
+          <div>
+            <div class="testimonial-name">David K.</div>
+            <div class="testimonial-event">Wedding</div>
+          </div>
+        </div>
+        <span class="review-source">Read on Google <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5-5-5-5"/></svg></span>
+      </a>
+
+    </div>
+
+    <div class="reviews-cta reveal" style="text-align:center;margin-top:40px;">
+      <a href="https://www.google.com/search?q=photobooth+guys+ireland+reviews" target="_blank" rel="noopener" class="btn-secondary" style="display:inline-flex;">
+        See All Google Reviews
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 1l6 6-6 6M13 7H1"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CTA BANNER ═══════ -->
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-inner reveal">
+      <div class="section-label">Let's Create Something Special</div>
+      <h2>Ready to Make Your Event Unforgettable?</h2>
+      <p>Get in touch today for a free, no-obligation quote. We'd love to help you find the perfect booth for your celebration.</p>
+      <a href="https://checkout.photoboothguys.ie/quote" class="btn-primary">
+        Get Your Free Quote
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5-5-5-5"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="/" class="logo">
+          <img src="logo.png" alt="Photobooth Guys" class="logo-img">
+        </a>
+        <p>Ireland's premium photo booth & selfie mirror hire company. Making events unforgettable with cutting-edge booth technology and impeccable service.</p>
+        <div class="social-links">
+          <a href="https://www.instagram.com/photoboothguys.ie/" class="social-link" aria-label="Instagram">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" transform="scale(0.78)"/><path d="M11.5 8.3a3.2 3.2 0 110 6.4 3.2 3.2 0 010-6.4" transform="scale(0.78) translate(2.7, 2.7)"/><circle cx="12.6" cy="5.2" r="0.8" transform="scale(0.78)"/></svg>
+          </a>
+          <a href="https://www.facebook.com/photoboothguys.ie/" class="social-link" aria-label="Facebook">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@photoboothguys" class="social-link" aria-label="TikTok">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13.2a8.16 8.16 0 005.58 2.2V12a4.85 4.85 0 01-5.58-2.2V2h3.45a4.83 4.83 0 002.13 4.69z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="https://www.photoboothguys.ie/photobooth-services">Services</a></li>
+          <li><a href="https://www.photoboothguys.ie/wedding-photo-booth-hire">Wedding Booths</a></li>
+          <li><a href="https://www.photoboothguys.ie/about">About Us</a></li>
+          <li><a href="https://www.photoboothguys.ie/blog">Blog</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Booths</h4>
+        <ul>
+          <li><a href="https://www.photoboothguys.ie/products/open-air-photo-booth">Open Air Booth</a></li>
+          <li><a href="https://www.photoboothguys.ie/products/selfie-mirror">Selfie Mirror</a></li>
+          <li><a href="https://www.photoboothguys.ie/products/360-photo-booth">360° Video Booth</a></li>
+          <li><a href="https://www.photoboothguys.ie/products/vintage-tripod-photo-booth">Vintage Tripod</a></li>
+          <li><a href="https://www.photoboothguys.ie/products/magazine-photo-booth">Magazine Booth</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Get In Touch</h4>
+        <ul>
+          <li><a href="mailto:info@photoboothguys.ie">info@photoboothguys.ie</a></li>
+          <li><a href="https://www.photoboothguys.ie/contact">Contact Form</a></li>
+          <li><a href="https://checkout.photoboothguys.ie/quote">Get A Quote</a></li>
+          <li><a href="https://www.photoboothguys.ie/faq">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2025 Photobooth Guys. All rights reserved.</span>
+      <span>Premium Photo Booth Hire — Nationwide, Ireland</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── Header scroll effect ──
+const header = document.getElementById('siteHeader');
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+// ── Mobile menu ──
+const menuToggle = document.getElementById('menuToggle');
+const mobileMenu = document.getElementById('mobileMenu');
+menuToggle.addEventListener('click', () => {
+  menuToggle.classList.toggle('active');
+  mobileMenu.classList.toggle('open');
+  document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+});
+function closeMobile() {
+  menuToggle.classList.remove('active');
+  mobileMenu.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Scroll reveal (IntersectionObserver) ──
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// ── Smooth scroll for anchor links ──
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+</body>
+</html>
