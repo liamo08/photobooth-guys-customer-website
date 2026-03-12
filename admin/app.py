@@ -5,9 +5,12 @@ import secrets
 from functools import wraps
 from pathlib import Path
 
+from datetime import datetime, timezone
+
 from flask import (
     Flask,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -21,8 +24,18 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parent.parent
 IMAGES_DIR = BASE_DIR / "images"
 ADMIN_DIR = Path(__file__).resolve().parent
+ENV_FILE = BASE_DIR / ".env"
+
+# Load .env file
+if ENV_FILE.exists():
+    for line in ENV_FILE.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip())
 PRODUCTS_FILE = ADMIN_DIR / "products.json"
 USERS_FILE = ADMIN_DIR / "users.json"
+ENQUIRIES_FILE = ADMIN_DIR / "enquiries.json"
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff"}
 MAX_IMAGE_WIDTH = 1200
@@ -332,6 +345,90 @@ def delete_user():
     USERS_FILE.write_text(json.dumps(users, indent=2))
     flash(f"User '{username}' deleted", "success")
     return redirect(url_for("settings"))
+
+
+def load_enquiries():
+    if not ENQUIRIES_FILE.exists():
+        ENQUIRIES_FILE.write_text("[]")
+    return json.loads(ENQUIRIES_FILE.read_text())
+
+
+def save_enquiry(data):
+    enquiries = load_enquiries()
+    enquiry = {
+        "id": secrets.token_hex(8),
+        "name": data.get("name", "").strip(),
+        "email": data.get("email", "").strip(),
+        "phone": data.get("phone", "").strip(),
+        "event_date": data.get("event_date", "").strip(),
+        "event_type": data.get("event_type", "").strip(),
+        "booth_type": data.get("booth_type", "").strip(),
+        "venue": data.get("venue", "").strip(),
+        "message": data.get("message", "").strip(),
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "read": False,
+    }
+    enquiries.insert(0, enquiry)
+    ENQUIRIES_FILE.write_text(json.dumps(enquiries, indent=2))
+    return enquiry
+
+
+@app.route("/enquiry", methods=["POST"])
+def receive_enquiry():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"success": False, "error": "Invalid request"}), 400
+
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    event_type = data.get("event_type", "").strip()
+
+    if not name or not email or not event_type:
+        return jsonify({"success": False, "error": "Name, email, and event type are required"}), 400
+
+    if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
+        return jsonify({"success": False, "error": "Invalid email address"}), 400
+
+    save_enquiry(data)
+    return jsonify({"success": True})
+
+
+@app.route("/maps-key")
+def maps_key():
+    key = os.environ.get("GOOGLE_MAPS_API_KEY", "")
+    return jsonify({"key": key})
+
+
+@app.route("/enquiries")
+@login_required
+def enquiries():
+    all_enquiries = load_enquiries()
+    unread = sum(1 for e in all_enquiries if not e.get("read"))
+    return render_template("enquiries.html", enquiries=all_enquiries, unread_count=unread)
+
+
+@app.route("/enquiries/mark-read", methods=["POST"])
+@login_required
+def mark_enquiry_read():
+    enquiry_id = request.form.get("enquiry_id", "")
+    all_enquiries = load_enquiries()
+    for e in all_enquiries:
+        if e["id"] == enquiry_id:
+            e["read"] = True
+            break
+    ENQUIRIES_FILE.write_text(json.dumps(all_enquiries, indent=2))
+    return redirect(url_for("enquiries"))
+
+
+@app.route("/enquiries/delete", methods=["POST"])
+@login_required
+def delete_enquiry():
+    enquiry_id = request.form.get("enquiry_id", "")
+    all_enquiries = load_enquiries()
+    all_enquiries = [e for e in all_enquiries if e["id"] != enquiry_id]
+    ENQUIRIES_FILE.write_text(json.dumps(all_enquiries, indent=2))
+    flash("Enquiry deleted", "success")
+    return redirect(url_for("enquiries"))
 
 
 if __name__ == "__main__":

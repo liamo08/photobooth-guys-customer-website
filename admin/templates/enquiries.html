@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enquiries | Photobooth Guys Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coal:#0e0e18;--charcoal:#1a1a2e;--surface:#16162a;
+  --teal:#5f94a4;--teal-light:#7ab8cc;--gold:#e8b83d;
+  --white:#f4f4f5;--text-muted:rgba(244,244,245,.6);
+  --border:rgba(95,148,164,.15);--border-hover:rgba(95,148,164,.35);
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --success-bg:rgba(34,197,94,.12);--success-border:rgba(34,197,94,.3);--success-text:#4ade80;
+  --error-bg:rgba(220,53,69,.12);--error-border:rgba(220,53,69,.3);--error-text:#f87171;
+}
+body{
+  min-height:100vh;background:var(--coal);font-family:var(--font-body);color:var(--white);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(95,148,164,.06) 0%,transparent 60%);
+}
+.admin-header{
+  position:sticky;top:0;z-index:100;padding:16px 32px;
+  background:rgba(14,14,24,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header .logo{display:flex;align-items:center;gap:12px}
+.admin-header .logo img{height:40px;width:auto}
+.admin-header .logo span{font-family:var(--font-display);font-size:1.1rem;font-weight:700}
+.admin-header .logo small{color:var(--teal);font-family:var(--font-body);font-size:.75rem;font-weight:500;margin-left:8px}
+.header-actions{display:flex;align-items:center;gap:12px}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-sm:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-sm.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-sm.danger:hover{background:rgba(220,53,69,.1)}
+.btn-sm.active{border-color:var(--teal);color:var(--teal-light)}
+.main{max-width:1200px;margin:0 auto;padding:32px 24px}
+.page-title{font-family:var(--font-display);font-size:1.6rem;margin-bottom:6px}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px}
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:20px;height:20px;padding:0 6px;border-radius:10px;
+  background:var(--gold);color:var(--coal);font-size:.7rem;font-weight:700;margin-left:6px
+}
+.flash{
+  padding:14px 20px;border-radius:10px;margin-bottom:24px;font-size:.88rem;
+  display:flex;align-items:center;gap:10px;
+}
+.flash.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.flash.error{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.flash::before{font-size:1.1rem}
+.flash.success::before{content:"\2713"}
+.flash.error::before{content:"\2717"}
+
+.enquiry-list{display:flex;flex-direction:column;gap:16px}
+.enquiry-card{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;transition:border-color .3s;
+}
+.enquiry-card:hover{border-color:var(--border-hover)}
+.enquiry-card.unread{border-left:3px solid var(--gold)}
+.enquiry-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;cursor:pointer;gap:16px;
+}
+.enquiry-header:hover{background:rgba(95,148,164,.04)}
+.enquiry-meta{display:flex;align-items:center;gap:16px;flex:1;min-width:0}
+.enquiry-avatar{
+  width:40px;height:40px;min-width:40px;border-radius:10px;
+  background:rgba(95,148,164,.15);display:flex;align-items:center;justify-content:center;
+  font-weight:600;color:var(--teal-light);font-size:.9rem
+}
+.enquiry-info{min-width:0}
+.enquiry-info h3{font-family:var(--font-display);font-size:1rem;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.enquiry-info .email{color:var(--teal-light);font-size:.82rem}
+.enquiry-tags{display:flex;gap:8px;flex-wrap:wrap}
+.tag{
+  padding:4px 10px;border-radius:6px;font-size:.72rem;font-weight:500;
+  background:rgba(95,148,164,.1);color:var(--teal-light);white-space:nowrap
+}
+.tag.event{background:rgba(232,184,61,.1);color:var(--gold)}
+.enquiry-date{color:var(--text-muted);font-size:.78rem;white-space:nowrap}
+.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+.enquiry-body{
+  display:none;padding:0 24px 24px;border-top:1px solid var(--border);
+}
+.enquiry-body.open{display:block;padding-top:20px}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.detail-item label{display:block;font-size:.72rem;color:var(--text-muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em}
+.detail-item span{font-size:.9rem}
+.detail-message{margin-bottom:20px}
+.detail-message label{display:block;font-size:.72rem;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.detail-message p{font-size:.9rem;line-height:1.6;color:rgba(244,244,245,.8);white-space:pre-wrap}
+.enquiry-actions{display:flex;gap:8px}
+.enquiry-actions form{display:inline}
+.btn-action{
+  padding:8px 16px;border-radius:8px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s
+}
+.btn-action:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-action.read{border-color:rgba(34,197,94,.3);color:#4ade80}
+.btn-action.read:hover{background:rgba(34,197,94,.08)}
+.btn-action.delete{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-action.delete:hover{background:rgba(220,53,69,.08)}
+.btn-action.reply{border-color:rgba(95,148,164,.3);color:var(--teal-light)}
+.btn-action.reply:hover{background:rgba(95,148,164,.08)}
+
+.empty-state{text-align:center;padding:64px 24px;color:var(--text-muted)}
+.empty-state svg{width:48px;height:48px;margin-bottom:16px;opacity:.4}
+.empty-state h3{font-family:var(--font-display);font-size:1.2rem;color:var(--white);margin-bottom:8px}
+
+.visit-site{color:var(--teal-light);text-decoration:none;font-size:.82rem;transition:color .2s}
+.visit-site:hover{color:var(--white)}
+
+@media(max-width:768px){
+  .admin-header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .main{padding:20px 16px}
+  .enquiry-header{flex-wrap:wrap;padding:16px}
+  .enquiry-tags{display:none}
+  .detail-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">
+    <img src="/logo.webp" alt="Photobooth Guys">
+    <span>Photobooth Guys</span>
+    <small>ADMIN</small>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-sm">Images</a>
+    <a href="{{ url_for('enquiries') }}" class="btn-sm active">Enquiries{% if unread_count %}<span class="badge">{{ unread_count }}</span>{% endif %}</a>
+    <a href="/" class="btn-sm visit-site" target="_blank">View Site</a>
+    <a href="{{ url_for('settings') }}" class="btn-sm">Settings</a>
+    <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <h1 class="page-title">Enquiries{% if unread_count %} <span class="badge">{{ unread_count }} new</span>{% endif %}</h1>
+  <p class="page-subtitle">Contact form submissions from the website.</p>
+
+  {% if enquiries %}
+  <div class="enquiry-list">
+    {% for e in enquiries %}
+    <div class="enquiry-card {{ 'unread' if not e.read }}">
+      <div class="enquiry-header" onclick="toggleEnquiry(this)">
+        <div class="enquiry-meta">
+          {% if not e.read %}<div class="unread-dot"></div>{% endif %}
+          <div class="enquiry-avatar">{{ e.name[0] | upper if e.name else '?' }}</div>
+          <div class="enquiry-info">
+            <h3>{{ e.name }}</h3>
+            <span class="email">{{ e.email }}</span>
+          </div>
+        </div>
+        <div class="enquiry-tags">
+          {% if e.event_type %}<span class="tag event">{{ e.event_type }}</span>{% endif %}
+          {% if e.booth_type %}<span class="tag">{{ e.booth_type }}</span>{% endif %}
+          {% if e.event_date %}<span class="tag">{{ e.event_date }}</span>{% endif %}
+        </div>
+        <span class="enquiry-date">{{ e.submitted_at[:16] | replace('T', ' ') }}</span>
+      </div>
+      <div class="enquiry-body" id="body-{{ e.id }}">
+        <div class="detail-grid">
+          <div class="detail-item"><label>Name</label><span>{{ e.name }}</span></div>
+          <div class="detail-item"><label>Email</label><span><a href="mailto:{{ e.email }}" style="color:var(--teal-light);text-decoration:none">{{ e.email }}</a></span></div>
+          {% if e.phone %}<div class="detail-item"><label>Phone</label><span><a href="tel:{{ e.phone }}" style="color:var(--teal-light);text-decoration:none">{{ e.phone }}</a></span></div>{% endif %}
+          {% if e.event_date %}<div class="detail-item"><label>Event Date</label><span>{{ e.event_date }}</span></div>{% endif %}
+          {% if e.event_type %}<div class="detail-item"><label>Event Type</label><span>{{ e.event_type }}</span></div>{% endif %}
+          {% if e.booth_type %}<div class="detail-item"><label>Booth Type</label><span>{{ e.booth_type }}</span></div>{% endif %}
+          {% if e.venue %}<div class="detail-item"><label>Venue / Address</label><span>{{ e.venue }}</span></div>{% endif %}
+        </div>
+        {% if e.message %}
+        <div class="detail-message">
+          <label>Message</label>
+          <p>{{ e.message }}</p>
+        </div>
+        {% endif %}
+        <div class="enquiry-actions">
+          <a href="mailto:{{ e.email }}?subject=Re: Your Photobooth Guys Enquiry" class="btn-action reply">Reply via Email</a>
+          {% if not e.read %}
+          <form method="POST" action="{{ url_for('mark_enquiry_read') }}">
+            <input type="hidden" name="enquiry_id" value="{{ e.id }}">
+            <button type="submit" class="btn-action read">Mark as Read</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="{{ url_for('delete_enquiry') }}" onsubmit="return confirm('Delete this enquiry?')">
+            <input type="hidden" name="enquiry_id" value="{{ e.id }}">
+            <button type="submit" class="btn-action delete">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+    <h3>No enquiries yet</h3>
+    <p>When someone submits the contact form on the website, their enquiry will appear here.</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function toggleEnquiry(header){
+  var body=header.nextElementSibling;
+  body.classList.toggle('open');
+}
+document.querySelectorAll('.flash').forEach(function(el){
+  setTimeout(function(){el.style.opacity='0';el.style.transition='opacity .5s';setTimeout(function(){el.remove()},500)},5000);
+});
+</script>
+</body>
+</html>

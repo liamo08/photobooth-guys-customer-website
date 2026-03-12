@@ -1,4 +1,6 @@
 admin/venv/
 admin/__pycache__/
 admin/users.json
+admin/enquiries.json
+.env
 *.pyc
