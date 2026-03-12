@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /images/thumb/
+
+Sitemap: https://www.photoboothguys.ie/sitemap.xml

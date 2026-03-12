@@ -1,0 +1,121 @@
+[
+  {
+    "id": "open-air-photo-booth",
+    "name": "Open Air Photo Booth",
+    "image": "open-air-booth.webp",
+    "pages": [
+      "services/open-air-photo-booth-hire.html",
+      "services.html",
+      "index.html",
+      "wedding-photo-booth-hire.html",
+      "corporate-events.html",
+      "party-photo-booth-hire.html",
+      "photo-booth-dublin.html",
+      "christmas-party.html"
+    ]
+  },
+  {
+    "id": "selfie-mirror",
+    "name": "Selfie Mirror",
+    "image": "selfie-mirror.webp",
+    "pages": [
+      "services/selfie-mirror-hire.html",
+      "services.html",
+      "index.html",
+      "wedding-photo-booth-hire.html",
+      "photo-booth-dublin.html"
+    ]
+  },
+  {
+    "id": "360-photo-booth",
+    "name": "360 Photo Booth",
+    "image": "360-booth.webp",
+    "pages": [
+      "services/360-photo-booth-hire.html",
+      "services/overhead-360-photo-booth-hire.html",
+      "services.html",
+      "index.html",
+      "corporate-events.html"
+    ]
+  },
+  {
+    "id": "vintage-tripod",
+    "name": "Vintage Tripod Photo Booth",
+    "image": "vintage-tripod.webp",
+    "pages": [
+      "services/vintage-tripod-photo-booth-hire.html",
+      "services.html",
+      "index.html",
+      "photo-booth-dublin.html"
+    ]
+  },
+  {
+    "id": "magazine-booth",
+    "name": "Magazine Photo Booth",
+    "image": "magazine-booth.webp",
+    "pages": [
+      "services/magazine-photo-booth-hire.html",
+      "services.html",
+      "index.html",
+      "photo-booth-dublin.html"
+    ]
+  },
+  {
+    "id": "glam-booth",
+    "name": "Glam Photo Booth",
+    "image": "glam-booth.webp",
+    "pages": [
+      "services/glam-photo-booth-hire.html",
+      "services.html",
+      "wedding-photo-booth-hire.html",
+      "branded-photobooth-hire.html"
+    ]
+  },
+  {
+    "id": "ai-photo-booth",
+    "name": "AI Photo Booth",
+    "image": "stylish-photos.webp",
+    "pages": [
+      "services/ai-photo-booth-hire.html",
+      "services.html"
+    ]
+  },
+  {
+    "id": "enclosed-photo-booth",
+    "name": "Enclosed Photo Booth",
+    "image": "group-photo.webp",
+    "pages": [
+      "services/enclosed-photo-booth-hire.html",
+      "services.html"
+    ]
+  },
+  {
+    "id": "guinness-pint-printer",
+    "name": "Guinness Pint Printer",
+    "image": "brand-activation.webp",
+    "pages": [
+      "services/guinness-pint-printer-hire.html",
+      "services.html",
+      "corporate-events.html"
+    ]
+  },
+  {
+    "id": "audio-guestbook",
+    "name": "Audio Phone Guestbook",
+    "image": "party.webp",
+    "pages": [
+      "services/audio-phone-guestbook-hire.html",
+      "services.html",
+      "wedding-photo-booth-hire.html"
+    ]
+  },
+  {
+    "id": "roaming-photographer",
+    "name": "Roaming Photographer",
+    "image": "stylish-photos.webp",
+    "pages": [
+      "services/roaming-photographer-hire.html",
+      "services.html"
+    ]
+  }
+]

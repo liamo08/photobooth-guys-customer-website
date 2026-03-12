@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings | Photobooth Guys Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coal:#0e0e18;--charcoal:#1a1a2e;--surface:#16162a;
+  --teal:#5f94a4;--teal-light:#7ab8cc;--gold:#e8b83d;
+  --white:#f4f4f5;--text-muted:rgba(244,244,245,.6);
+  --border:rgba(95,148,164,.15);--border-hover:rgba(95,148,164,.35);
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --success-bg:rgba(34,197,94,.12);--success-border:rgba(34,197,94,.3);--success-text:#4ade80;
+  --error-bg:rgba(220,53,69,.12);--error-border:rgba(220,53,69,.3);--error-text:#f87171;
+}
+body{
+  min-height:100vh;background:var(--coal);font-family:var(--font-body);color:var(--white);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(95,148,164,.06) 0%,transparent 60%);
+}
+.admin-header{
+  position:sticky;top:0;z-index:100;padding:16px 32px;
+  background:rgba(14,14,24,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header .logo{display:flex;align-items:center;gap:12px}
+.admin-header .logo img{height:40px;width:auto}
+.admin-header .logo span{font-family:var(--font-display);font-size:1.1rem;font-weight:700}
+.admin-header .logo small{color:var(--teal);font-family:var(--font-body);font-size:.75rem;font-weight:500;margin-left:8px}
+.header-actions{display:flex;align-items:center;gap:12px}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-sm:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-sm.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-sm.danger:hover{background:rgba(220,53,69,.1)}
+.btn-sm.active{border-color:var(--teal);color:var(--teal-light)}
+
+.main{max-width:800px;margin:0 auto;padding:32px 24px}
+.page-title{font-family:var(--font-display);font-size:1.6rem;margin-bottom:6px}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px}
+
+.flash{
+  padding:14px 20px;border-radius:10px;margin-bottom:24px;font-size:.88rem;
+  display:flex;align-items:center;gap:10px;
+}
+.flash.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.flash.error{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.flash::before{font-size:1.1rem}
+.flash.success::before{content:"\2713"}
+.flash.error::before{content:"\2717"}
+
+.card{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  padding:28px;margin-bottom:24px;
+}
+.card h2{font-family:var(--font-display);font-size:1.15rem;margin-bottom:4px}
+.card .card-desc{color:var(--text-muted);font-size:.82rem;margin-bottom:24px}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.82rem;font-weight:500;margin-bottom:6px;color:var(--text-muted)}
+.form-group input{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:8px;color:var(--white);
+  font-size:.9rem;font-family:var(--font-body);transition:border-color .2s;
+}
+.form-group input:focus{outline:none;border-color:var(--teal)}
+.btn{
+  padding:11px 24px;border:none;border-radius:8px;cursor:pointer;
+  font-size:.85rem;font-weight:600;font-family:var(--font-body);transition:opacity .2s;
+}
+.btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal-light));color:var(--coal)}
+.btn-primary:hover{opacity:.9}
+.btn-danger{background:rgba(220,53,69,.15);border:1px solid rgba(220,53,69,.3);color:#f87171}
+.btn-danger:hover{background:rgba(220,53,69,.25)}
+
+/* User list */
+.user-list{list-style:none}
+.user-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border:1px solid var(--border);border-radius:10px;
+  margin-bottom:10px;transition:border-color .2s;
+}
+.user-item:hover{border-color:var(--border-hover)}
+.user-info{display:flex;align-items:center;gap:12px}
+.user-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--teal-light));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:700;color:var(--coal);text-transform:uppercase;
+}
+.user-name{font-weight:600;font-size:.92rem}
+.user-badge{
+  font-size:.68rem;padding:2px 8px;border-radius:4px;margin-left:8px;
+  background:rgba(232,184,61,.12);border:1px solid rgba(232,184,61,.25);color:var(--gold);
+}
+.delete-form{display:inline}
+.delete-btn{
+  padding:6px 14px;border-radius:6px;font-size:.78rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;
+  background:transparent;border:1px solid rgba(220,53,69,.25);color:rgba(248,113,113,.7);
+  transition:all .2s;
+}
+.delete-btn:hover{background:rgba(220,53,69,.12);color:#f87171;border-color:rgba(220,53,69,.4)}
+
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+@media(max-width:768px){
+  .admin-header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .main{padding:20px 16px}
+  .form-row{grid-template-columns:1fr}
+  .page-title{font-size:1.3rem}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">
+    <img src="/logo.webp" alt="Photobooth Guys">
+    <span>Photobooth Guys</span>
+    <small>ADMIN</small>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-sm">Product Images</a>
+    <a href="{{ url_for('settings') }}" class="btn-sm active">Settings</a>
+    <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <h1 class="page-title">Settings</h1>
+  <p class="page-subtitle">Manage users and account settings</p>
+
+  <!-- User List -->
+  <div class="card">
+    <h2>Users</h2>
+    <p class="card-desc">All users who can access this admin panel</p>
+    <ul class="user-list">
+      {% for username in usernames %}
+      <li class="user-item">
+        <div class="user-info">
+          <div class="user-avatar">{{ username[0] }}</div>
+          <span class="user-name">{{ username }}</span>
+          {% if username == current_user %}
+          <span class="user-badge">You</span>
+          {% endif %}
+        </div>
+        {% if username != current_user %}
+        <form method="POST" action="{{ url_for('delete_user') }}" class="delete-form"
+              onsubmit="return confirm('Delete user \'{{ username }}\'? This cannot be undone.')">
+          <input type="hidden" name="username" value="{{ username }}">
+          <button type="submit" class="delete-btn">Delete</button>
+        </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Add User -->
+  <div class="card">
+    <h2>Add New User</h2>
+    <p class="card-desc">Create a new admin account</p>
+    <form method="POST" action="{{ url_for('add_user') }}">
+      <div class="form-group">
+        <label for="new_username">Username</label>
+        <input type="text" id="new_username" name="username" required minlength="3"
+               placeholder="e.g. liam or info@photoboothguys.ie">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="new_user_password">Password</label>
+          <input type="password" id="new_user_password" name="password" required minlength="8"
+                 placeholder="Min 8 characters">
+        </div>
+        <div class="form-group">
+          <label for="new_user_confirm">Confirm Password</label>
+          <input type="password" id="new_user_confirm" name="confirm_password" required minlength="8">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Add User</button>
+    </form>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Change Own Password -->
+  <div class="card">
+    <h2>Change Your Password</h2>
+    <p class="card-desc">Update the password for <strong>{{ current_user }}</strong></p>
+    <form method="POST" action="{{ url_for('change_password') }}">
+      <div class="form-group">
+        <label for="current_password">Current Password</label>
+        <input type="password" id="current_password" name="current_password" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="new_password">New Password</label>
+          <input type="password" id="new_password" name="new_password" required minlength="8">
+        </div>
+        <div class="form-group">
+          <label for="confirm_password">Confirm New Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Update Password</button>
+    </form>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.flash').forEach(el => {
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .5s'; setTimeout(() => el.remove(), 500); }, 5000);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+admin/venv/
+admin/__pycache__/
+admin/users.json
+*.pyc
