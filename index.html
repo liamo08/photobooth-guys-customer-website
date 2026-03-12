@@ -563,6 +563,8 @@ body::before {
 .services {
   padding: 120px 0;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
 .services::before {
   content: '';
@@ -630,6 +632,8 @@ body::before {
   cursor: pointer;
   text-decoration: none;
   display: block;
+  will-change: transform;
+  contain: layout style paint;
 }
 .service-card::before {
   content: '';
@@ -729,6 +733,8 @@ body::before {
   padding: 120px 0;
   background: linear-gradient(180deg, rgba(42, 42, 66, 0.15), transparent 30%, transparent 70%, rgba(42, 42, 66, 0.15));
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 800px;
 }
 
 .why-us-layout {
@@ -830,6 +836,8 @@ body::before {
    ═══════════════════════════════════ */
 .testimonials {
   padding: 120px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
   position: relative;
 }
 .testimonials::before {
@@ -996,6 +1004,8 @@ body::before {
 .clients-section {
   padding: 80px 0 60px;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
 }
 .clients-heading {
   text-align: center;
@@ -1331,6 +1341,9 @@ body::before {
   will-change: left, top;
 }
 .cursor-glow.active { opacity: 1; }
+@media (hover: none), (pointer: coarse) {
+  .cursor-glow { display: none; }
+}
 
 /* ── Floating hero cards ── */
 .hero-card:nth-child(1) { animation: float-1 6s ease-in-out infinite; }
@@ -1527,17 +1540,17 @@ body::before {
   <div class="container">
     <div class="hero-inner">
       <div class="hero-content">
-        <div class="hero-badge reveal">
+        <div class="hero-badge">
           <span class="hero-badge-dot"></span>
           Ireland's #1 Photobooth Rental
         </div>
-        <h1 class="reveal reveal-delay-1">
+        <h1>
           Photo Booth &<br><em>Selfie Mirror</em> Hire<br>For Every Occasion
         </h1>
-        <p class="hero-sub reveal reveal-delay-2">
+        <p class="hero-sub">
           The prestige photobooth and selfie mirror rental company in Ireland. Premium products, instant sharing, unforgettable memories — for weddings, corporate events, birthdays and more.
         </p>
-        <div class="hero-actions reveal reveal-delay-3">
+        <div class="hero-actions">
           <a href="#services" class="btn-primary">
             See Our Booths
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5-5-5-5"/></svg>
@@ -1545,17 +1558,17 @@ body::before {
           <a href="https://checkout.photoboothguys.ie/quote" class="btn-secondary">Get A Quote</a>
         </div>
       </div>
-      <div class="hero-visual reveal reveal-delay-2">
+      <div class="hero-visual">
         <div class="hero-card">
-          <img fetchpriority="high" src="images/thumb/selfie-mirror.webp" alt="Selfie Mirror Photo Booth with LED lights" class="hero-card-img" width="500" height="666">
+          <img fetchpriority="high" src="images/thumb/selfie-mirror.webp" alt="Selfie Mirror Photo Booth with LED lights" class="hero-card-img" width="400" height="533" sizes="(max-width: 1024px) 40vw, 220px">
           <span class="hero-card-label">Selfie Mirror</span>
         </div>
         <div class="hero-card">
-          <img loading="lazy" src="images/thumb/360-booth.webp" alt="360 Video Photo Booth with colorful lighting" class="hero-card-img" width="500" height="375">
+          <img loading="lazy" decoding="async" src="images/thumb/360-booth.webp" alt="360 Video Photo Booth with colorful lighting" class="hero-card-img" width="400" height="300" sizes="(max-width: 1024px) 35vw, 180px">
           <span class="hero-card-label">360° Booth</span>
         </div>
         <div class="hero-card">
-          <img loading="lazy" src="images/thumb/glam-booth.webp" alt="Couple having fun in the glam photo booth" class="hero-card-img" width="500" height="333">
+          <img loading="lazy" decoding="async" src="images/thumb/glam-booth.webp" alt="Couple having fun in the glam photo booth" class="hero-card-img" width="400" height="266" sizes="(max-width: 1024px) 30vw, 160px">
           <span class="hero-card-label">Open Air</span>
         </div>
         <div class="hero-stat">
@@ -1600,7 +1613,7 @@ body::before {
     <div class="services-grid">
 
       <a href="services/open-air-photo-booth-hire.html" class="service-card reveal" style="overflow:hidden;">
-        <img loading="lazy" src="images/thumb/open-air-booth.webp" alt="Open air photo booth hire Ireland" class="service-card-bg" width="500" height="281">
+        <img loading="lazy" decoding="async" src="images/thumb/open-air-booth.webp" alt="Open air photo booth hire Ireland" class="service-card-bg" width="400" height="225" sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 380px">
         <div class="service-icon teal">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
@@ -1613,7 +1626,7 @@ body::before {
       </a>
 
       <a href="services/selfie-mirror-hire.html" class="service-card reveal reveal-delay-1" style="overflow:hidden;">
-        <img loading="lazy" src="images/thumb/selfie-mirror.webp" alt="Selfie mirror photo booth hire Ireland" class="service-card-bg" width="500" height="666">
+        <img loading="lazy" decoding="async" src="images/thumb/selfie-mirror.webp" alt="Selfie mirror photo booth hire Ireland" class="service-card-bg" width="400" height="533" sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 380px">
         <div class="service-icon gold">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M6 21v-1a6 6 0 0112 0v1"/></svg>
         </div>
@@ -1626,7 +1639,7 @@ body::before {
       </a>
 
       <a href="services/360-photo-booth-hire.html" class="service-card reveal reveal-delay-2" style="overflow:hidden;">
-        <img loading="lazy" src="images/thumb/360-booth.webp" alt="360 video photo booth hire Ireland" class="service-card-bg" width="500" height="375">
+        <img loading="lazy" decoding="async" src="images/thumb/360-booth.webp" alt="360 video photo booth hire Ireland" class="service-card-bg" width="400" height="300" sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 380px">
         <div class="service-icon teal">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
         </div>
@@ -1639,7 +1652,7 @@ body::before {
       </a>
 
       <a href="services/vintage-tripod-photo-booth-hire.html" class="service-card reveal reveal-delay-3" style="overflow:hidden;">
-        <img loading="lazy" src="images/thumb/vintage-tripod.webp" alt="Vintage tripod photo booth hire Ireland" class="service-card-bg" width="500" height="375">
+        <img loading="lazy" decoding="async" src="images/thumb/vintage-tripod.webp" alt="Vintage tripod photo booth hire Ireland" class="service-card-bg" width="400" height="300" sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 380px">
         <div class="service-icon gold">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
         </div>
@@ -1652,7 +1665,7 @@ body::before {
       </a>
 
       <a href="services/magazine-photo-booth-hire.html" class="service-card reveal reveal-delay-4" style="overflow:hidden;">
-        <img loading="lazy" src="images/thumb/magazine-booth.webp" alt="Magazine photo booth hire Ireland" class="service-card-bg" width="500" height="333">
+        <img loading="lazy" decoding="async" src="images/thumb/magazine-booth.webp" alt="Magazine photo booth hire Ireland" class="service-card-bg" width="400" height="266" sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 380px">
         <div class="service-icon teal">
           <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         </div>
@@ -2089,15 +2102,25 @@ if (statEl) {
   statObserver.observe(statEl);
 }
 
-// ── Service card tilt on mouse move ──
+// ── Service card tilt on mouse move (GPU-accelerated, no forced reflow) ──
 document.querySelectorAll('.service-card').forEach(card => {
+  let rect = null;
+  let ticking = false;
+  card.addEventListener('mouseenter', () => {
+    rect = card.getBoundingClientRect();
+  });
   card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    card.style.transform = `translateY(-6px) perspective(600px) rotateX(${y * -4}deg) rotateY(${x * 4}deg)`;
+    if (!rect || ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      card.style.transform = `translateY(-6px) perspective(600px) rotateX(${y * -4}deg) rotateY(${x * 4}deg)`;
+      ticking = false;
+    });
   });
   card.addEventListener('mouseleave', () => {
+    rect = null;
     card.style.transform = '';
   });
 });

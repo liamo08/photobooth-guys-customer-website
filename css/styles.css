@@ -541,6 +541,8 @@ body::before {
 .services {
   padding: 120px 0;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
 .services::before {
   content: '';
@@ -608,6 +610,8 @@ body::before {
   cursor: pointer;
   text-decoration: none;
   display: block;
+  will-change: transform;
+  contain: layout style paint;
 }
 .service-card::before {
   content: '';
@@ -707,6 +711,8 @@ body::before {
   padding: 120px 0;
   background: linear-gradient(180deg, rgba(42, 42, 66, 0.15), transparent 30%, transparent 70%, rgba(42, 42, 66, 0.15));
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 800px;
 }
 
 .why-us-layout {
@@ -810,6 +816,8 @@ body::before {
    ═══════════════════════════════════ */
 .testimonials {
   padding: 120px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
   position: relative;
 }
 .testimonials::before {
@@ -976,6 +984,8 @@ body::before {
 .clients-section {
   padding: 80px 0 60px;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
 }
 .clients-heading {
   text-align: center;
@@ -1312,6 +1322,9 @@ body::before {
   will-change: left, top;
 }
 .cursor-glow.active { opacity: 1; }
+@media (hover: none), (pointer: coarse) {
+  .cursor-glow { display: none; }
+}
 
 /* ── Floating hero cards ── */
 .hero-card:nth-child(1) { animation: float-1 6s ease-in-out infinite; }
