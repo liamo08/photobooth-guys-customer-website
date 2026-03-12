@@ -1444,14 +1444,29 @@ body::before {
 /* ═══════════════════════════════════
    BREADCRUMBS
    ═══════════════════════════════════ */
-.breadcrumb {
+nav.breadcrumb {
+  padding-top: 96px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-bottom: 24px;
   flex-wrap: wrap;
+}
+.product-hero nav.breadcrumb,
+.breadcrumb-section nav.breadcrumb {
+  padding-top: 0;
+}
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  flex-wrap: wrap;
+}
+.breadcrumb-separator {
+  color: var(--text-muted);
+  opacity: 0.4;
 }
 .breadcrumb a {
   color: var(--text-muted);
