@@ -1,11 +1,14 @@
+import hashlib
 import json
 import os
 import re
 import secrets
+import sqlite3
+import urllib.request
 from functools import wraps
 from pathlib import Path
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from flask import (
     Flask,
@@ -36,6 +39,7 @@ if ENV_FILE.exists():
 PRODUCTS_FILE = ADMIN_DIR / "products.json"
 USERS_FILE = ADMIN_DIR / "users.json"
 ENQUIRIES_FILE = ADMIN_DIR / "enquiries.json"
+ANALYTICS_DB = ADMIN_DIR / "analytics.db"
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff"}
 MAX_IMAGE_WIDTH = 1200
@@ -168,6 +172,268 @@ def update_html_image_dimensions(product, new_width, new_height):
 
         if html != original:
             filepath.write_text(html)
+
+
+# ---------------------------------------------------------------------------
+# Analytics helpers
+# ---------------------------------------------------------------------------
+
+def get_analytics_db():
+    conn = sqlite3.connect(str(ANALYTICS_DB))
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=5000")
+    return conn
+
+
+def init_analytics_db():
+    conn = get_analytics_db()
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS pageviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visitor_hash TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            page_path TEXT NOT NULL,
+            referrer TEXT DEFAULT '',
+            device_type TEXT DEFAULT 'desktop',
+            country TEXT DEFAULT '',
+            city TEXT DEFAULT '',
+            screen_width INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_pv_created ON pageviews(created_at);
+        CREATE INDEX IF NOT EXISTS idx_pv_visitor ON pageviews(visitor_hash);
+        CREATE INDEX IF NOT EXISTS idx_pv_session ON pageviews(session_id);
+        CREATE INDEX IF NOT EXISTS idx_pv_page ON pageviews(page_path);
+        CREATE TABLE IF NOT EXISTS geo_cache (
+            ip_hash TEXT PRIMARY KEY,
+            country TEXT DEFAULT '',
+            city TEXT DEFAULT '',
+            cached_at TEXT
+        );
+    """)
+    conn.close()
+
+
+def get_real_ip():
+    return (
+        request.headers.get("CF-Connecting-IP")
+        or request.headers.get("X-Real-IP")
+        or request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        or request.remote_addr
+    )
+
+
+def make_visitor_hash(ip, ua):
+    raw = f"{ip}|{ua}".encode()
+    return hashlib.sha256(raw).hexdigest()[:16]
+
+
+def detect_device(ua, screen_width):
+    ua_lower = ua.lower()
+    if screen_width > 0:
+        if screen_width <= 768:
+            return "mobile"
+        if screen_width <= 1024:
+            return "tablet"
+        return "desktop"
+    if "mobile" in ua_lower or "android" in ua_lower:
+        if "tablet" in ua_lower or "ipad" in ua_lower:
+            return "tablet"
+        return "mobile"
+    if "ipad" in ua_lower or "tablet" in ua_lower:
+        return "tablet"
+    return "desktop"
+
+
+def resolve_session(conn, visitor_hash, now_str):
+    row = conn.execute(
+        """SELECT session_id, created_at FROM pageviews
+           WHERE visitor_hash = ?
+           ORDER BY created_at DESC LIMIT 1""",
+        (visitor_hash,),
+    ).fetchone()
+    if row:
+        last_time = datetime.fromisoformat(row["created_at"])
+        now_time = datetime.fromisoformat(now_str)
+        if (now_time - last_time) < timedelta(minutes=30):
+            return row["session_id"]
+    raw = f"{visitor_hash}|{now_str}".encode()
+    return hashlib.sha256(raw).hexdigest()[:16]
+
+
+def lookup_geo(ip):
+    if not ip or ip in ("127.0.0.1", "::1"):
+        return ("", "")
+    conn = get_analytics_db()
+    try:
+        ip_hash = hashlib.sha256(ip.encode()).hexdigest()[:16]
+        cached = conn.execute(
+            "SELECT country, city FROM geo_cache WHERE ip_hash = ?",
+            (ip_hash,),
+        ).fetchone()
+        if cached:
+            return (cached["country"], cached["city"])
+        try:
+            url = f"http://ip-api.com/json/{ip}?fields=country,city,status"
+            req = urllib.request.Request(url, headers={"User-Agent": "PhotoboothGuys/1.0"})
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                data = json.loads(resp.read())
+                if data.get("status") == "success":
+                    country = data.get("country", "")
+                    city = data.get("city", "")
+                    conn.execute(
+                        "INSERT OR REPLACE INTO geo_cache (ip_hash, country, city, cached_at) VALUES (?, ?, ?, ?)",
+                        (ip_hash, country, city, datetime.now(timezone.utc).isoformat()),
+                    )
+                    conn.commit()
+                    return (country, city)
+        except Exception:
+            pass
+        return ("", "")
+    finally:
+        conn.close()
+
+
+@app.route("/track", methods=["POST"])
+def track_pageview():
+    data = request.get_json(silent=True)
+    if not data or not data.get("p"):
+        return "", 204
+
+    ua = request.headers.get("User-Agent", "")
+    ua_lower = ua.lower()
+    if any(b in ua_lower for b in ("bot", "crawl", "spider", "lighthouse", "pagespeed")):
+        return "", 204
+
+    ip = get_real_ip()
+    visitor_hash = make_visitor_hash(ip, ua)
+    page_path = data["p"][:500]
+    referrer = data.get("r", "")[:500]
+    screen_width = int(data.get("w", 0) or 0)
+    device_type = detect_device(ua, screen_width)
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+
+    country, city = lookup_geo(ip)
+
+    conn = get_analytics_db()
+    try:
+        session_id = resolve_session(conn, visitor_hash, now_str)
+        conn.execute(
+            """INSERT INTO pageviews
+               (visitor_hash, session_id, page_path, referrer, device_type,
+                country, city, screen_width, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (visitor_hash, session_id, page_path, referrer, device_type,
+             country, city, screen_width, now_str),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return "", 204
+
+
+@app.route("/analytics")
+@login_required
+def analytics():
+    end_date = request.args.get("end", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    start_date = request.args.get(
+        "start",
+        (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%d"),
+    )
+    start_ts = f"{start_date}T00:00:00"
+    end_ts = f"{end_date}T23:59:59"
+
+    conn = get_analytics_db()
+    try:
+        overview = conn.execute(
+            """SELECT COUNT(*) as total_views,
+                      COUNT(DISTINCT visitor_hash) as unique_visitors,
+                      COUNT(DISTINCT session_id) as total_sessions
+               FROM pageviews WHERE created_at BETWEEN ? AND ?""",
+            (start_ts, end_ts),
+        ).fetchone()
+
+        bounce = conn.execute(
+            """SELECT COALESCE(
+                   CAST(SUM(CASE WHEN pv_count = 1 THEN 1 ELSE 0 END) AS FLOAT) /
+                   NULLIF(COUNT(*), 0) * 100, 0
+               ) AS bounce_rate
+               FROM (SELECT session_id, COUNT(*) AS pv_count
+                     FROM pageviews WHERE created_at BETWEEN ? AND ?
+                     GROUP BY session_id)""",
+            (start_ts, end_ts),
+        ).fetchone()
+
+        avg_duration = conn.execute(
+            """SELECT COALESCE(AVG(duration), 0) as avg_dur FROM (
+                   SELECT (julianday(MAX(created_at)) - julianday(MIN(created_at))) * 86400 AS duration
+                   FROM pageviews WHERE created_at BETWEEN ? AND ?
+                   GROUP BY session_id HAVING COUNT(*) > 1)""",
+            (start_ts, end_ts),
+        ).fetchone()
+
+        top_pages = conn.execute(
+            """SELECT page_path, COUNT(*) as views,
+                      COUNT(DISTINCT visitor_hash) as unique_views
+               FROM pageviews WHERE created_at BETWEEN ? AND ?
+               GROUP BY page_path ORDER BY views DESC LIMIT 20""",
+            (start_ts, end_ts),
+        ).fetchall()
+
+        devices = conn.execute(
+            """SELECT device_type, COUNT(DISTINCT visitor_hash) as count
+               FROM pageviews WHERE created_at BETWEEN ? AND ?
+               GROUP BY device_type ORDER BY count DESC""",
+            (start_ts, end_ts),
+        ).fetchall()
+
+        countries = conn.execute(
+            """SELECT country, COUNT(DISTINCT visitor_hash) as count
+               FROM pageviews WHERE created_at BETWEEN ? AND ?
+               AND country != '' GROUP BY country ORDER BY count DESC LIMIT 15""",
+            (start_ts, end_ts),
+        ).fetchall()
+
+        cities = conn.execute(
+            """SELECT city, country, COUNT(DISTINCT visitor_hash) as count
+               FROM pageviews WHERE created_at BETWEEN ? AND ?
+               AND city != '' GROUP BY city, country ORDER BY count DESC LIMIT 15""",
+            (start_ts, end_ts),
+        ).fetchall()
+
+        referrers = conn.execute(
+            """SELECT referrer, COUNT(*) as count
+               FROM pageviews WHERE created_at BETWEEN ? AND ?
+               AND referrer != '' GROUP BY referrer ORDER BY count DESC LIMIT 10""",
+            (start_ts, end_ts),
+        ).fetchall()
+
+        daily = conn.execute(
+            """SELECT DATE(created_at) as day, COUNT(*) as views,
+                      COUNT(DISTINCT visitor_hash) as visitors
+               FROM pageviews WHERE created_at BETWEEN ? AND ?
+               GROUP BY day ORDER BY day""",
+            (start_ts, end_ts),
+        ).fetchall()
+    finally:
+        conn.close()
+
+    return render_template(
+        "analytics.html",
+        start_date=start_date,
+        end_date=end_date,
+        overview=overview,
+        bounce_rate=round(bounce["bounce_rate"], 1),
+        avg_duration=round(avg_duration["avg_dur"]),
+        top_pages=top_pages,
+        devices=devices,
+        countries=countries,
+        cities=cities,
+        referrers=referrers,
+        daily=daily,
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -431,6 +697,164 @@ def delete_enquiry():
     return redirect(url_for("enquiries"))
 
 
+@app.route("/image-seo")
+@login_required
+def image_seo():
+    scan_dirs = [
+        ("", BASE_DIR),
+        ("services/", BASE_DIR / "services"),
+        ("locations/", BASE_DIR / "locations"),
+    ]
+    pages_data = []
+    total_images = 0
+    images_with_alt = 0
+    images_missing_alt = 0
+
+    for prefix, scan_dir in scan_dirs:
+        if not scan_dir.exists():
+            continue
+        for html_file in sorted(scan_dir.glob("*.html")):
+            rel_path = prefix + html_file.name
+            html_content = html_file.read_text()
+            img_tags = re.findall(r"<img[^>]*>", html_content, re.IGNORECASE)
+            if not img_tags:
+                continue
+            images = []
+            for tag in img_tags:
+                src_match = re.search(r'src="([^"]*)"', tag)
+                alt_match = re.search(r'alt="([^"]*)"', tag)
+                src = src_match.group(1) if src_match else ""
+                alt = alt_match.group(1) if alt_match else ""
+                has_alt = bool(alt_match and alt.strip())
+                total_images += 1
+                if has_alt:
+                    images_with_alt += 1
+                else:
+                    images_missing_alt += 1
+                images.append({
+                    "src": src,
+                    "alt": alt,
+                    "has_alt": has_alt,
+                })
+            pages_data.append({
+                "page": rel_path,
+                "images": images,
+            })
+
+    return render_template(
+        "image-seo.html",
+        pages_data=pages_data,
+        total_images=total_images,
+        images_with_alt=images_with_alt,
+        images_missing_alt=images_missing_alt,
+    )
+
+
+@app.route("/image-seo/update", methods=["POST"])
+@login_required
+def image_seo_update():
+    page = request.form.get("page", "")
+    src = request.form.get("src", "")
+    old_alt = request.form.get("old_alt", "")
+    new_alt = request.form.get("new_alt", "")
+
+    if not page or not src:
+        flash("Missing required fields", "error")
+        return redirect(url_for("image_seo"))
+
+    filepath = BASE_DIR / page
+    if not filepath.exists():
+        flash(f"File not found: {page}", "error")
+        return redirect(url_for("image_seo"))
+
+    html = filepath.read_text()
+    original = html
+
+    escaped_src = re.escape(src)
+    escaped_old_alt = re.escape(old_alt)
+    pattern = re.compile(
+        r'(<img\s[^>]*?src="' + escaped_src + r'"[^>]*?)alt="'
+        + escaped_old_alt + r'"',
+        re.IGNORECASE,
+    )
+    html = pattern.sub(r'\1alt="' + new_alt.replace("\\", "\\\\") + '"', html, count=1)
+
+    if html == original:
+        pattern2 = re.compile(
+            r'(<img\s[^>]*?)alt="' + escaped_old_alt
+            + r'"([^>]*?src="' + escaped_src + r'")',
+            re.IGNORECASE,
+        )
+        html = pattern2.sub(
+            r'\1alt="' + new_alt.replace("\\", "\\\\") + r'"\2', html, count=1
+        )
+
+    if html != original:
+        filepath.write_text(html)
+        flash(f"Alt text updated for {src} on {page}", "success")
+    else:
+        flash(f"Could not find matching image tag to update", "error")
+
+    return redirect(url_for("image_seo"))
+
+
+@app.route("/image-seo/bulk-update", methods=["POST"])
+@login_required
+def image_seo_bulk_update():
+    data = request.get_json()
+    if not data or "page" not in data or "updates" not in data:
+        return jsonify({"success": False, "error": "Invalid request"}), 400
+
+    page = data["page"]
+    updates = data["updates"]
+
+    filepath = BASE_DIR / page
+    if not filepath.exists():
+        return jsonify({"success": False, "error": f"File not found: {page}"}), 404
+
+    html = filepath.read_text()
+    original = html
+    changed = 0
+
+    for item in updates:
+        src = item.get("src", "")
+        old_alt = item.get("old_alt", "")
+        new_alt = item.get("new_alt", "")
+        if not src or old_alt == new_alt:
+            continue
+
+        escaped_src = re.escape(src)
+        escaped_old_alt = re.escape(old_alt)
+        pattern = re.compile(
+            r'(<img\s[^>]*?src="' + escaped_src + r'"[^>]*?)alt="'
+            + escaped_old_alt + r'"',
+            re.IGNORECASE,
+        )
+        new_html = pattern.sub(
+            r'\1alt="' + new_alt.replace("\\", "\\\\") + '"', html, count=1
+        )
+        if new_html == html:
+            pattern2 = re.compile(
+                r'(<img\s[^>]*?)alt="' + escaped_old_alt
+                + r'"([^>]*?src="' + escaped_src + r'")',
+                re.IGNORECASE,
+            )
+            new_html = pattern2.sub(
+                r'\1alt="' + new_alt.replace("\\", "\\\\") + r'"\2',
+                html, count=1,
+            )
+        if new_html != html:
+            html = new_html
+            changed += 1
+
+    if html != original:
+        filepath.write_text(html)
+
+    return jsonify({"success": True, "changed": changed})
+
+
+ensure_users_file()
+init_analytics_db()
+
 if __name__ == "__main__":
-    ensure_users_file()
     app.run(host="127.0.0.1", port=5050, debug=True)

@@ -1082,6 +1082,8 @@ body::before {
    ═══════════════════════════════════ */
 .cta-banner {
   padding: 100px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
 }
 .cta-inner {
   position: relative;
@@ -1742,6 +1744,8 @@ nav.breadcrumb {
 .features-section {
   padding: 80px 0;
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 800px;
 }
 .features-section::before {
   content: '';
@@ -1852,6 +1856,8 @@ nav.breadcrumb {
    ═══════════════════════════════════ */
 .faq-section {
   padding: 80px 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }
 .faq-list {
   max-width: 800px;
