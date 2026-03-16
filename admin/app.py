@@ -49,12 +49,13 @@ FEATURES_DIR = IMAGES_DIR / "features"
 FEATURES_DIR.mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff"}
+ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "mov"}
 MAX_IMAGE_WIDTH = 1200
 WEBP_QUALITY = 80
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", secrets.token_hex(32))
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB max upload
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB max upload (videos)
 app.config["APPLICATION_ROOT"] = "/admin"
 
 
@@ -108,6 +109,10 @@ def login_required(f):
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def allowed_video(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
 
 
 def optimize_image(input_path, output_path, max_width=MAX_IMAGE_WIDTH, quality=WEBP_QUALITY):
@@ -794,6 +799,15 @@ def product_settings(product_id):
             feat["info"] = get_image_info("features/" + feat["image"])
         else:
             feat["info"] = {"exists": False, "size_kb": 0, "width": 0, "height": 0}
+        if feat.get("video"):
+            vid_path = FEATURES_DIR / feat["video"]
+            feat["video_info"] = {
+                "exists": vid_path.exists(),
+                "size_kb": round(vid_path.stat().st_size / 1024) if vid_path.exists() else 0,
+                "filename": feat["video"],
+            }
+        else:
+            feat["video_info"] = {"exists": False, "size_kb": 0, "filename": ""}
     return render_template("product-settings.html", product=product)
 
 
@@ -835,6 +849,26 @@ def upload_hero_image(product_id):
     return redirect(url_for("product_settings", product_id=product_id))
 
 
+@app.route("/product-settings/<product_id>/speed", methods=["POST"])
+@login_required
+def save_carousel_speed(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("dashboard"))
+    try:
+        speed = int(request.form.get("speed", 10))
+        speed = max(3, min(30, speed))
+    except (ValueError, TypeError):
+        speed = 10
+    product["carousel_speed"] = speed
+    save_products(products)
+    slide = request.form.get("slide", "0")
+    flash(f"Carousel speed set to {speed} seconds", "success")
+    return redirect(url_for("product_settings", product_id=product_id, slide=slide))
+
+
 @app.route("/product-settings/<product_id>/feature", methods=["POST"])
 @login_required
 def save_feature(product_id):
@@ -847,10 +881,15 @@ def save_feature(product_id):
     feature_id = request.form.get("feature_id", "").strip()
     title = request.form.get("title", "").strip()
     description = request.form.get("description", "").strip()
+    media_type = request.form.get("media_type", "image").strip()
+    slide = request.form.get("slide", "0")
+
+    if media_type not in ("image", "video"):
+        media_type = "image"
 
     if not title or not description:
         flash("Title and description are required", "error")
-        return redirect(url_for("product_settings", product_id=product_id))
+        return redirect(url_for("product_settings", product_id=product_id, slide=slide))
 
     if "features" not in product:
         product["features"] = []
@@ -860,6 +899,7 @@ def save_feature(product_id):
         if feat:
             feat["title"] = title
             feat["description"] = description
+            feat["media_type"] = media_type
             flash(f"Feature '{title}' updated", "success")
         else:
             flash("Feature not found", "error")
@@ -870,11 +910,14 @@ def save_feature(product_id):
             "title": title,
             "description": description,
             "image": "",
+            "video": "",
+            "media_type": media_type,
         })
         flash(f"Feature '{title}' added", "success")
+        slide = str(len(product["features"]) - 1)
 
     save_products(products)
-    return redirect(url_for("product_settings", product_id=product_id))
+    return redirect(url_for("product_settings", product_id=product_id, slide=slide))
 
 
 @app.route("/product-settings/<product_id>/feature/upload", methods=["POST"])
@@ -887,6 +930,7 @@ def upload_feature_image(product_id):
         return redirect(url_for("dashboard"))
 
     feature_id = request.form.get("feature_id", "")
+    slide = request.form.get("slide", "0")
     feat = next((f for f in product.get("features", []) if f["id"] == feature_id), None)
     if not feat:
         flash("Feature not found", "error")
@@ -894,12 +938,12 @@ def upload_feature_image(product_id):
 
     if "image" not in request.files or request.files["image"].filename == "":
         flash("No file selected", "error")
-        return redirect(url_for("product_settings", product_id=product_id))
+        return redirect(url_for("product_settings", product_id=product_id, slide=slide))
 
     file = request.files["image"]
     if not allowed_file(file.filename):
         flash(f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}", "error")
-        return redirect(url_for("product_settings", product_id=product_id))
+        return redirect(url_for("product_settings", product_id=product_id, slide=slide))
 
     filename = f"{product_id}_{feature_id}.webp"
     tmp_path = FEATURES_DIR / f"_tmp_{secure_filename(file.filename)}"
@@ -917,7 +961,49 @@ def upload_feature_image(product_id):
         if tmp_path.exists():
             tmp_path.unlink()
 
-    return redirect(url_for("product_settings", product_id=product_id))
+    return redirect(url_for("product_settings", product_id=product_id, slide=slide))
+
+
+@app.route("/product-settings/<product_id>/feature/upload-video", methods=["POST"])
+@login_required
+def upload_feature_video(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("dashboard"))
+
+    feature_id = request.form.get("feature_id", "")
+    slide = request.form.get("slide", "0")
+    feat = next((f for f in product.get("features", []) if f["id"] == feature_id), None)
+    if not feat:
+        flash("Feature not found", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    if "video" not in request.files or request.files["video"].filename == "":
+        flash("No video file selected", "error")
+        return redirect(url_for("product_settings", product_id=product_id, slide=slide))
+
+    file = request.files["video"]
+    if not allowed_video(file.filename):
+        flash(f"Invalid video type. Allowed: {', '.join(ALLOWED_VIDEO_EXTENSIONS)}", "error")
+        return redirect(url_for("product_settings", product_id=product_id, slide=slide))
+
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    filename = f"{product_id}_{feature_id}.{ext}"
+    output_path = FEATURES_DIR / filename
+
+    try:
+        file.save(str(output_path))
+        feat["video"] = filename
+        feat["media_type"] = "video"
+        save_products(products)
+        size_kb = round(output_path.stat().st_size / 1024)
+        flash(f"Video uploaded for '{feat['title']}' ({size_kb}KB)", "success")
+    except Exception as e:
+        flash(f"Error saving video: {e}", "error")
+
+    return redirect(url_for("product_settings", product_id=product_id, slide=slide))
 
 
 @app.route("/product-settings/<product_id>/feature/delete", methods=["POST"])
@@ -940,6 +1026,10 @@ def delete_feature(product_id):
         img_path = FEATURES_DIR / feat["image"]
         if img_path.exists():
             img_path.unlink()
+    if feat.get("video"):
+        vid_path = FEATURES_DIR / feat["video"]
+        if vid_path.exists():
+            vid_path.unlink()
 
     product["features"] = [f for f in features if f["id"] != feature_id]
     save_products(products)
@@ -976,14 +1066,24 @@ def api_features(product_id):
         return jsonify({"features": []})
     features = []
     for f in product.get("features", []):
-        if f.get("title") and f.get("image"):
-            features.append({
+        media_type = f.get("media_type", "image")
+        has_media = f.get("image") if media_type == "image" else f.get("video")
+        if f.get("title") and has_media:
+            feat_data = {
                 "id": f["id"],
                 "title": f["title"],
                 "description": f.get("description", ""),
-                "image": f"/images/features/{f['image']}",
-            })
-    return jsonify({"features": features})
+                "media_type": media_type,
+            }
+            if media_type == "video" and f.get("video"):
+                feat_data["video"] = f"/images/features/{f['video']}"
+                if f.get("image"):
+                    feat_data["image"] = f"/images/features/{f['image']}"
+            else:
+                feat_data["image"] = f"/images/features/{f['image']}"
+            features.append(feat_data)
+    speed = product.get("carousel_speed", 10)
+    return jsonify({"features": features, "speed": speed})
 
 
 @app.route("/settings")

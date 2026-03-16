@@ -13,7 +13,26 @@
       "photo-booth-dublin.html",
       "christmas-party.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "3872132e82ad",
+        "title": "Group Photos",
+        "description": "Great for group photos, we can fit a lot of people in when required & capture the fun!\r\nTemplates designed for your event, tailored to meet your colour scheme, brand & theme.",
+        "image": "open-air-photo-booth_3872132e82ad.webp"
+      },
+      {
+        "id": "2b71371402de",
+        "title": "Clean White Photobooth",
+        "description": "Our clean white open-air photobooth features professional lighting, a modern design and high-quality camera technology. Perfect for weddings, corporate events and parties, it captures stunning photos while blending beautifully into any venue.",
+        "image": "open-air-photo-booth_2b71371402de.webp"
+      },
+      {
+        "id": "7f65a99ebf4c",
+        "title": "Backdrops",
+        "description": "Choose the perfect backdrop for your event with a range of elegant, modern and themed options designed to make every photobooth photo look amazing.",
+        "image": "open-air-photo-booth_7f65a99ebf4c.webp"
+      }
+    ]
   },
   {
     "id": "selfie-mirror",
@@ -26,7 +45,26 @@
       "wedding-photo-booth-hire.html",
       "photo-booth-dublin.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "4509b6588083",
+        "title": "Interaction",
+        "description": "The interactive selfie mirror photobooth gets guests involved with fun animations, touch-screen prompts and instant photos. Perfect for weddings, corporate events and parties, it creates a fun and engaging photo experience everyone loves.",
+        "image": "selfie-mirror_4509b6588083.webp"
+      },
+      {
+        "id": "ba3b213bb0fb",
+        "title": "Full length photos",
+        "description": "Our magic selfie mirror photobooth captures full-length photos with professional lighting, allowing guests to pose naturally and capture stylish head-to-toe event photos.",
+        "image": "selfie-mirror_ba3b213bb0fb.webp"
+      },
+      {
+        "id": "7e5ca1c7fe93",
+        "title": "Branded Templates",
+        "description": "Custom branded photo templates can be designed to match your event or company branding. Perfect for weddings, corporate events and brand activations, our selfie mirror prints can include logos, colours and messaging.",
+        "image": "selfie-mirror_7e5ca1c7fe93.webp"
+      }
+    ]
   },
   {
     "id": "360-photo-booth",
@@ -39,7 +77,22 @@
       "index.html",
       "corporate-events.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "f1b209cbdb8d",
+        "title": "Options",
+        "description": "Choose from a range of photobooth setup options including LED curved walls, custom branded panels and premium event backdrops. Perfect for weddings, corporate events and brand activations looking to create a unique photo experience.",
+        "image": "360-photo-booth_f1b209cbdb8d.webp"
+      },
+      {
+        "id": "a2b81d5abf48",
+        "title": "Branded Videos",
+        "description": "Create stunning branded 360\u00b0 videos with custom overlays, logos and graphics. Perfect for corporate events, brand activations and parties, our 360 photo booth produces shareable slow-motion videos designed for social media.",
+        "image": "",
+        "video": "360-photo-booth_a2b81d5abf48.mp4",
+        "media_type": "video"
+      }
+    ]
   },
   {
     "id": "vintage-tripod",
@@ -87,7 +140,26 @@
       "party-photo-booth-hire.html",
       "corporate-events.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "22185c60a7cd",
+        "title": "Movie Covers",
+        "description": "We can swap your guests into any movie cover or poster",
+        "image": "ai-photo-booth_22185c60a7cd.webp"
+      },
+      {
+        "id": "06ba02ef3d94",
+        "title": "AI Transformations",
+        "description": "Watch photos transform instantly with AI. Turn guests into cartoon characters, movie-style avatars, or stylised digital figures for a fun and unforgettable photobooth experience.",
+        "image": "ai-photo-booth_06ba02ef3d94.webp"
+      },
+      {
+        "id": "7958aa9e3ea7",
+        "title": "Themes",
+        "description": "Create incredible themed AI photo booth transformations for any event. From Bridgerton-style portraits to movie, vintage or fantasy themes, our AI photobooth instantly transforms guests into stunning themed images that are perfect for weddings, corporate events and parties.",
+        "image": "ai-photo-booth_7958aa9e3ea7.webp"
+      }
+    ]
   },
   {
     "id": "enclosed-photo-booth",
