@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image SEO | Photobooth Guys Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coal:#0e0e18;--charcoal:#1a1a2e;--surface:#16162a;
+  --teal:#5f94a4;--teal-light:#7ab8cc;--gold:#e8b83d;
+  --white:#f4f4f5;--text-muted:rgba(244,244,245,.6);
+  --border:rgba(95,148,164,.15);--border-hover:rgba(95,148,164,.35);
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --success-bg:rgba(34,197,94,.12);--success-border:rgba(34,197,94,.3);--success-text:#4ade80;
+  --error-bg:rgba(220,53,69,.12);--error-border:rgba(220,53,69,.3);--error-text:#f87171;
+  --warning-bg:rgba(232,184,61,.1);--warning-border:rgba(232,184,61,.3);--warning-text:#e8b83d;
+}
+body{
+  min-height:100vh;background:var(--coal);font-family:var(--font-body);color:var(--white);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(95,148,164,.06) 0%,transparent 60%);
+}
+.admin-header{
+  position:sticky;top:0;z-index:100;padding:16px 32px;
+  background:rgba(14,14,24,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header .logo{display:flex;align-items:center;gap:12px}
+.admin-header .logo img{height:40px;width:auto}
+.admin-header .logo span{font-family:var(--font-display);font-size:1.1rem;font-weight:700}
+.admin-header .logo small{color:var(--teal);font-family:var(--font-body);font-size:.75rem;font-weight:500;margin-left:8px}
+.header-actions{display:flex;align-items:center;gap:12px}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-sm:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-sm.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-sm.danger:hover{background:rgba(220,53,69,.1)}
+.btn-sm.active{border-color:var(--teal);color:var(--teal-light)}
+.main{max-width:1200px;margin:0 auto;padding:32px 24px}
+.page-title{font-family:var(--font-display);font-size:1.6rem;margin-bottom:6px}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px}
+.flash{
+  padding:14px 20px;border-radius:10px;margin-bottom:24px;font-size:.88rem;
+  display:flex;align-items:center;gap:10px;
+}
+.flash.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.flash.error{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.flash::before{font-size:1.1rem}
+.flash.success::before{content:"\2713"}
+.flash.error::before{content:"\2717"}
+.visit-site{color:var(--teal-light);text-decoration:none;font-size:.82rem;transition:color .2s}
+.visit-site:hover{color:var(--white)}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+.stat-card{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  padding:24px;text-align:center;
+}
+.stat-card .stat-number{font-family:var(--font-display);font-size:2rem;margin-bottom:4px}
+.stat-card .stat-label{color:var(--text-muted);font-size:.82rem}
+.stat-card.good .stat-number{color:var(--success-text)}
+.stat-card.warn .stat-number{color:var(--warning-text)}
+
+/* Search */
+.search-bar{
+  margin-bottom:24px;
+}
+.search-bar input{
+  width:100%;padding:12px 16px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:10px;color:var(--white);
+  font-size:.9rem;font-family:var(--font-body);transition:border-color .2s;
+}
+.search-bar input:focus{outline:none;border-color:var(--teal)}
+.search-bar input::placeholder{color:var(--text-muted)}
+
+/* Page groups */
+.page-group{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  margin-bottom:20px;overflow:hidden;
+}
+.page-group-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;cursor:pointer;transition:background .2s;
+}
+.page-group-header:hover{background:rgba(95,148,164,.04)}
+.page-group-header h3{font-family:var(--font-display);font-size:1rem}
+.page-group-header .count{
+  padding:4px 10px;border-radius:6px;font-size:.72rem;font-weight:500;
+  background:rgba(95,148,164,.1);color:var(--teal-light);
+}
+.page-group-header .count.has-missing{background:var(--warning-bg);color:var(--warning-text)}
+.page-group-body{display:none;border-top:1px solid var(--border)}
+.page-group-body.open{display:block}
+
+/* Image rows */
+.image-row{
+  display:grid;grid-template-columns:60px 1fr 1fr;gap:16px;align-items:center;
+  padding:14px 24px;border-bottom:1px solid rgba(95,148,164,.08);
+  transition:background .2s;
+}
+.image-row:last-child{border-bottom:none}
+.image-row:hover{background:rgba(95,148,164,.03)}
+.image-row.missing-alt{background:rgba(220,53,69,.04)}
+.image-thumb{
+  width:60px;height:40px;border-radius:6px;object-fit:cover;
+  background:var(--charcoal);border:1px solid var(--border);
+}
+.image-thumb-placeholder{
+  width:60px;height:40px;border-radius:6px;background:var(--charcoal);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:.6rem;color:var(--text-muted);
+}
+.image-src{
+  font-family:monospace;font-size:.78rem;color:var(--teal-light);
+  word-break:break-all;
+}
+.alt-input{
+  width:100%;padding:8px 12px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:6px;color:var(--white);
+  font-size:.82rem;font-family:var(--font-body);transition:border-color .2s;
+}
+.alt-input:focus{outline:none;border-color:var(--teal)}
+.alt-input.empty{border-color:rgba(220,53,69,.4);background:rgba(220,53,69,.05)}
+.alt-input.changed{border-color:var(--gold);background:rgba(232,184,61,.06)}
+.page-group-footer{
+  padding:14px 24px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:flex-end;gap:12px;
+}
+.save-section-btn{
+  padding:10px 24px;border:none;border-radius:8px;cursor:pointer;
+  font-size:.82rem;font-weight:600;font-family:var(--font-body);
+  background:linear-gradient(135deg,var(--teal),var(--teal-light));
+  color:var(--coal);transition:all .2s;white-space:nowrap;
+}
+.save-section-btn:hover{opacity:.9;transform:translateY(-1px)}
+.save-section-btn:disabled{opacity:.4;cursor:default;transform:none}
+.save-section-btn.saving{background:var(--charcoal);color:var(--text-muted)}
+.save-section-btn.saved{background:linear-gradient(135deg,#22c55e,#4ade80);color:var(--coal)}
+.save-status{font-size:.78rem;color:var(--text-muted)}
+
+.hidden{display:none !important}
+
+@media(max-width:768px){
+  .admin-header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .main{padding:20px 16px}
+  .stats-grid{grid-template-columns:1fr}
+  .image-row{grid-template-columns:1fr;gap:10px}
+  .image-thumb,.image-thumb-placeholder{display:none}
+  .page-title{font-size:1.3rem}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">
+    <img src="/logo.webp" alt="Photobooth Guys">
+    <span>Photobooth Guys</span>
+    <small>ADMIN</small>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-sm">Images</a>
+    <a href="{{ url_for('enquiries') }}" class="btn-sm">Enquiries</a>
+    <a href="{{ url_for('image_seo') }}" class="btn-sm active">Image SEO</a>
+    <a href="{{ url_for('analytics') }}" class="btn-sm">Analytics</a>
+    <a href="/" class="btn-sm visit-site" target="_blank">View Site</a>
+    <a href="{{ url_for('settings') }}" class="btn-sm">Settings</a>
+    <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <h1 class="page-title">Image SEO</h1>
+  <p class="page-subtitle">Manage alt text for all images across the website. Images with missing alt text are highlighted.</p>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">{{ total_images }}</div>
+      <div class="stat-label">Total Images</div>
+    </div>
+    <div class="stat-card good">
+      <div class="stat-number">{{ images_with_alt }}</div>
+      <div class="stat-label">With Alt Text</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-number">{{ images_missing_alt }}</div>
+      <div class="stat-label">Missing Alt Text</div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="Search by image filename or page name..." oninput="filterImages()">
+  </div>
+
+  {% for page in pages_data %}
+  {% set missing_count = page.images | selectattr('has_alt', 'equalto', false) | list | length %}
+  <div class="page-group" data-page="{{ page.page | lower }}">
+    <div class="page-group-header" onclick="toggleGroup(this)">
+      <h3>{{ page.page }}</h3>
+      <span class="count {{ 'has-missing' if missing_count > 0 }}">{{ page.images | length }} image{{ 's' if page.images | length != 1 }}{% if missing_count > 0 %} / {{ missing_count }} missing{% endif %}</span>
+    </div>
+    <div class="page-group-body" data-page="{{ page.page }}">
+      {% for img in page.images %}
+      <div class="image-row {{ 'missing-alt' if not img.has_alt }}" data-src="{{ img.src | lower }}">
+        {% if img.src %}
+        <img class="image-thumb" src="/{{ img.src }}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="image-thumb-placeholder" style="display:none">N/A</div>
+        {% else %}
+        <div class="image-thumb-placeholder">N/A</div>
+        {% endif %}
+        <div class="image-src">{{ img.src }}</div>
+        <input type="text" class="alt-input {{ 'empty' if not img.has_alt }}" data-src="{{ img.src }}" data-original="{{ img.alt }}" value="{{ img.alt }}" placeholder="Enter alt text..." oninput="markChanged(this)">
+      </div>
+      {% endfor %}
+      <div class="page-group-footer">
+        <span class="save-status"></span>
+        <button class="save-section-btn" disabled onclick="saveSection(this)">Save Changes</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function toggleGroup(header){
+  var body=header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function filterImages(){
+  var query=document.getElementById('search-input').value.toLowerCase();
+  document.querySelectorAll('.page-group').forEach(function(group){
+    var pageName=group.getAttribute('data-page');
+    var rows=group.querySelectorAll('.image-row');
+    var anyVisible=false;
+    rows.forEach(function(row){
+      var src=row.getAttribute('data-src');
+      var match=!query||pageName.indexOf(query)!==-1||src.indexOf(query)!==-1;
+      row.classList.toggle('hidden',!match);
+      if(match) anyVisible=true;
+    });
+    group.classList.toggle('hidden',!anyVisible);
+    if(query&&anyVisible){
+      group.querySelector('.page-group-body').classList.add('open');
+    }
+  });
+}
+
+function markChanged(input){
+  var original=input.getAttribute('data-original');
+  var changed=input.value!==original;
+  input.classList.toggle('changed',changed);
+  var body=input.closest('.page-group-body');
+  var btn=body.querySelector('.save-section-btn');
+  var anyChanged=body.querySelectorAll('.alt-input.changed').length>0;
+  btn.disabled=!anyChanged;
+  btn.textContent=anyChanged?'Save Changes':'No Changes';
+  btn.className='save-section-btn'+(anyChanged?'':' ');
+}
+
+function saveSection(btn){
+  var body=btn.closest('.page-group-body');
+  var page=body.getAttribute('data-page');
+  var inputs=body.querySelectorAll('.alt-input.changed');
+  var status=body.querySelector('.save-status');
+  if(!inputs.length) return;
+
+  var updates=[];
+  inputs.forEach(function(inp){
+    updates.push({
+      src:inp.getAttribute('data-src'),
+      old_alt:inp.getAttribute('data-original'),
+      new_alt:inp.value
+    });
+  });
+
+  btn.disabled=true;
+  btn.textContent='Saving...';
+  btn.classList.add('saving');
+  status.textContent='';
+
+  fetch('/admin/image-seo/bulk-update',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({page:page,updates:updates})
+  })
+  .then(function(r){return r.json()})
+  .then(function(data){
+    if(data.success){
+      btn.classList.remove('saving');
+      btn.classList.add('saved');
+      btn.textContent=data.changed+' image'+(data.changed!==1?'s':'')+' updated';
+      status.textContent='';
+      inputs.forEach(function(inp){
+        inp.setAttribute('data-original',inp.value);
+        inp.classList.remove('changed','empty');
+      });
+      setTimeout(function(){
+        btn.classList.remove('saved');
+        btn.textContent='No Changes';
+        btn.disabled=true;
+      },3000);
+    } else {
+      btn.classList.remove('saving');
+      btn.textContent='Save Changes';
+      btn.disabled=false;
+      status.textContent='Error: '+(data.error||'Unknown error');
+      status.style.color='var(--error-text)';
+    }
+  })
+  .catch(function(err){
+    btn.classList.remove('saving');
+    btn.textContent='Save Changes';
+    btn.disabled=false;
+    status.textContent='Network error';
+    status.style.color='var(--error-text)';
+  });
+}
+
+document.querySelectorAll('.flash').forEach(function(el){
+  setTimeout(function(){el.style.opacity='0';el.style.transition='opacity .5s';setTimeout(function(){el.remove()},500)},5000);
+});
+</script>
+</body>
+</html>

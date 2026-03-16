@@ -196,6 +196,6 @@
   </div>
 </footer>
 <script src="../js/main.min.js" defer></script>
-<script>(function(){var d={p:location.pathname,r:document.referrer,w:screen.width};navigator.sendBeacon("/admin/track",new Blob([JSON.stringify(d)],{type:"application/json"}))})()</script>
+<script>(function(){var p=location.pathname,st=performance.now(),mx=0,vt=0,lv=st,sent=0;function snd(d){if(navigator.sendBeacon)navigator.sendBeacon("/admin/track",new Blob([JSON.stringify(d)],{type:"application/json"}))}snd({t:"pv",p:p,r:document.referrer,w:screen.width});var stm;addEventListener("scroll",function(){if(stm)return;stm=setTimeout(function(){stm=null;var pct=Math.round((scrollY+innerHeight)/Math.max(document.body.scrollHeight,1)*100);if(pct>mx)mx=Math.min(pct,100)},500)},{passive:true});function eng(){if(sent)return;sent=1;vt+=performance.now()-lv;snd({t:"eng",p:p,d:mx,s:Math.round(vt/1000)})}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden"){eng()}else{lv=performance.now()}});addEventListener("beforeunload",eng);document.addEventListener("click",function(e){var el=e.target.closest("a[href*=contact],a[href*=quote],.btn-primary,.btn-book,.btn-book-mobile,.hero-btn,button[type=submit]");if(el)snd({t:"click",p:p,l:(el.dataset.track||el.textContent.trim().slice(0,50))})})})()</script>
 </body>
 </html>

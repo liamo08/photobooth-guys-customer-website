@@ -4,3 +4,5 @@ admin/users.json
 admin/enquiries.json
 .env
 *.pyc
+admin/analytics.db
+scraped/
