@@ -124,11 +124,19 @@
       },
       {
         "id": "2c018e548cd2",
-        "title": "New Slide 2",
-        "description": "Description for this feature",
+        "title": "Boomerang & GIF Feature",
+        "description": "Create fun boomerang and GIF animations that guests can instantly share on social media. The Vintage Tripod Photo Booth captures short looping clips that add energy and excitement to weddings, corporate events and parties.",
         "image": "",
         "video": "vintage-tripod_2c018e548cd2.mp4",
         "media_type": "video"
+      },
+      {
+        "id": "b6a38d5609b7",
+        "title": "Perfect for Weddings & Events",
+        "description": "Our vintage tripod photo booth is ideal for weddings, corporate events, parties and special celebrations, capturing high-quality photos with professional lighting and a timeless design.",
+        "image": "vintage-tripod_b6a38d5609b7.webp",
+        "video": "",
+        "media_type": "image"
       }
     ]
   },
@@ -142,7 +150,32 @@
       "index.html",
       "photo-booth-dublin.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "098a9e01841d",
+        "title": "Custom Magazine Covers",
+        "description": "Guests can step into a custom magazine cover and capture stylish photos designed to look like a real publication. Perfect for brand activations, corporate events and glamorous celebrations.",
+        "image": "magazine-booth_098a9e01841d.webp",
+        "video": "",
+        "media_type": "image"
+      },
+      {
+        "id": "f230301eb757",
+        "title": "Corporate Event Photo Experience",
+        "description": "The Magazine Photo Booth creates a premium photo experience for corporate events, conferences and brand activations with fully customised magazine-style designs and branded event graphics.",
+        "image": "magazine-booth_f230301eb757.webp",
+        "video": "",
+        "media_type": "image"
+      },
+      {
+        "id": "7da4e90ee370",
+        "title": "Fully Custom Magazine Covers",
+        "description": "Create fully customised magazine covers to match your event theme, brand or campaign. From corporate branding to themed parties and weddings, every cover can be tailored with logos, colours and event graphics.",
+        "image": "magazine-booth_7da4e90ee370.webp",
+        "video": "",
+        "media_type": "image"
+      }
+    ]
   },
   {
     "id": "glam-booth",
@@ -195,7 +228,32 @@
       "services/enclosed-photo-booth-hire.html",
       "services.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "18b8b4a75430",
+        "title": "Booth Skins",
+        "description": "Choose from sleek black or white photobooth skins, with custom branded skins available to match your event, wedding or corporate branding.",
+        "image": "enclosed-photo-booth_18b8b4a75430.webp",
+        "video": "",
+        "media_type": "image"
+      },
+      {
+        "id": "2996376337fb",
+        "title": "Branded Strip Printing",
+        "description": "Our enclosed photobooth prints custom photo strips with logos, colours and event graphics, perfect for weddings, corporate events and brand activations.",
+        "image": "enclosed-photo-booth_2996376337fb.webp",
+        "video": "",
+        "media_type": "image"
+      },
+      {
+        "id": "d3a15b7889fc",
+        "title": "Branded Skins",
+        "description": "Our enclosed photo booth can be fully wrapped with custom branded skins, allowing your company logo, colours and event messaging to stand out at corporate events and activations.",
+        "image": "enclosed-photo-booth_d3a15b7889fc.webp",
+        "video": "",
+        "media_type": "image"
+      }
+    ]
   },
   {
     "id": "guinness-pint-printer",
