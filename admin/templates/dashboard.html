@@ -177,6 +177,7 @@ body{
       <div class="card-body">
         <h3>{{ product.name }}</h3>
         <p class="filename">{{ product.image }}</p>
+        <a href="{{ url_for('product_settings', product_id=product.id) }}" class="btn-sm" style="margin-bottom:12px;display:inline-block;font-size:.75rem">Carousel Settings</a>
         <form method="POST" action="{{ url_for('upload_image', product_id=product.id) }}" enctype="multipart/form-data" class="upload-form">
           <div class="upload-area" id="drop-{{ product.id }}">
             <input type="file" name="image" accept="image/*" onchange="handleFileSelect(this, '{{ product.id }}')">

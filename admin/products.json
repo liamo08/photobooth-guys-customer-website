@@ -12,7 +12,8 @@
       "party-photo-booth-hire.html",
       "photo-booth-dublin.html",
       "christmas-party.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "selfie-mirror",
@@ -24,7 +25,8 @@
       "index.html",
       "wedding-photo-booth-hire.html",
       "photo-booth-dublin.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "360-photo-booth",
@@ -36,7 +38,8 @@
       "services.html",
       "index.html",
       "corporate-events.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "vintage-tripod",
@@ -47,7 +50,8 @@
       "services.html",
       "index.html",
       "photo-booth-dublin.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "magazine-booth",
@@ -58,7 +62,8 @@
       "services.html",
       "index.html",
       "photo-booth-dublin.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "glam-booth",
@@ -69,16 +74,20 @@
       "services.html",
       "wedding-photo-booth-hire.html",
       "branded-photobooth-hire.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "ai-photo-booth",
     "name": "AI Photo Booth",
-    "image": "stylish-photos.webp",
+    "image": "ai-photo-booth.webp",
     "pages": [
       "services/ai-photo-booth-hire.html",
-      "services.html"
-    ]
+      "services.html",
+      "party-photo-booth-hire.html",
+      "corporate-events.html"
+    ],
+    "features": []
   },
   {
     "id": "enclosed-photo-booth",
@@ -87,7 +96,8 @@
     "pages": [
       "services/enclosed-photo-booth-hire.html",
       "services.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "guinness-pint-printer",
@@ -97,7 +107,8 @@
       "services/guinness-pint-printer-hire.html",
       "services.html",
       "corporate-events.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "audio-guestbook",
@@ -107,15 +118,17 @@
       "services/audio-phone-guestbook-hire.html",
       "services.html",
       "wedding-photo-booth-hire.html"
-    ]
+    ],
+    "features": []
   },
   {
     "id": "roaming-photographer",
     "name": "Roaming Photographer",
-    "image": "stylish-photos.webp",
+    "image": "roaming-photographer.webp",
     "pages": [
       "services/roaming-photographer-hire.html",
       "services.html"
-    ]
+    ],
+    "features": []
   }
 ]

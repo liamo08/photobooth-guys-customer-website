@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ product.name }} Settings | Photobooth Guys Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coal:#0e0e18;--charcoal:#1a1a2e;--surface:#16162a;
+  --teal:#5f94a4;--teal-light:#7ab8cc;--gold:#e8b83d;
+  --white:#f4f4f5;--text-muted:rgba(244,244,245,.6);
+  --border:rgba(95,148,164,.15);--border-hover:rgba(95,148,164,.35);
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --success-bg:rgba(34,197,94,.12);--success-border:rgba(34,197,94,.3);--success-text:#4ade80;
+  --error-bg:rgba(220,53,69,.12);--error-border:rgba(220,53,69,.3);--error-text:#f87171;
+}
+body{
+  min-height:100vh;background:var(--coal);font-family:var(--font-body);color:var(--white);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(95,148,164,.06) 0%,transparent 60%);
+}
+.admin-header{
+  position:sticky;top:0;z-index:100;padding:16px 32px;
+  background:rgba(14,14,24,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header .logo{display:flex;align-items:center;gap:12px}
+.admin-header .logo img{height:40px;width:auto}
+.admin-header .logo span{font-family:var(--font-display);font-size:1.1rem;font-weight:700}
+.admin-header .logo small{color:var(--teal);font-family:var(--font-body);font-size:.75rem;font-weight:500;margin-left:8px}
+.header-actions{display:flex;align-items:center;gap:12px}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-sm:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-sm.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-sm.danger:hover{background:rgba(220,53,69,.1)}
+.visit-site{color:var(--teal-light);text-decoration:none;font-size:.82rem;transition:color .2s}
+.visit-site:hover{color:var(--white)}
+
+.main{max-width:1000px;margin:0 auto;padding:32px 24px}
+.page-title{font-family:var(--font-display);font-size:1.6rem;margin-bottom:6px}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--teal-light);text-decoration:none;font-size:.85rem;margin-bottom:20px;transition:color .2s}
+.back-link:hover{color:var(--white)}
+
+.flash{
+  padding:14px 20px;border-radius:10px;margin-bottom:24px;font-size:.88rem;
+  display:flex;align-items:center;gap:10px;
+}
+.flash.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.flash.error{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.flash::before{font-size:1.1rem}
+.flash.success::before{content:"\2713"}
+.flash.error::before{content:"\2717"}
+
+.section-card{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  padding:28px;margin-bottom:28px;
+}
+.section-card h2{font-family:var(--font-display);font-size:1.2rem;margin-bottom:4px}
+.section-card .subtitle{font-size:.82rem;color:var(--text-muted);margin-bottom:20px}
+
+.hero-preview{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.hero-preview img{width:280px;border-radius:10px;border:1px solid var(--border)}
+.hero-preview .no-image{width:280px;height:180px;background:var(--charcoal);border-radius:10px;display:grid;place-items:center;color:var(--text-muted);font-size:.85rem}
+.hero-upload{flex:1;min-width:260px}
+.image-badge-inline{font-size:.75rem;color:var(--text-muted);font-family:monospace;margin-top:6px}
+
+.upload-area{
+  border:2px dashed var(--border);border-radius:10px;padding:20px;
+  text-align:center;transition:all .3s;cursor:pointer;position:relative;
+}
+.upload-area:hover,.upload-area.dragover{
+  border-color:var(--teal);background:rgba(95,148,164,.05);
+}
+.upload-area input[type="file"]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;
+}
+.upload-area p{font-size:.82rem;color:var(--text-muted)}
+.upload-area p strong{color:var(--teal-light)}
+.upload-area .hint{font-size:.72rem;margin-top:6px;color:rgba(244,244,245,.35)}
+
+.upload-btn{
+  margin-top:12px;padding:10px 20px;border:none;border-radius:8px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-light));
+  color:var(--coal);font-size:.85rem;font-weight:600;cursor:pointer;
+  font-family:var(--font-body);display:none;transition:opacity .2s;
+}
+.upload-btn:hover{opacity:.9}
+.upload-btn.visible{display:inline-block}
+
+.upload-preview{margin-top:12px;display:none;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.upload-preview img{width:100%;display:block}
+
+/* Features */
+.features-list{display:flex;flex-direction:column;gap:16px;margin-bottom:24px}
+.feature-row{
+  display:flex;gap:16px;align-items:flex-start;padding:20px;
+  background:rgba(14,14,24,.5);border:1px solid var(--border);border-radius:12px;
+  transition:border-color .3s;
+}
+.feature-row:hover{border-color:var(--border-hover)}
+.feature-thumb{width:120px;height:80px;flex-shrink:0;border-radius:8px;overflow:hidden;background:var(--charcoal);position:relative}
+.feature-thumb img{width:100%;height:100%;object-fit:cover}
+.feature-thumb .no-img{display:grid;place-items:center;height:100%;font-size:.7rem;color:var(--text-muted)}
+.feature-content{flex:1;min-width:0}
+.feature-content h4{font-size:.95rem;font-weight:600;margin-bottom:4px;color:var(--white)}
+.feature-content p{font-size:.82rem;color:var(--text-muted);line-height:1.5;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.feature-actions{display:flex;gap:8px;flex-wrap:wrap}
+.feature-actions form{display:inline}
+.btn-xs{
+  padding:5px 12px;border-radius:5px;font-size:.75rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-xs:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-xs.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-xs.danger:hover{background:rgba(220,53,69,.1)}
+.btn-xs.primary{border-color:rgba(95,148,164,.3);color:var(--teal-light)}
+.btn-xs.primary:hover{background:rgba(95,148,164,.1)}
+
+.empty-state{text-align:center;padding:32px;color:var(--text-muted);font-size:.88rem}
+
+/* Add/Edit Feature Form */
+.feature-form{
+  background:rgba(14,14,24,.5);border:1px solid var(--border);border-radius:12px;
+  padding:24px;margin-top:20px;
+}
+.feature-form h3{font-family:var(--font-display);font-size:1rem;margin-bottom:16px}
+.form-row{margin-bottom:16px}
+.form-row label{display:block;font-size:.82rem;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+.form-row input,.form-row textarea{
+  width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(14,14,24,.5);color:var(--white);font-family:var(--font-body);
+  font-size:.88rem;transition:border-color .2s;
+}
+.form-row input:focus,.form-row textarea:focus{border-color:var(--teal);outline:none}
+.form-row textarea{resize:vertical;min-height:80px}
+.form-actions{display:flex;gap:10px;margin-top:16px}
+.btn-primary-sm{
+  padding:10px 24px;border:none;border-radius:8px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-light));
+  color:var(--coal);font-size:.85rem;font-weight:600;cursor:pointer;
+  font-family:var(--font-body);transition:opacity .2s;
+}
+.btn-primary-sm:hover{opacity:.9}
+.btn-cancel{
+  padding:10px 24px;border:1px solid var(--border);border-radius:8px;
+  background:transparent;color:var(--text-muted);font-size:.85rem;cursor:pointer;
+  font-family:var(--font-body);transition:all .2s;
+}
+.btn-cancel:hover{border-color:var(--border-hover);color:var(--white)}
+
+/* Image upload modal for features */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
+  align-items:center;justify-content:center;
+}
+.modal-overlay.active{display:flex}
+.modal{
+  background:var(--charcoal);border:1px solid var(--border);border-radius:16px;
+  padding:32px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;
+}
+.modal h3{font-family:var(--font-display);font-size:1.1rem;margin-bottom:20px}
+
+@media(max-width:768px){
+  .admin-header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .main{padding:20px 16px}
+  .hero-preview{flex-direction:column}
+  .hero-preview img{width:100%}
+  .feature-row{flex-direction:column}
+  .feature-thumb{width:100%;height:140px}
+  .page-title{font-size:1.3rem}
+  .header-actions{flex-wrap:wrap}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">
+    <img src="/logo.webp" alt="Photobooth Guys">
+    <span>Photobooth Guys</span>
+    <small>ADMIN</small>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-sm">Images</a>
+    <a href="{{ url_for('enquiries') }}" class="btn-sm">Enquiries</a>
+    <a href="{{ url_for('image_seo') }}" class="btn-sm">Image SEO</a>
+    <a href="{{ url_for('analytics') }}" class="btn-sm">Analytics</a>
+    <a href="/" class="btn-sm visit-site" target="_blank">View Site</a>
+    <a href="{{ url_for('settings') }}" class="btn-sm">Settings</a>
+    <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <a href="{{ url_for('dashboard') }}" class="back-link">&larr; Back to Dashboard</a>
+  <h1 class="page-title">{{ product.name }} — Carousel</h1>
+  <p class="page-subtitle">Manage the rotating feature highlights shown on the service page between "Everything You Need" and "How It Works".</p>
+
+  <!-- Features Section -->
+  <div class="section-card">
+    <h2>Feature Highlights</h2>
+    <p class="subtitle">Showcase features displayed in the rotating carousel on the service page. Each feature needs a title, description, and image.</p>
+
+    {% if product.features %}
+    <div class="features-list" id="featuresList">
+      {% for feat in product.features %}
+      <div class="feature-row" data-id="{{ feat.id }}">
+        <div class="feature-thumb">
+          {% if feat.info and feat.info.exists %}
+          <img src="/images/features/{{ feat.image }}?v={{ range(1000,9999) | random }}" alt="{{ feat.title }}">
+          {% else %}
+          <div class="no-img">No image</div>
+          {% endif %}
+        </div>
+        <div class="feature-content">
+          <h4>{{ feat.title }}</h4>
+          <p>{{ feat.description }}</p>
+          <div class="feature-actions">
+            <button class="btn-xs primary" onclick="editFeature('{{ feat.id }}', '{{ feat.title | e }}', '{{ feat.description | e }}')">Edit</button>
+            <button class="btn-xs" onclick="openImageModal('{{ feat.id }}', '{{ feat.title | e }}')">Upload Image</button>
+            <form method="POST" action="{{ url_for('delete_feature', product_id=product.id) }}" onsubmit="return confirm('Delete this feature?')">
+              <input type="hidden" name="feature_id" value="{{ feat.id }}">
+              <button type="submit" class="btn-xs danger">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" id="emptyState">No features added yet. Add your first feature below.</div>
+    {% endif %}
+
+    <div class="feature-form" id="featureForm">
+      <h3 id="formTitle">Add Feature</h3>
+      <form method="POST" action="{{ url_for('save_feature', product_id=product.id) }}">
+        <input type="hidden" name="feature_id" id="editFeatureId" value="">
+        <div class="form-row">
+          <label for="featureTitle">Title</label>
+          <input type="text" id="featureTitle" name="title" placeholder="e.g. Canon Camera Quality" required>
+        </div>
+        <div class="form-row">
+          <label for="featureDesc">Description</label>
+          <textarea id="featureDesc" name="description" placeholder="Brief description of this feature..." required></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary-sm" id="formSubmitBtn">Add Feature</button>
+          <button type="button" class="btn-cancel" onclick="resetForm()" id="formCancelBtn" style="display:none">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Feature Image Upload Modal -->
+<div class="modal-overlay" id="imageModal">
+  <div class="modal">
+    <h3 id="modalTitle">Upload Feature Image</h3>
+    <form method="POST" action="{{ url_for('upload_feature_image', product_id=product.id) }}" enctype="multipart/form-data">
+      <input type="hidden" name="feature_id" id="modalFeatureId" value="">
+      <div class="upload-area" id="drop-modal">
+        <input type="file" name="image" accept="image/*" onchange="handleFileSelect(this, 'modal')">
+        <p><strong>Click to upload</strong> or drag and drop</p>
+        <p class="hint">PNG, JPG, WebP &middot; Max 16MB &middot; Recommended: 800x530</p>
+      </div>
+      <div class="upload-preview" id="preview-modal"><img src="" alt="Preview"></div>
+      <div class="form-actions">
+        <button type="submit" class="upload-btn visible" id="btn-modal" style="display:none">Upload Image</button>
+        <button type="button" class="btn-cancel" onclick="closeImageModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function handleFileSelect(input, id) {
+  var file = input.files[0];
+  if (!file) return;
+  var preview = document.getElementById('preview-' + id);
+  var btn = document.getElementById('btn-' + id);
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    preview.querySelector('img').src = e.target.result;
+    preview.style.display = 'block';
+    if (btn) btn.style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+
+document.querySelectorAll('.upload-area').forEach(function(area) {
+  area.addEventListener('dragover', function(e) { e.preventDefault(); area.classList.add('dragover'); });
+  area.addEventListener('dragleave', function() { area.classList.remove('dragover'); });
+  area.addEventListener('drop', function(e) {
+    e.preventDefault();
+    area.classList.remove('dragover');
+    var input = area.querySelector('input[type="file"]');
+    input.files = e.dataTransfer.files;
+    input.dispatchEvent(new Event('change'));
+  });
+});
+
+function editFeature(id, title, desc) {
+  document.getElementById('editFeatureId').value = id;
+  document.getElementById('featureTitle').value = title;
+  document.getElementById('featureDesc').value = desc;
+  document.getElementById('formTitle').textContent = 'Edit Feature';
+  document.getElementById('formSubmitBtn').textContent = 'Save Changes';
+  document.getElementById('formCancelBtn').style.display = '';
+  document.getElementById('featureForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetForm() {
+  document.getElementById('editFeatureId').value = '';
+  document.getElementById('featureTitle').value = '';
+  document.getElementById('featureDesc').value = '';
+  document.getElementById('formTitle').textContent = 'Add Feature';
+  document.getElementById('formSubmitBtn').textContent = 'Add Feature';
+  document.getElementById('formCancelBtn').style.display = 'none';
+}
+
+function openImageModal(featureId, title) {
+  document.getElementById('modalFeatureId').value = featureId;
+  document.getElementById('modalTitle').textContent = 'Upload Image: ' + title;
+  document.getElementById('imageModal').classList.add('active');
+  document.getElementById('preview-modal').style.display = 'none';
+  document.getElementById('btn-modal').style.display = 'none';
+}
+
+function closeImageModal() {
+  document.getElementById('imageModal').classList.remove('active');
+}
+
+document.getElementById('imageModal').addEventListener('click', function(e) {
+  if (e.target === this) closeImageModal();
+});
+
+document.querySelectorAll('.flash').forEach(function(el) {
+  setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .5s'; setTimeout(function() { el.remove(); }, 500); }, 5000);
+});
+</script>
+</body>
+</html>

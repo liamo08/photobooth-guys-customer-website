@@ -1,11 +1,14 @@
 import hashlib
 import json
+import logging
 import os
 import re
 import secrets
+import smtplib
 import sqlite3
 import urllib.request
 from collections import Counter
+from email.mime.text import MIMEText
 from functools import wraps
 from pathlib import Path
 
@@ -41,6 +44,9 @@ PRODUCTS_FILE = ADMIN_DIR / "products.json"
 USERS_FILE = ADMIN_DIR / "users.json"
 ENQUIRIES_FILE = ADMIN_DIR / "enquiries.json"
 ANALYTICS_DB = ADMIN_DIR / "analytics.db"
+
+FEATURES_DIR = IMAGES_DIR / "features"
+FEATURES_DIR.mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff"}
 MAX_IMAGE_WIDTH = 1200
@@ -145,30 +151,31 @@ def get_image_info(filename):
 
 
 def update_html_image_dimensions(product, new_width, new_height):
-    """Update width/height attributes in HTML files for a product's image."""
+    """Update width/height attributes in ALL HTML files referencing a product's image."""
     image_name = product["image"]
 
-    for page in product["pages"]:
-        filepath = BASE_DIR / page
-        if not filepath.exists():
+    def replace_dims(match):
+        tag = match.group(0)
+        src = re.search(r'src="([^"]*)"', tag)
+        if not src:
+            return tag
+        src_val = src.group(1)
+        if not src_val.endswith(image_name):
+            return tag
+
+        tag = re.sub(r'width="\d+"', f'width="{new_width}"', tag)
+        tag = re.sub(r'height="\d+"', f'height="{new_height}"', tag)
+        return tag
+
+    # Scan all HTML files in the project for references to this image
+    for filepath in BASE_DIR.rglob("*.html"):
+        # Skip admin templates and hidden directories
+        rel = filepath.relative_to(BASE_DIR)
+        if str(rel).startswith("admin") or str(rel).startswith("."):
             continue
 
         html = filepath.read_text()
         original = html
-
-        def replace_dims(match):
-            tag = match.group(0)
-            src = re.search(r'src="([^"]*)"', tag)
-            if not src:
-                return tag
-            src_val = src.group(1)
-            if not src_val.endswith(image_name):
-                return tag
-
-            tag = re.sub(r'width="\d+"', f'width="{new_width}"', tag)
-            tag = re.sub(r'height="\d+"', f'height="{new_height}"', tag)
-            return tag
-
         html = re.sub(r"<img[^>]+>", replace_dims, html)
 
         if html != original:
@@ -773,6 +780,212 @@ def upload_image(product_id):
     return redirect(url_for("dashboard"))
 
 
+@app.route("/product-settings/<product_id>")
+@login_required
+def product_settings(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("dashboard"))
+    product["info"] = get_image_info(product["image"])
+    for feat in product.get("features", []):
+        if feat.get("image"):
+            feat["info"] = get_image_info("features/" + feat["image"])
+        else:
+            feat["info"] = {"exists": False, "size_kb": 0, "width": 0, "height": 0}
+    return render_template("product-settings.html", product=product)
+
+
+@app.route("/product-settings/<product_id>/upload-hero", methods=["POST"])
+@login_required
+def upload_hero_image(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("dashboard"))
+
+    if "image" not in request.files or request.files["image"].filename == "":
+        flash("No file selected", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    file = request.files["image"]
+    if not allowed_file(file.filename):
+        flash(f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    tmp_path = IMAGES_DIR / f"_tmp_{secure_filename(file.filename)}"
+    output_path = IMAGES_DIR / product["image"]
+    try:
+        file.save(str(tmp_path))
+        new_size = optimize_image(tmp_path, output_path)
+        update_html_image_dimensions(product, new_size[0], new_size[1])
+        info = get_image_info(product["image"])
+        flash(
+            f"Hero image updated — {info['width']}x{info['height']}, {info['size_kb']}KB",
+            "success",
+        )
+    except Exception as e:
+        flash(f"Error processing image: {e}", "error")
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
+
+    return redirect(url_for("product_settings", product_id=product_id))
+
+
+@app.route("/product-settings/<product_id>/feature", methods=["POST"])
+@login_required
+def save_feature(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("dashboard"))
+
+    feature_id = request.form.get("feature_id", "").strip()
+    title = request.form.get("title", "").strip()
+    description = request.form.get("description", "").strip()
+
+    if not title or not description:
+        flash("Title and description are required", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    if "features" not in product:
+        product["features"] = []
+
+    if feature_id:
+        feat = next((f for f in product["features"] if f["id"] == feature_id), None)
+        if feat:
+            feat["title"] = title
+            feat["description"] = description
+            flash(f"Feature '{title}' updated", "success")
+        else:
+            flash("Feature not found", "error")
+    else:
+        new_id = secrets.token_hex(6)
+        product["features"].append({
+            "id": new_id,
+            "title": title,
+            "description": description,
+            "image": "",
+        })
+        flash(f"Feature '{title}' added", "success")
+
+    save_products(products)
+    return redirect(url_for("product_settings", product_id=product_id))
+
+
+@app.route("/product-settings/<product_id>/feature/upload", methods=["POST"])
+@login_required
+def upload_feature_image(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("dashboard"))
+
+    feature_id = request.form.get("feature_id", "")
+    feat = next((f for f in product.get("features", []) if f["id"] == feature_id), None)
+    if not feat:
+        flash("Feature not found", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    if "image" not in request.files or request.files["image"].filename == "":
+        flash("No file selected", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    file = request.files["image"]
+    if not allowed_file(file.filename):
+        flash(f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    filename = f"{product_id}_{feature_id}.webp"
+    tmp_path = FEATURES_DIR / f"_tmp_{secure_filename(file.filename)}"
+    output_path = FEATURES_DIR / filename
+
+    try:
+        file.save(str(tmp_path))
+        optimize_image(tmp_path, output_path, max_width=800, quality=85)
+        feat["image"] = filename
+        save_products(products)
+        flash(f"Feature image uploaded for '{feat['title']}'", "success")
+    except Exception as e:
+        flash(f"Error processing image: {e}", "error")
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
+
+    return redirect(url_for("product_settings", product_id=product_id))
+
+
+@app.route("/product-settings/<product_id>/feature/delete", methods=["POST"])
+@login_required
+def delete_feature(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        flash("Product not found", "error")
+        return redirect(url_for("dashboard"))
+
+    feature_id = request.form.get("feature_id", "")
+    features = product.get("features", [])
+    feat = next((f for f in features if f["id"] == feature_id), None)
+    if not feat:
+        flash("Feature not found", "error")
+        return redirect(url_for("product_settings", product_id=product_id))
+
+    if feat.get("image"):
+        img_path = FEATURES_DIR / feat["image"]
+        if img_path.exists():
+            img_path.unlink()
+
+    product["features"] = [f for f in features if f["id"] != feature_id]
+    save_products(products)
+    flash(f"Feature '{feat['title']}' deleted", "success")
+    return redirect(url_for("product_settings", product_id=product_id))
+
+
+@app.route("/product-settings/<product_id>/feature/reorder", methods=["POST"])
+@login_required
+def reorder_features(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        return jsonify({"success": False, "error": "Product not found"}), 404
+
+    data = request.get_json(silent=True)
+    if not data or "order" not in data:
+        return jsonify({"success": False, "error": "Invalid request"}), 400
+
+    order = data["order"]
+    features = product.get("features", [])
+    feat_map = {f["id"]: f for f in features}
+    reordered = [feat_map[fid] for fid in order if fid in feat_map]
+    product["features"] = reordered
+    save_products(products)
+    return jsonify({"success": True})
+
+
+@app.route("/api/features/<product_id>")
+def api_features(product_id):
+    products = load_products()
+    product = next((p for p in products if p["id"] == product_id), None)
+    if not product:
+        return jsonify({"features": []})
+    features = []
+    for f in product.get("features", []):
+        if f.get("title") and f.get("image"):
+            features.append({
+                "id": f["id"],
+                "title": f["title"],
+                "description": f.get("description", ""),
+                "image": f"/images/features/{f['image']}",
+            })
+    return jsonify({"features": features})
+
+
 @app.route("/settings")
 @login_required
 def settings():
@@ -898,6 +1111,49 @@ def save_enquiry(data):
     return enquiry
 
 
+def send_enquiry_email(enquiry):
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    notify_to = os.environ.get("NOTIFY_EMAIL", "info@photoboothguys.ie")
+    if not smtp_user or not smtp_pass:
+        logging.warning("SMTP_USER/SMTP_PASS not set, skipping email notification")
+        return
+
+    lines = [
+        f"New enquiry from {enquiry['name']}",
+        "",
+        f"Name: {enquiry['name']}",
+        f"Email: {enquiry['email']}",
+    ]
+    if enquiry.get("phone"):
+        lines.append(f"Phone: {enquiry['phone']}")
+    if enquiry.get("event_date"):
+        lines.append(f"Event Date: {enquiry['event_date']}")
+    if enquiry.get("event_type"):
+        lines.append(f"Event Type: {enquiry['event_type']}")
+    if enquiry.get("booth_type"):
+        lines.append(f"Booth Type: {enquiry['booth_type']}")
+    if enquiry.get("venue"):
+        lines.append(f"Venue: {enquiry['venue']}")
+    if enquiry.get("message"):
+        lines.extend(["", "Message:", enquiry["message"]])
+
+    body = "\n".join(lines)
+    msg = MIMEText(body)
+    msg["Subject"] = f"New Enquiry: {enquiry['name']} - {enquiry.get('event_type', 'General')}"
+    msg["From"] = smtp_user
+    msg["To"] = notify_to
+    msg["Reply-To"] = enquiry["email"]
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+    except Exception as e:
+        logging.error(f"Failed to send enquiry email: {e}")
+
+
 @app.route("/enquiry", methods=["POST"])
 def receive_enquiry():
     data = request.get_json(silent=True)
@@ -914,7 +1170,8 @@ def receive_enquiry():
     if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
         return jsonify({"success": False, "error": "Invalid email address"}), 400
 
-    save_enquiry(data)
+    enquiry = save_enquiry(data)
+    send_enquiry_email(enquiry)
     return jsonify({"success": True})
 
 

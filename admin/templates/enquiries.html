@@ -197,7 +197,7 @@ body{
         </div>
         {% endif %}
         <div class="enquiry-actions">
-          <a href="mailto:{{ e.email }}?subject=Re: Your Photobooth Guys Enquiry" class="btn-action reply">Reply via Email</a>
+          <a href="#" class="btn-action reply" onclick="replyGmail(this.closest('.enquiry-card'));return false">Reply via Gmail</a>
           {% if not e.read %}
           <form method="POST" action="{{ url_for('mark_enquiry_read') }}">
             <input type="hidden" name="enquiry_id" value="{{ e.id }}">
@@ -226,6 +226,28 @@ body{
 function toggleEnquiry(header){
   var body=header.nextElementSibling;
   body.classList.toggle('open');
+}
+function replyGmail(card){
+  var name=card.querySelector('.enquiry-info h3').textContent.trim();
+  var email=card.querySelector('.enquiry-info .email').textContent.trim();
+  var details=[];
+  card.querySelectorAll('.detail-grid .detail-item').forEach(function(item){
+    var label=item.querySelector('label').textContent.trim();
+    var value=item.querySelector('span').textContent.trim();
+    if(value)details.push(label+': '+value);
+  });
+  var msgEl=card.querySelector('.detail-message p');
+  var message=msgEl?msgEl.textContent.trim():'';
+  var subject='Re: Your Photobooth Guys Enquiry';
+  var body='\n\n--- Original Enquiry from '+name+' ---\n';
+  if(details.length)body+=details.join('\n')+'\n';
+  if(message)body+='\nMessage:\n'+message+'\n';
+  var url='https://mail.google.com/mail/u/0/?view=cm&fs=1&tf=1'
+    +'&to='+encodeURIComponent(email)
+    +'&su='+encodeURIComponent(subject)
+    +'&body='+encodeURIComponent(body);
+  var w=window.open('','_blank');
+  if(w)w.location.href=url;
 }
 document.querySelectorAll('.flash').forEach(function(el){
   setTimeout(function(){el.style.opacity='0';el.style.transition='opacity .5s';setTimeout(function(){el.remove()},500)},5000);
