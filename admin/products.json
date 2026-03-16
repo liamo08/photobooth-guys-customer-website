@@ -91,8 +91,17 @@
         "image": "",
         "video": "360-photo-booth_a2b81d5abf48.mp4",
         "media_type": "video"
+      },
+      {
+        "id": "8b88d3c6a08a",
+        "title": "Sharing Station",
+        "description": "Our 360 photo booth includes a dedicated sharing station where guests can instantly download and share their branded videos to their phones or social media, making it perfect for weddings, corporate events and parties.",
+        "image": "360-photo-booth_8b88d3c6a08a.webp",
+        "video": "",
+        "media_type": "image"
       }
-    ]
+    ],
+    "carousel_speed": 8
   },
   {
     "id": "vintage-tripod",
@@ -104,7 +113,24 @@
       "index.html",
       "photo-booth-dublin.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "5ba7d3ec598f",
+        "title": "Group Photos",
+        "description": "The Vintage Tripod Photo Booth captures beautiful group photos with professional lighting and a wide camera angle, making it perfect for weddings, corporate events and parties where guests want to gather together for memorable photos.",
+        "image": "vintage-tripod_5ba7d3ec598f.webp",
+        "video": "",
+        "media_type": "image"
+      },
+      {
+        "id": "2c018e548cd2",
+        "title": "New Slide 2",
+        "description": "Description for this feature",
+        "image": "",
+        "video": "vintage-tripod_2c018e548cd2.mp4",
+        "media_type": "video"
+      }
+    ]
   },
   {
     "id": "magazine-booth",

@@ -25,6 +25,8 @@ from flask import (
     url_for,
 )
 from PIL import Image
+import pillow_heif
+pillow_heif.register_heif_opener()
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -48,7 +50,7 @@ ANALYTICS_DB = ADMIN_DIR / "analytics.db"
 FEATURES_DIR = IMAGES_DIR / "features"
 FEATURES_DIR.mkdir(exist_ok=True)
 
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff"}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff", "heic", "heif"}
 ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "mov"}
 MAX_IMAGE_WIDTH = 1200
 WEBP_QUALITY = 80
@@ -941,7 +943,9 @@ def upload_feature_image(product_id):
         return redirect(url_for("product_settings", product_id=product_id, slide=slide))
 
     file = request.files["image"]
+    app.logger.warning("UPLOAD DEBUG feature: filename=%r, ext=%r", file.filename, file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "NO_DOT")
     if not allowed_file(file.filename):
+        app.logger.warning("UPLOAD DEBUG feature: REJECTED %r", file.filename)
         flash(f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}", "error")
         return redirect(url_for("product_settings", product_id=product_id, slide=slide))
 
