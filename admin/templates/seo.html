@@ -442,7 +442,7 @@ body{
         </div>
         <div style="min-width:160px">
           <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Location</label>
-          <input type="text" name="location" value="Dublin, Ireland" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
+          <input type="text" name="location" value="{{ serp_data.location if serp_data else 'Dublin, Ireland' }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
         </div>
         <button type="submit" class="run-btn" onclick="this.textContent='Checking...';this.disabled=true;this.form.submit()">Check SERP</button>
       </form>
