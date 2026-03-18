@@ -111,6 +111,28 @@ body{
 .btn-action.delete:hover{background:rgba(220,53,69,.08)}
 .btn-action.reply{border-color:rgba(95,148,164,.3);color:var(--teal-light)}
 .btn-action.reply:hover{background:rgba(95,148,164,.08)}
+.btn-action.restore{border-color:rgba(232,184,61,.3);color:var(--gold)}
+.btn-action.restore:hover{background:rgba(232,184,61,.08)}
+
+.tab-bar{display:flex;gap:4px;margin-bottom:24px}
+.tab{
+  padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid transparent;
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px
+}
+.tab:hover{background:rgba(95,148,164,.06);color:var(--white)}
+.tab.active{background:rgba(95,148,164,.1);border-color:var(--border-hover);color:var(--teal-light)}
+.tab .count{
+  font-size:.7rem;background:rgba(244,244,245,.1);padding:2px 7px;border-radius:8px;
+  color:var(--text-muted)
+}
+.tab.active .count{background:rgba(95,148,164,.15);color:var(--teal-light)}
+.spam-reason{
+  display:inline-block;padding:3px 8px;border-radius:5px;font-size:.68rem;font-weight:500;
+  background:rgba(220,53,69,.1);color:#f87171;margin-left:8px
+}
+.spam-actions-bar{display:flex;justify-content:flex-end;margin-bottom:16px}
 
 .empty-state{text-align:center;padding:64px 24px;color:var(--text-muted)}
 .empty-state svg{width:48px;height:48px;margin-bottom:16px;opacity:.4}
@@ -160,6 +182,81 @@ body{
   <h1 class="page-title">Enquiries{% if unread_count %} <span class="badge">{{ unread_count }} new</span>{% endif %}</h1>
   <p class="page-subtitle">Contact form submissions from the website.</p>
 
+  <div class="tab-bar">
+    <a href="{{ url_for('enquiries') }}" class="tab {{ 'active' if active_tab == 'enquiries' }}">
+      Enquiries <span class="count">{{ enquiries|length }}</span>
+    </a>
+    <a href="{{ url_for('spam_enquiries') }}" class="tab {{ 'active' if active_tab == 'spam' }}">
+      Spam <span class="count">{{ spam|length if spam else 0 }}</span>
+    </a>
+  </div>
+
+  {% if active_tab == 'spam' %}
+  <!-- SPAM TAB -->
+  {% if spam %}
+  <div class="spam-actions-bar">
+    <form method="POST" action="{{ url_for('clear_spam') }}" onsubmit="return confirm('Clear all spam entries?')">
+      <button type="submit" class="btn-action delete">Clear All Spam</button>
+    </form>
+  </div>
+  <div class="enquiry-list">
+    {% for s in spam %}
+    <div class="enquiry-card">
+      <div class="enquiry-header" onclick="toggleEnquiry(this)">
+        <div class="enquiry-meta">
+          <div class="enquiry-avatar" style="background:rgba(220,53,69,.15);color:#f87171">{{ s.name[0] | upper if s.name else '?' }}</div>
+          <div class="enquiry-info">
+            <h3>{{ s.name or 'Unknown' }} <span class="spam-reason">{{ s.blocked_reason }}</span></h3>
+            <span class="email">{{ s.email or 'No email' }}</span>
+          </div>
+        </div>
+        <div class="enquiry-tags">
+          {% if s.event_type %}<span class="tag event">{{ s.event_type }}</span>{% endif %}
+          {% if s.event_date %}<span class="tag">{{ s.event_date }}</span>{% endif %}
+        </div>
+        <span class="enquiry-date">{{ s.submitted_at[:16] | replace('T', ' ') }}</span>
+      </div>
+      <div class="enquiry-body" id="body-{{ s.id }}">
+        <div class="detail-grid">
+          <div class="detail-item"><label>Name</label><span>{{ s.name }}</span></div>
+          <div class="detail-item"><label>Email</label><span>{{ s.email }}</span></div>
+          {% if s.phone %}<div class="detail-item"><label>Phone</label><span>{{ s.phone }}</span></div>{% endif %}
+          {% if s.event_date %}<div class="detail-item"><label>Event Date</label><span>{{ s.event_date }}</span></div>{% endif %}
+          {% if s.event_type %}<div class="detail-item"><label>Event Type</label><span>{{ s.event_type }}</span></div>{% endif %}
+          {% if s.booth_type %}<div class="detail-item"><label>Booth Type</label><span>{{ s.booth_type }}</span></div>{% endif %}
+          {% if s.venue %}<div class="detail-item"><label>Venue / Address</label><span>{{ s.venue }}</span></div>{% endif %}
+          <div class="detail-item"><label>Blocked Reason</label><span style="color:#f87171">{{ s.blocked_reason }}</span></div>
+        </div>
+        {% if s.message %}
+        <div class="detail-message">
+          <label>Message</label>
+          <p>{{ s.message }}</p>
+        </div>
+        {% endif %}
+        <div class="enquiry-actions">
+          <form method="POST" action="{{ url_for('restore_spam') }}">
+            <input type="hidden" name="spam_id" value="{{ s.id }}">
+            <button type="submit" class="btn-action restore">Restore to Enquiries</button>
+          </form>
+          <form method="POST" action="{{ url_for('delete_spam') }}" onsubmit="return confirm('Delete this spam entry?')">
+            <input type="hidden" name="spam_id" value="{{ s.id }}">
+            <button type="submit" class="btn-action delete">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/><path d="M12 15.75h.007v.008H12v-.008z"/></svg>
+    <h3>No spam caught</h3>
+    <p>Blocked form submissions will appear here so you can review them.</p>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- ENQUIRIES TAB -->
   {% if enquiries %}
   <div class="enquiry-list">
     {% for e in enquiries %}
@@ -219,6 +316,7 @@ body{
     <h3>No enquiries yet</h3>
     <p>When someone submits the contact form on the website, their enquiry will appear here.</p>
   </div>
+  {% endif %}
   {% endif %}
 </div>
 

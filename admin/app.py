@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import json
 import logging
@@ -6,6 +7,7 @@ import re
 import secrets
 import smtplib
 import sqlite3
+import time
 import urllib.request
 from collections import Counter
 from email.mime.text import MIMEText
@@ -45,6 +47,7 @@ if ENV_FILE.exists():
 PRODUCTS_FILE = ADMIN_DIR / "products.json"
 USERS_FILE = ADMIN_DIR / "users.json"
 ENQUIRIES_FILE = ADMIN_DIR / "enquiries.json"
+SPAM_FILE = ADMIN_DIR / "spam.json"
 ANALYTICS_DB = ADMIN_DIR / "analytics.db"
 
 FEATURES_DIR = IMAGES_DIR / "features"
@@ -1215,6 +1218,34 @@ def save_enquiry(data):
     return enquiry
 
 
+def load_spam():
+    if not SPAM_FILE.exists():
+        SPAM_FILE.write_text("[]")
+    return json.loads(SPAM_FILE.read_text())
+
+
+def save_spam(data, reason):
+    spam_entries = load_spam()
+    entry = {
+        "id": secrets.token_hex(8),
+        "name": data.get("name", "").strip(),
+        "email": data.get("email", "").strip(),
+        "phone": data.get("phone", "").strip(),
+        "event_date": data.get("event_date", "").strip(),
+        "event_type": data.get("event_type", "").strip(),
+        "booth_type": data.get("booth_type", "").strip(),
+        "venue": data.get("venue", "").strip(),
+        "message": data.get("message", "").strip(),
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "blocked_reason": reason,
+    }
+    spam_entries.insert(0, entry)
+    # Keep max 100 spam entries to avoid unbounded growth
+    spam_entries = spam_entries[:100]
+    SPAM_FILE.write_text(json.dumps(spam_entries, indent=2))
+    return entry
+
+
 def send_enquiry_email(enquiry):
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_pass = os.environ.get("SMTP_PASS", "")
@@ -1258,11 +1289,96 @@ def send_enquiry_email(enquiry):
         logging.error(f"Failed to send enquiry email: {e}")
 
 
+# --- Spam protection ---
+_enquiry_rate_limit = {}  # {ip: [timestamp, ...]}
+RATE_LIMIT_MAX = 3
+RATE_LIMIT_WINDOW = 3600  # 1 hour
+
+SPAM_KEYWORDS = [
+    "keyword placements", "premium keyword", "search terms",
+    "guaranteed traffic", "seo", "backlink", "rank your",
+    "traffic projections", "secure them before",
+    "check availability", "competitors do",
+    "marketing campaign", "link building",
+]
+
+
+def _is_spam(data):
+    """Check multiple signals. Returns reason string if spam, None if clean."""
+    # 1. Honeypot field filled
+    if data.get("website", "").strip():
+        logging.info("Spam blocked: honeypot field filled")
+        return "Honeypot field filled"
+
+    # 2. Time-based check - reject if submitted in under 3 seconds
+    token = data.get("form_token", "")
+    if token:
+        try:
+            load_time_ms = int(base64.b64decode(token).decode())
+            elapsed_s = (time.time() * 1000 - load_time_ms) / 1000
+            if elapsed_s < 3:
+                logging.info("Spam blocked: form submitted in %.1fs", elapsed_s)
+                return "Submitted too fast (%.1fs)" % elapsed_s
+        except (ValueError, Exception):
+            logging.info("Spam blocked: invalid form token")
+            return "Invalid form token"
+    else:
+        logging.info("Spam blocked: missing form token")
+        return "Missing form token"
+
+    # 3. Event date sanity check - reject dates more than 3 years out
+    event_date = data.get("event_date", "").strip()
+    if event_date:
+        try:
+            parsed = datetime.strptime(event_date, "%Y-%m-%d")
+            max_date = datetime.now() + timedelta(days=3 * 365)
+            if parsed > max_date:
+                logging.info("Spam blocked: event date too far in future: %s", event_date)
+                return "Event date too far in future (%s)" % event_date
+        except ValueError:
+            pass
+
+    # 4. Spam keyword detection in message
+    message = data.get("message", "").lower()
+    matches = sum(1 for kw in SPAM_KEYWORDS if kw in message)
+    if matches >= 2:
+        logging.info("Spam blocked: %d spam keywords found in message", matches)
+        return "Spam keywords detected (%d matches)" % matches
+
+    return None
+
+
+def _check_rate_limit(ip):
+    """Return True if rate limited."""
+    now = time.time()
+    timestamps = _enquiry_rate_limit.get(ip, [])
+    timestamps = [t for t in timestamps if now - t < RATE_LIMIT_WINDOW]
+    if len(timestamps) >= RATE_LIMIT_MAX:
+        return True
+    timestamps.append(now)
+    _enquiry_rate_limit[ip] = timestamps
+    return False
+
+
 @app.route("/enquiry", methods=["POST"])
 def receive_enquiry():
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"success": False, "error": "Invalid request"}), 400
+
+    # Rate limiting
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+    if client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    if _check_rate_limit(client_ip):
+        logging.info("Spam blocked: rate limit exceeded for %s", client_ip)
+        return jsonify({"success": False, "error": "Too many submissions. Please try again later."}), 429
+
+    # Spam detection - save to spam log, silently accept to not tip off bots
+    spam_reason = _is_spam(data)
+    if spam_reason:
+        save_spam(data, spam_reason)
+        return jsonify({"success": True})
 
     name = data.get("name", "").strip()
     email = data.get("email", "").strip()
@@ -1289,8 +1405,9 @@ def maps_key():
 @login_required
 def enquiries():
     all_enquiries = load_enquiries()
+    spam = load_spam()
     unread = sum(1 for e in all_enquiries if not e.get("read"))
-    return render_template("enquiries.html", enquiries=all_enquiries, unread_count=unread)
+    return render_template("enquiries.html", enquiries=all_enquiries, spam=spam, unread_count=unread, active_tab="enquiries")
 
 
 @app.route("/enquiries/mark-read", methods=["POST"])
@@ -1315,6 +1432,68 @@ def delete_enquiry():
     ENQUIRIES_FILE.write_text(json.dumps(all_enquiries, indent=2))
     flash("Enquiry deleted", "success")
     return redirect(url_for("enquiries"))
+
+
+@app.route("/enquiries/spam")
+@login_required
+def spam_enquiries():
+    spam = load_spam()
+    all_enquiries = load_enquiries()
+    unread = sum(1 for e in all_enquiries if not e.get("read"))
+    return render_template("enquiries.html", enquiries=all_enquiries, spam=spam, unread_count=unread, active_tab="spam")
+
+
+@app.route("/enquiries/spam/restore", methods=["POST"])
+@login_required
+def restore_spam():
+    spam_id = request.form.get("spam_id", "")
+    spam = load_spam()
+    entry = None
+    remaining = []
+    for s in spam:
+        if s["id"] == spam_id and entry is None:
+            entry = s
+        else:
+            remaining.append(s)
+    if entry:
+        SPAM_FILE.write_text(json.dumps(remaining, indent=2))
+        enquiry = {
+            "id": secrets.token_hex(8),
+            "name": entry.get("name", ""),
+            "email": entry.get("email", ""),
+            "phone": entry.get("phone", ""),
+            "event_date": entry.get("event_date", ""),
+            "event_type": entry.get("event_type", ""),
+            "booth_type": entry.get("booth_type", ""),
+            "venue": entry.get("venue", ""),
+            "message": entry.get("message", ""),
+            "submitted_at": entry.get("submitted_at", datetime.now(timezone.utc).isoformat()),
+            "read": False,
+        }
+        enquiries = load_enquiries()
+        enquiries.insert(0, enquiry)
+        ENQUIRIES_FILE.write_text(json.dumps(enquiries, indent=2))
+        flash("Restored to enquiries", "success")
+    return redirect(url_for("spam_enquiries"))
+
+
+@app.route("/enquiries/spam/delete", methods=["POST"])
+@login_required
+def delete_spam():
+    spam_id = request.form.get("spam_id", "")
+    spam = load_spam()
+    spam = [s for s in spam if s["id"] != spam_id]
+    SPAM_FILE.write_text(json.dumps(spam, indent=2))
+    flash("Spam entry deleted", "success")
+    return redirect(url_for("spam_enquiries"))
+
+
+@app.route("/enquiries/spam/clear", methods=["POST"])
+@login_required
+def clear_spam():
+    SPAM_FILE.write_text("[]")
+    flash("All spam cleared", "success")
+    return redirect(url_for("spam_enquiries"))
 
 
 @app.route("/image-seo")

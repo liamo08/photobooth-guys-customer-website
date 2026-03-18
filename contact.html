@@ -225,6 +225,13 @@
             <textarea id="message" name="message" placeholder="Tell us about your event, any special requirements, or questions you have..." required></textarea>
           </div>
 
+          <!-- Honeypot - hidden from humans, bots will fill it -->
+          <div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
+            <label for="website">Website</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+          <input type="hidden" id="form_token" name="form_token" value="">
+
           <button type="submit" class="form-submit">
             Send Enquiry
             <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -308,8 +315,13 @@
 (function(){
   var form=document.getElementById('contactForm');
   var success=document.getElementById('formSuccess');
+  // Set time-based token on page load
+  var loadTime=Date.now();
+  document.getElementById('form_token').value=btoa(String(loadTime));
   form.addEventListener('submit',function(e){
     e.preventDefault();
+    // Check honeypot
+    if(document.getElementById('website').value){return}
     var btn=form.querySelector('.form-submit');
     btn.disabled=true;btn.textContent='Sending...';
     fetch('/admin/enquiry',{
@@ -324,7 +336,9 @@
         booth_type:form.booth_type.value,
         partner_name:form.partner_name?form.partner_name.value:'',
         venue:form.venue.value,
-        message:form.message.value
+        message:form.message.value,
+        website:document.getElementById('website').value,
+        form_token:document.getElementById('form_token').value
       })
     }).then(function(r){return r.json()}).then(function(data){
       if(data.success){
