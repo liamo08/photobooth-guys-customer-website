@@ -554,19 +554,102 @@ body{
 
     {% if serp_history and serp_history|length > 1 %}
     <h3 style="font-family:var(--font-display);font-size:.95rem;margin:24px 0 12px">Position History</h3>
-    <div class="rec-card">
-      {% for sh in serp_history %}
-      <div style="display:flex;justify-content:space-between;padding:6px 0;{% if not loop.last %}border-bottom:1px solid rgba(95,148,164,.06);{% endif %}font-size:.85rem">
-        <span>"{{ sh.keyword }}"</span>
-        <span>
-          <span class="{{ 'pos-good' if sh.position and sh.position <= 3 else ('pos-mid' if sh.position and sh.position <= 10 else 'pos-low') }}">
-            {{ sh.position or 'N/A' }}
-          </span>
-          <span style="color:var(--text-muted);margin-left:12px">{{ sh.date[:10] }}</span>
-        </span>
-      </div>
-      {% endfor %}
+    <div class="rec-card" style="padding:20px">
+      <canvas id="serpChart" height="260"></canvas>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script>
+    (function(){
+      var history = [
+        {% for sh in serp_history %}
+        {keyword: {{ sh.keyword|tojson }}, position: {{ sh.position|default('null') }}, date: {{ sh.date[:16]|tojson }} },
+        {% endfor %}
+      ].reverse();
+
+      // Group by keyword
+      var keywords = {};
+      history.forEach(function(h){
+        if(!keywords[h.keyword]) keywords[h.keyword] = [];
+        keywords[h.keyword].push(h);
+      });
+
+      var colors = ['#5f94a4','#e8b83d','#4ade80','#fb923c','#f87171','#60a5fa','#a78bfa','#f472b6'];
+      var datasets = [];
+      var ci = 0;
+      var allDates = [];
+
+      Object.keys(keywords).forEach(function(kw){
+        var entries = keywords[kw];
+        var color = colors[ci % colors.length];
+        ci++;
+        var data = entries.map(function(e){
+          var label = e.date.replace('T',' ');
+          if(allDates.indexOf(label) === -1) allDates.push(label);
+          return {x: label, y: e.position};
+        });
+        datasets.push({
+          label: kw,
+          data: data,
+          borderColor: color,
+          backgroundColor: color + '20',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: color,
+          tension: 0.3,
+          fill: false,
+        });
+      });
+
+      allDates.sort();
+
+      new Chart(document.getElementById('serpChart'), {
+        type: 'line',
+        data: {labels: allDates, datasets: datasets},
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              reverse: true,
+              min: 1,
+              title: {display: true, text: 'Position', color: 'rgba(244,244,245,.6)', font: {family: "'DM Sans',sans-serif"}},
+              ticks: {
+                stepSize: 1,
+                color: 'rgba(244,244,245,.6)',
+                font: {family: "'DM Sans',sans-serif"},
+                callback: function(v){return '#'+v}
+              },
+              grid: {color: 'rgba(95,148,164,.1)'}
+            },
+            x: {
+              title: {display: true, text: 'Date', color: 'rgba(244,244,245,.6)', font: {family: "'DM Sans',sans-serif"}},
+              ticks: {
+                color: 'rgba(244,244,245,.6)',
+                font: {family: "'DM Sans',sans-serif", size: 10},
+                maxRotation: 45
+              },
+              grid: {color: 'rgba(95,148,164,.06)'}
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {color: 'rgba(244,244,245,.8)', font: {family: "'DM Sans',sans-serif"}, boxWidth: 12, padding: 16}
+            },
+            tooltip: {
+              backgroundColor: '#1a1a2e',
+              borderColor: 'rgba(95,148,164,.3)',
+              borderWidth: 1,
+              titleFont: {family: "'DM Sans',sans-serif"},
+              bodyFont: {family: "'DM Sans',sans-serif"},
+              callbacks: {
+                label: function(ctx){return ctx.dataset.label + ': Position #' + ctx.parsed.y}
+              }
+            }
+          }
+        }
+      });
+    })();
+    </script>
     {% endif %}
 
     {% else %}

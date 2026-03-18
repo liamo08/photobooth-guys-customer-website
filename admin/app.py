@@ -2089,7 +2089,7 @@ def seo_dashboard():
 
     # Get SERP position history
     serp_history = conn.execute(
-        "SELECT keyword, our_position, created_at FROM serp_checks ORDER BY created_at DESC LIMIT 30"
+        "SELECT keyword, our_position, created_at FROM serp_checks ORDER BY created_at DESC LIMIT 100"
     ).fetchall()
     serp_history_list = [
         {"keyword": s[0], "position": s[1], "date": s[2]}
