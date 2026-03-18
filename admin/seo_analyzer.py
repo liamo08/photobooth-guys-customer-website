@@ -7,6 +7,8 @@ import json
 import os
 import re
 import subprocess
+import urllib.request
+import urllib.parse
 from pathlib import Path
 
 
@@ -630,3 +632,198 @@ def _iter_html_files(base_dir):
                 rel = str(f.relative_to(base))
                 if not rel.startswith("admin"):
                     yield rel
+
+
+# ── Serper.dev SERP Analysis ─────────────────────────────────────
+
+def fetch_serp_data(keyword, api_key, location="Dublin, Ireland", gl="ie"):
+    """Fetch live SERP results from Serper.dev for a keyword."""
+    if not api_key:
+        return None
+    try:
+        payload = json.dumps({
+            "q": keyword,
+            "gl": gl,
+            "location": location,
+            "num": 20,
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://google.serper.dev/search",
+            data=payload,
+            headers={
+                "X-API-KEY": api_key,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        results = {
+            "keyword": keyword,
+            "location": location,
+            "organic": [],
+            "local_pack": [],
+            "people_also_ask": [],
+            "our_position": None,
+            "our_url": None,
+        }
+
+        for i, item in enumerate(data.get("organic", []), 1):
+            entry = {
+                "position": i,
+                "title": item.get("title", ""),
+                "link": item.get("link", ""),
+                "snippet": item.get("snippet", ""),
+                "domain": _extract_domain(item.get("link", "")),
+            }
+            results["organic"].append(entry)
+            if "photoboothguys.ie" in entry.get("link", ""):
+                results["our_position"] = i
+                results["our_url"] = entry["link"]
+
+        for item in data.get("places", []):
+            results["local_pack"].append({
+                "title": item.get("title", ""),
+                "address": item.get("address", ""),
+                "rating": item.get("rating"),
+                "reviews": item.get("ratingCount"),
+            })
+
+        for item in data.get("peopleAlsoAsk", []):
+            results["people_also_ask"].append(item.get("question", ""))
+
+        return results
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def _extract_domain(url):
+    """Extract domain from a URL."""
+    try:
+        from urllib.parse import urlparse
+        return urlparse(url).netloc.replace("www.", "")
+    except Exception:
+        return url
+
+
+# ── Google PageSpeed Insights ────────────────────────────────────
+
+def fetch_pagespeed_data(url, api_key=None, strategy="mobile"):
+    """Fetch Core Web Vitals and SEO audit from PageSpeed Insights API."""
+    params = {
+        "url": url,
+        "strategy": strategy,
+        "category": ["performance", "seo", "accessibility", "best-practices"],
+    }
+    api_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed?"
+    # Build query string (category appears multiple times)
+    qs_parts = [
+        f"url={urllib.parse.quote(url, safe='')}",
+        f"strategy={strategy}",
+        "category=performance",
+        "category=seo",
+        "category=accessibility",
+        "category=best-practices",
+    ]
+    if api_key:
+        qs_parts.append(f"key={api_key}")
+    api_url += "&".join(qs_parts)
+
+    try:
+        req = urllib.request.Request(api_url, method="GET")
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        result = {
+            "url": url,
+            "strategy": strategy,
+            "scores": {},
+            "core_web_vitals": {},
+            "seo_audits": [],
+            "opportunities": [],
+        }
+
+        # Category scores (0-100)
+        categories = data.get("lighthouseResult", {}).get("categories", {})
+        for cat_key, cat_data in categories.items():
+            result["scores"][cat_key] = int((cat_data.get("score", 0) or 0) * 100)
+
+        # Core Web Vitals from field data (CrUX)
+        field = data.get("loadingExperience", {}).get("metrics", {})
+        vitals_map = {
+            "LARGEST_CONTENTFUL_PAINT_MS": "LCP",
+            "CUMULATIVE_LAYOUT_SHIFT_SCORE": "CLS",
+            "INTERACTION_TO_NEXT_PAINT": "INP",
+            "FIRST_CONTENTFUL_PAINT_MS": "FCP",
+            "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "TTFB",
+        }
+        for api_name, display_name in vitals_map.items():
+            metric = field.get(api_name, {})
+            if metric:
+                pctile = metric.get("percentile")
+                category = metric.get("category", "").lower()
+                result["core_web_vitals"][display_name] = {
+                    "value": pctile,
+                    "rating": category,
+                }
+
+        # If no field data, fall back to lab data
+        if not result["core_web_vitals"]:
+            audits = data.get("lighthouseResult", {}).get("audits", {})
+            lab_map = {
+                "largest-contentful-paint": "LCP",
+                "cumulative-layout-shift": "CLS",
+                "interactive": "TTI",
+                "first-contentful-paint": "FCP",
+                "speed-index": "Speed Index",
+                "total-blocking-time": "TBT",
+            }
+            for audit_id, display_name in lab_map.items():
+                audit = audits.get(audit_id, {})
+                if audit:
+                    result["core_web_vitals"][display_name] = {
+                        "value": audit.get("numericValue"),
+                        "rating": _score_to_rating(audit.get("score", 0)),
+                        "display": audit.get("displayValue", ""),
+                    }
+
+        # Failed SEO audits
+        audits = data.get("lighthouseResult", {}).get("audits", {})
+        seo_refs = categories.get("seo", {}).get("auditRefs", [])
+        for ref in seo_refs:
+            audit = audits.get(ref.get("id"), {})
+            if audit and audit.get("score") is not None and audit["score"] < 1:
+                result["seo_audits"].append({
+                    "id": ref["id"],
+                    "title": audit.get("title", ""),
+                    "description": audit.get("description", ""),
+                    "score": int((audit.get("score", 0) or 0) * 100),
+                })
+
+        # Performance opportunities
+        for audit_id, audit in audits.items():
+            savings = audit.get("details", {}).get("overallSavingsMs")
+            if savings and savings > 100:
+                result["opportunities"].append({
+                    "title": audit.get("title", ""),
+                    "savings_ms": int(savings),
+                    "description": audit.get("description", ""),
+                })
+        result["opportunities"].sort(key=lambda x: x["savings_ms"], reverse=True)
+
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def _score_to_rating(score):
+    """Convert a Lighthouse score (0-1) to a rating string."""
+    if score is None:
+        return "unknown"
+    if score >= 0.9:
+        return "good"
+    if score >= 0.5:
+        return "needs_improvement"
+    return "poor"

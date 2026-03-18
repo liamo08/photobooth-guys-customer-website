@@ -281,6 +281,28 @@ def init_analytics_db():
             reverted INTEGER DEFAULT 0
         );
 
+        CREATE TABLE IF NOT EXISTS serp_checks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now')),
+            keyword TEXT NOT NULL,
+            location TEXT,
+            our_position INTEGER,
+            our_url TEXT,
+            results_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_serp_created ON serp_checks(created_at);
+
+        CREATE TABLE IF NOT EXISTS pagespeed_checks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now')),
+            url TEXT NOT NULL,
+            strategy TEXT NOT NULL,
+            perf_score INTEGER,
+            seo_score INTEGER,
+            results_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_pagespeed_created ON pagespeed_checks(created_at);
+
         CREATE TABLE IF NOT EXISTS seo_snapshots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             commit_hash TEXT NOT NULL,
@@ -1893,7 +1915,10 @@ def image_seo_bulk_update():
 
 # ── SEO Analysis ─────────────────────────────────────────────────
 
-from seo_analyzer import run_full_analysis, get_git_changes, get_file_at_commit
+from seo_analyzer import (
+    run_full_analysis, get_git_changes, get_file_at_commit,
+    fetch_serp_data, fetch_pagespeed_data,
+)
 
 GSC_TOKEN_FILE = ADMIN_DIR / "gsc-token.json"
 
@@ -2046,6 +2071,33 @@ def seo_dashboard():
         for h in history
     ]
 
+    # Get latest SERP check
+    serp_row = conn.execute(
+        "SELECT results_json, created_at FROM serp_checks ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    serp_data = None
+    if serp_row:
+        serp_data = json.loads(serp_row[0])
+        serp_data["checked_at"] = serp_row[1]
+
+    # Get SERP position history
+    serp_history = conn.execute(
+        "SELECT keyword, our_position, created_at FROM serp_checks ORDER BY created_at DESC LIMIT 30"
+    ).fetchall()
+    serp_history_list = [
+        {"keyword": s[0], "position": s[1], "date": s[2]}
+        for s in serp_history
+    ]
+
+    # Get latest PageSpeed check
+    ps_row = conn.execute(
+        "SELECT results_json, created_at FROM pagespeed_checks ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    pagespeed_data = None
+    if ps_row:
+        pagespeed_data = json.loads(ps_row[0])
+        pagespeed_data["checked_at"] = ps_row[1]
+
     conn.close()
     return render_template(
         "seo.html",
@@ -2054,6 +2106,11 @@ def seo_dashboard():
         history=history_list,
         gsc_connected=_gsc_connected(),
         has_gsc_config=bool(os.environ.get("GSC_CLIENT_ID")),
+        has_serper=bool(os.environ.get("SERPER_API_KEY")),
+        has_pagespeed=bool(os.environ.get("PAGESPEED_API_KEY")),
+        serp_data=serp_data,
+        serp_history=serp_history_list,
+        pagespeed_data=pagespeed_data,
     )
 
 
@@ -2099,6 +2156,11 @@ def seo_report(report_id):
         history=history_list,
         gsc_connected=_gsc_connected(),
         has_gsc_config=bool(os.environ.get("GSC_CLIENT_ID")),
+        has_serper=bool(os.environ.get("SERPER_API_KEY")),
+        has_pagespeed=bool(os.environ.get("PAGESPEED_API_KEY")),
+        serp_data=None,
+        serp_history=[],
+        pagespeed_data=None,
     )
 
 
@@ -2232,6 +2294,78 @@ def seo_disconnect_gsc():
     if GSC_TOKEN_FILE.exists():
         GSC_TOKEN_FILE.unlink()
     flash("Google Search Console disconnected.", "success")
+    return redirect(url_for("seo_dashboard"))
+
+
+# ── SERP Check (Serper.dev) ───────────────────────────────────────
+
+@app.route("/seo/serp-check", methods=["POST"])
+@login_required
+def seo_serp_check():
+    keyword = request.form.get("keyword", "photo booth dublin").strip()
+    location = request.form.get("location", "Dublin, Ireland").strip()
+    api_key = os.environ.get("SERPER_API_KEY", "")
+
+    if not api_key:
+        flash("SERPER_API_KEY not set in .env", "error")
+        return redirect(url_for("seo_dashboard"))
+
+    result = fetch_serp_data(keyword, api_key, location=location)
+
+    if result and "error" not in result:
+        conn = get_analytics_db()
+        conn.execute(
+            """INSERT INTO serp_checks
+               (keyword, location, our_position, our_url, results_json)
+               VALUES (?, ?, ?, ?, ?)""",
+            (keyword, location, result.get("our_position"),
+             result.get("our_url"), json.dumps(result)),
+        )
+        conn.commit()
+        conn.close()
+        pos = result.get("our_position")
+        if pos:
+            flash(f'SERP check complete: "{keyword}" — Position {pos}', "success")
+        else:
+            flash(f'SERP check complete: "{keyword}" — Not found in top 20', "error")
+    else:
+        error_msg = result.get("error", "Unknown error") if result else "No response"
+        flash(f"SERP check failed: {error_msg}", "error")
+
+    return redirect(url_for("seo_dashboard"))
+
+
+# ── PageSpeed Insights ───────────────────────────────────────────
+
+@app.route("/seo/pagespeed-check", methods=["POST"])
+@login_required
+def seo_pagespeed_check():
+    url = request.form.get("url", "https://www.photoboothguys.ie/").strip()
+    strategy = request.form.get("strategy", "mobile")
+    api_key = os.environ.get("PAGESPEED_API_KEY", "")
+
+    result = fetch_pagespeed_data(url, api_key=api_key, strategy=strategy)
+
+    if result and "error" not in result:
+        conn = get_analytics_db()
+        conn.execute(
+            """INSERT INTO pagespeed_checks
+               (url, strategy, perf_score, seo_score, results_json)
+               VALUES (?, ?, ?, ?, ?)""",
+            (url, strategy,
+             result.get("scores", {}).get("performance"),
+             result.get("scores", {}).get("seo"),
+             json.dumps(result)),
+        )
+        conn.commit()
+        conn.close()
+        perf = result.get("scores", {}).get("performance", "?")
+        seo = result.get("scores", {}).get("seo", "?")
+        flash(f"PageSpeed ({strategy}): Performance {perf}/100, SEO {seo}/100", "success")
+    else:
+        error_msg = result.get("error", "Unknown error") if result else "No response"
+        flash(f"PageSpeed check failed: {error_msg}", "error")
+
     return redirect(url_for("seo_dashboard"))
 
 

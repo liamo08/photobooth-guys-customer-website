@@ -318,6 +318,8 @@ body{
       {% if report.keywords %}
       <button class="sub-tab" onclick="switchTab('keywords')">Keywords</button>
       {% endif %}
+      <button class="sub-tab" onclick="switchTab('serp')">SERP</button>
+      <button class="sub-tab" onclick="switchTab('pagespeed')">PageSpeed</button>
       <button class="sub-tab" onclick="switchTab('changes')">Changes</button>
       <button class="sub-tab" onclick="switchTab('history')">History</button>
     </div>
@@ -422,6 +424,216 @@ body{
     </div>
   </div>
   {% endif %}
+
+  <!-- Tab: SERP -->
+  <div id="tab-serp" class="tab-content">
+    {% if has_serper %}
+    <div class="rec-card" style="margin-bottom:24px">
+      <h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:12px">Check SERP Position</h3>
+      <form method="POST" action="{{ url_for('seo_serp_check') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:200px">
+          <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Keyword</label>
+          <input type="text" name="keyword" value="photo booth dublin" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
+        </div>
+        <div style="min-width:160px">
+          <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Location</label>
+          <input type="text" name="location" value="Dublin, Ireland" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
+        </div>
+        <button type="submit" class="run-btn" onclick="this.textContent='Checking...';this.disabled=true;this.form.submit()">Check SERP</button>
+      </form>
+    </div>
+
+    {% if serp_data and serp_data.organic %}
+    <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+      <div class="stat-card" style="flex:1;min-width:150px">
+        <div class="stat-number {% if serp_data.our_position and serp_data.our_position <= 3 %}pos-good{% elif serp_data.our_position and serp_data.our_position <= 10 %}pos-mid{% else %}pos-low{% endif %}">
+          {{ serp_data.our_position or 'N/A' }}
+        </div>
+        <div class="stat-label">Our Position for "{{ serp_data.keyword }}"</div>
+      </div>
+      <div class="stat-card info" style="flex:1;min-width:150px">
+        <div class="stat-number">{{ serp_data.organic|length }}</div>
+        <div class="stat-label">Competitors Tracked</div>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:150px">
+        <div class="stat-number" style="font-size:.9rem;color:var(--text-muted)">{{ serp_data.checked_at[:16]|replace('T',' ') }}</div>
+        <div class="stat-label">Last Checked</div>
+      </div>
+    </div>
+
+    {% if serp_data.local_pack %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin-bottom:12px">Local Pack</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:24px">
+      {% for place in serp_data.local_pack %}
+      <div class="rec-card" style="margin-bottom:0">
+        <div style="font-weight:600;font-size:.9rem;margin-bottom:4px">{{ place.title }}</div>
+        <div style="font-size:.78rem;color:var(--text-muted)">{{ place.address }}</div>
+        {% if place.rating %}<div style="font-size:.78rem;color:var(--gold);margin-top:4px">{{ place.rating }} stars ({{ place.reviews }} reviews)</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin-bottom:12px">Organic Results</h3>
+    <div style="overflow-x:auto">
+      <table class="kw-table">
+        <thead><tr><th>#</th><th>Title</th><th>Domain</th></tr></thead>
+        <tbody>
+          {% for item in serp_data.organic %}
+          <tr style="{% if item.domain == 'photoboothguys.ie' %}background:rgba(95,148,164,.08){% endif %}">
+            <td><span class="{{ 'pos-good' if item.position <= 3 else ('pos-mid' if item.position <= 10 else 'pos-low') }}">{{ item.position }}</span></td>
+            <td>
+              <div style="font-weight:{% if item.domain == 'photoboothguys.ie' %}700{% else %}400{% endif %};font-size:.85rem">{{ item.title|truncate(60) }}</div>
+              <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">{{ item.snippet|truncate(100) }}</div>
+            </td>
+            <td style="font-size:.78rem;color:{% if item.domain == 'photoboothguys.ie' %}var(--teal-light){% else %}var(--text-muted){% endif %};white-space:nowrap">{{ item.domain }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if serp_data.people_also_ask %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin:24px 0 12px">People Also Ask</h3>
+    <div class="rec-card">
+      {% for q in serp_data.people_also_ask %}
+      <div style="padding:8px 0;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}font-size:.88rem">{{ q }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if serp_history and serp_history|length > 1 %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin:24px 0 12px">Position History</h3>
+    <div class="rec-card">
+      {% for sh in serp_history %}
+      <div style="display:flex;justify-content:space-between;padding:6px 0;{% if not loop.last %}border-bottom:1px solid rgba(95,148,164,.06);{% endif %}font-size:.85rem">
+        <span>"{{ sh.keyword }}"</span>
+        <span>
+          <span class="{{ 'pos-good' if sh.position and sh.position <= 3 else ('pos-mid' if sh.position and sh.position <= 10 else 'pos-low') }}">
+            {{ sh.position or 'N/A' }}
+          </span>
+          <span style="color:var(--text-muted);margin-left:12px">{{ sh.date[:10] }}</span>
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <h2>No SERP data yet</h2>
+      <p>Use the form above to check where you rank for any keyword.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <h2>Serper.dev not configured</h2>
+      <p>Add SERPER_API_KEY to your .env file to enable live SERP tracking.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Tab: PageSpeed -->
+  <div id="tab-pagespeed" class="tab-content">
+    {% if has_pagespeed %}
+    <div class="rec-card" style="margin-bottom:24px">
+      <h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:12px">Run PageSpeed Check</h3>
+      <form method="POST" action="{{ url_for('seo_pagespeed_check') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:250px">
+          <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px">URL</label>
+          <select name="url" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
+            <option value="https://www.photoboothguys.ie/">Homepage</option>
+            <option value="https://www.photoboothguys.ie/photo-booth-dublin">Photo Booth Dublin</option>
+            <option value="https://www.photoboothguys.ie/services">Services</option>
+            <option value="https://www.photoboothguys.ie/services/selfie-mirror-hire">Selfie Mirror</option>
+            <option value="https://www.photoboothguys.ie/services/360-photo-booth-hire">360 Photo Booth</option>
+            <option value="https://www.photoboothguys.ie/wedding-photo-booth-hire">Wedding Booths</option>
+            <option value="https://www.photoboothguys.ie/contact">Contact</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Device</label>
+          <select name="strategy" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
+            <option value="mobile">Mobile</option>
+            <option value="desktop">Desktop</option>
+          </select>
+        </div>
+        <button type="submit" class="run-btn" onclick="this.textContent='Testing...';this.disabled=true;this.form.submit()">Run Test</button>
+      </form>
+    </div>
+
+    {% if pagespeed_data and pagespeed_data.scores %}
+    <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+      {% for cat, score in pagespeed_data.scores.items() %}
+      <div class="stat-card {{ 'good' if score >= 90 else ('warn' if score >= 50 else 'critical') }}" style="flex:1;min-width:120px">
+        <div class="score-circle {{ 'score-high' if score >= 90 else ('score-mid' if score >= 50 else 'score-low') }}" style="width:64px;height:64px;font-size:1.4rem">{{ score }}</div>
+        <div class="stat-label">{{ cat|replace('-',' ')|replace('_',' ')|title }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;font-size:.82rem;color:var(--text-muted)">
+      <span>URL: {{ pagespeed_data.url }}</span>
+      <span>Strategy: {{ pagespeed_data.strategy }}</span>
+      <span>Checked: {{ pagespeed_data.checked_at[:16]|replace('T',' ') }}</span>
+    </div>
+
+    {% if pagespeed_data.core_web_vitals %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin-bottom:12px">Core Web Vitals</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px">
+      {% for name, vital in pagespeed_data.core_web_vitals.items() %}
+      <div class="rec-card" style="margin-bottom:0;text-align:center">
+        <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:4px">{{ name }}</div>
+        <div style="font-family:var(--font-display);font-size:1.3rem;color:{% if vital.rating == 'good' or vital.rating == 'FAST' %}var(--success-text){% elif vital.rating == 'needs_improvement' or vital.rating == 'AVERAGE' %}var(--warning-text){% else %}var(--error-text){% endif %}">
+          {% if vital.display %}{{ vital.display }}{% elif vital.value %}{{ vital.value }}{% else %}--{% endif %}
+        </div>
+        <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;color:{% if vital.rating == 'good' or vital.rating == 'FAST' %}var(--success-text){% elif vital.rating == 'needs_improvement' or vital.rating == 'AVERAGE' %}var(--warning-text){% else %}var(--error-text){% endif %}">
+          {{ vital.rating|replace('_',' ') }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if pagespeed_data.seo_audits %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin-bottom:12px">Failed SEO Audits</h3>
+    {% for audit in pagespeed_data.seo_audits %}
+    <div class="rec-card">
+      <div class="rec-header">
+        <span class="severity-badge {{ 'critical' if audit.score == 0 else 'medium' }}">{{ audit.score }}/100</span>
+        <span class="rec-title">{{ audit.title }}</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if pagespeed_data.opportunities %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin-bottom:12px">Performance Opportunities</h3>
+    {% for opp in pagespeed_data.opportunities[:8] %}
+    <div class="rec-card">
+      <div class="rec-header">
+        <span class="severity-badge {{ 'high' if opp.savings_ms > 500 else 'medium' }}">-{{ opp.savings_ms }}ms</span>
+        <span class="rec-title">{{ opp.title }}</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <h2>No PageSpeed data yet</h2>
+      <p>Select a page above and run a test to see Core Web Vitals and performance scores.</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <h2>PageSpeed Insights not configured</h2>
+      <p>Add PAGESPEED_API_KEY to your .env file for higher rate limits, or it will work without a key at lower limits.</p>
+    </div>
+    {% endif %}
+  </div>
 
   <!-- Tab: Changes -->
   <div id="tab-changes" class="tab-content">
