@@ -530,6 +530,28 @@ body{
     </div>
     {% endif %}
 
+    {% if serp_data.related_searches %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin:24px 0 12px">Related Searches</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px">
+      {% for rs in serp_data.related_searches %}
+      <span style="padding:6px 14px;border-radius:20px;font-size:.82rem;background:rgba(95,148,164,.1);border:1px solid var(--border);color:var(--teal-light)">{{ rs }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if serp_data.suggestions %}
+    <h3 style="font-family:var(--font-display);font-size:.95rem;margin:24px 0 12px">Keyword Improvement Suggestions</h3>
+    {% for sug in serp_data.suggestions %}
+    <div class="rec-card">
+      <div class="rec-header">
+        <span class="severity-badge {{ sug.type }}">{{ sug.type }}</span>
+        <span class="rec-title">{{ sug.title }}</span>
+      </div>
+      <div class="rec-desc" style="line-height:1.6">{{ sug.detail }}</div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
     {% if serp_history and serp_history|length > 1 %}
     <h3 style="font-family:var(--font-display);font-size:.95rem;margin:24px 0 12px">Position History</h3>
     <div class="rec-card">

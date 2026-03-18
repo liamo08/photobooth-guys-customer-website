@@ -671,8 +671,10 @@ def fetch_serp_data(keyword, api_key, location="Dublin, Ireland", gl="ie"):
             "organic": [],
             "local_pack": [],
             "people_also_ask": [],
+            "related_searches": [],
             "our_position": None,
             "our_url": None,
+            "suggestions": [],
         }
 
         for i, item in enumerate(data.get("organic", []), 1):
@@ -699,6 +701,12 @@ def fetch_serp_data(keyword, api_key, location="Dublin, Ireland", gl="ie"):
         for item in data.get("peopleAlsoAsk", []):
             results["people_also_ask"].append(item.get("question", ""))
 
+        for item in data.get("relatedSearches", []):
+            results["related_searches"].append(item.get("query", ""))
+
+        # Build actionable suggestions
+        results["suggestions"] = _build_serp_suggestions(results, keyword)
+
         return results
     except Exception as e:
         return {"error": str(e)}
@@ -711,6 +719,158 @@ def _extract_domain(url):
         return urlparse(url).netloc.replace("www.", "")
     except Exception:
         return url
+
+
+def _build_serp_suggestions(results, keyword):
+    """Analyse SERP data and return actionable keyword improvement suggestions."""
+    suggestions = []
+    our_pos = results.get("our_position")
+    our_url = results.get("our_url", "")
+    organic = results.get("organic", [])
+    paa = results.get("people_also_ask", [])
+    related = results.get("related_searches", [])
+
+    # 1. Position-based suggestions
+    if our_pos is None:
+        suggestions.append({
+            "type": "critical",
+            "title": "Not ranking in top 20",
+            "detail": (
+                f'Your site does not appear in the top results for "{keyword}". '
+                "Ensure you have a dedicated page targeting this keyword with it in the "
+                "title tag, H1, meta description, and body content."
+            ),
+        })
+    elif our_pos > 10:
+        suggestions.append({
+            "type": "high",
+            "title": f"Page 2+ (position {our_pos})",
+            "detail": (
+                "You are on page 2 or beyond. Focus on building backlinks to "
+                f'"{our_url}", adding more content depth, and improving internal '
+                "linking from high-authority pages on your site."
+            ),
+        })
+    elif our_pos > 3:
+        suggestions.append({
+            "type": "medium",
+            "title": f"Close to top 3 (position {our_pos})",
+            "detail": (
+                "You are within striking distance of the top 3. Compare your title "
+                "and meta description to the pages above you — make yours more "
+                "compelling with specific numbers, benefits, or a clear call to action."
+            ),
+        })
+    else:
+        suggestions.append({
+            "type": "low",
+            "title": f"Strong position ({our_pos})",
+            "detail": (
+                "You are in the top 3. Focus on maintaining this position by keeping "
+                "content fresh, building more reviews, and monitoring competitors."
+            ),
+        })
+
+    # 2. Competitor analysis
+    if organic:
+        top = organic[0]
+        if top.get("domain") != "photoboothguys.ie":
+            # Analyse what #1 has in their title that we don't
+            top_title = top.get("title", "").lower()
+            our_entry = next(
+                (o for o in organic if o.get("domain") == "photoboothguys.ie"), None
+            )
+            our_title = (our_entry.get("title", "") if our_entry else "").lower()
+
+            # Check for keyword patterns in #1 title
+            differentiators = []
+            trust_signals = ["award", "best", "#1", "top", "rated", "trusted", "leading"]
+            for signal in trust_signals:
+                if signal in top_title and signal not in our_title:
+                    differentiators.append(signal)
+
+            if differentiators:
+                suggestions.append({
+                    "type": "medium",
+                    "title": "Competitor uses trust signals you don't",
+                    "detail": (
+                        f'The #1 result ({top.get("domain")}) uses trust signals in their title: '
+                        f'{", ".join(differentiators)}. Consider adding social proof like '
+                        '"Award-winning", "5-star rated", or "2,500+ events" to your title or snippet.'
+                    ),
+                })
+
+        # Check for directory/forum sites that can be displaced
+        displaceable = [
+            o for o in organic[:5]
+            if o.get("domain") in (
+                "reddit.com", "instagram.com", "facebook.com", "tiktok.com",
+                "yelp.com", "tripadvisor.com", "pinterest.com",
+            )
+        ]
+        if displaceable:
+            domains = ", ".join(d.get("domain") for d in displaceable)
+            suggestions.append({
+                "type": "medium",
+                "title": f"{len(displaceable)} social/directory site(s) in top 5",
+                "detail": (
+                    f"These are not direct competitors: {domains}. "
+                    "With stronger on-page SEO and backlinks, you can displace them "
+                    "as Google prefers dedicated service pages over social profiles."
+                ),
+            })
+
+    # 3. People Also Ask — content opportunities
+    if paa:
+        suggestions.append({
+            "type": "medium",
+            "title": f"{len(paa)} 'People Also Ask' content opportunities",
+            "detail": (
+                "Google shows these questions for your keyword. Add them as FAQ "
+                "items with schema markup on your target page to win featured snippets: "
+                + " | ".join(f'"{q}"' for q in paa[:4])
+            ),
+        })
+
+    # 4. Related searches — keyword expansion
+    if related:
+        suggestions.append({
+            "type": "low",
+            "title": f"{len(related)} related keyword opportunities",
+            "detail": (
+                "Google suggests these related searches. Consider creating content "
+                "or adding sections that target these terms: "
+                + ", ".join(f'"{r}"' for r in related[:6])
+            ),
+        })
+
+    # 5. Local pack presence
+    local_pack = results.get("local_pack", [])
+    our_in_local = any(
+        "photobooth guys" in p.get("title", "").lower()
+        for p in local_pack
+    )
+    if local_pack and not our_in_local:
+        suggestions.append({
+            "type": "high",
+            "title": "Not appearing in Local Pack",
+            "detail": (
+                "A Google Maps local pack is showing for this keyword but you are "
+                "not in it. Ensure your Google Business Profile is set up, verified, "
+                "and optimised with correct category, photos, and reviews."
+            ),
+        })
+    elif not local_pack:
+        suggestions.append({
+            "type": "low",
+            "title": "No Local Pack for this keyword",
+            "detail": (
+                "Google is not showing a maps pack for this search. This means "
+                "organic rankings are the primary way to win visibility."
+            ),
+        })
+
+    return suggestions
 
 
 # ── Google PageSpeed Insights ────────────────────────────────────
