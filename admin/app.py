@@ -1116,6 +1116,174 @@ def api_features(product_id):
     return jsonify({"features": features, "speed": speed})
 
 
+# ---------------------------------------------------------------------------
+# Page Images management (wedding / corporate page images)
+# ---------------------------------------------------------------------------
+
+PAGE_CONFIG_FILE = ADMIN_DIR / "page-config.json"
+PAGE_IMAGES_DIR = IMAGES_DIR / "pages"
+PAGE_IMAGES_DIR.mkdir(exist_ok=True)
+
+
+def load_page_config():
+    if PAGE_CONFIG_FILE.exists():
+        return json.loads(PAGE_CONFIG_FILE.read_text())
+    return {}
+
+
+def save_page_config(config):
+    PAGE_CONFIG_FILE.write_text(json.dumps(config, indent=2))
+
+
+@app.route("/page-images")
+@login_required
+def page_images():
+    config = load_page_config()
+    products = load_products()
+    product_map = {p["id"]: p["name"] for p in products}
+    page_key = request.args.get("page", "wedding-photo-booth-hire.html")
+    if page_key not in config:
+        page_key = next(iter(config), "")
+    page_data = config.get(page_key, {})
+    for section in page_data.get("sections", []):
+        section["product_name"] = product_map.get(section["product_id"], section["product_id"])
+        img = section.get("image", "")
+        if img and (PAGE_IMAGES_DIR / img).exists():
+            section["info"] = get_image_info("pages/" + img)
+        elif img:
+            section["info"] = get_image_info(img)
+        else:
+            section["info"] = {"exists": False, "size_kb": 0, "width": 0, "height": 0}
+    hero = page_data.get("hero_image", "")
+    if hero and (PAGE_IMAGES_DIR / hero).exists():
+        hero_info = get_image_info("pages/" + hero)
+    elif hero:
+        hero_info = get_image_info(hero)
+    else:
+        hero_info = {"exists": False, "size_kb": 0, "width": 0, "height": 0}
+    return render_template(
+        "page-images.html",
+        pages=config,
+        current_page=page_key,
+        page_data=page_data,
+        hero_info=hero_info,
+        product_map=product_map,
+    )
+
+
+@app.route("/page-images/upload-hero", methods=["POST"])
+@login_required
+def upload_page_hero():
+    config = load_page_config()
+    page_key = request.form.get("page_key", "")
+    if page_key not in config:
+        flash("Page not found", "error")
+        return redirect(url_for("page_images"))
+
+    if "image" not in request.files or request.files["image"].filename == "":
+        flash("No file selected", "error")
+        return redirect(url_for("page_images", page=page_key))
+
+    file = request.files["image"]
+    if not allowed_file(file.filename):
+        flash(f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}", "error")
+        return redirect(url_for("page_images", page=page_key))
+
+    safe_page = page_key.replace(".html", "").replace("/", "-")
+    output_name = f"{safe_page}_hero.webp"
+    tmp_path = PAGE_IMAGES_DIR / f"_tmp_{secure_filename(file.filename)}"
+    output_path = PAGE_IMAGES_DIR / output_name
+
+    try:
+        file.save(str(tmp_path))
+        new_size = optimize_image(tmp_path, output_path)
+        config[page_key]["hero_image"] = output_name
+        save_page_config(config)
+        flash(f"Hero image updated — {new_size[0]}x{new_size[1]}", "success")
+    except Exception as e:
+        flash(f"Error processing image: {e}", "error")
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
+
+    return redirect(url_for("page_images", page=page_key))
+
+
+@app.route("/page-images/upload-section", methods=["POST"])
+@login_required
+def upload_page_section():
+    config = load_page_config()
+    page_key = request.form.get("page_key", "")
+    product_id = request.form.get("product_id", "")
+
+    if page_key not in config:
+        flash("Page not found", "error")
+        return redirect(url_for("page_images"))
+
+    section = next(
+        (s for s in config[page_key].get("sections", []) if s["product_id"] == product_id),
+        None,
+    )
+    if not section:
+        flash("Section not found", "error")
+        return redirect(url_for("page_images", page=page_key))
+
+    if "image" not in request.files or request.files["image"].filename == "":
+        flash("No file selected", "error")
+        return redirect(url_for("page_images", page=page_key))
+
+    file = request.files["image"]
+    if not allowed_file(file.filename):
+        flash(f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}", "error")
+        return redirect(url_for("page_images", page=page_key))
+
+    safe_page = page_key.replace(".html", "").replace("/", "-")
+    output_name = f"{safe_page}_{product_id}.webp"
+    tmp_path = PAGE_IMAGES_DIR / f"_tmp_{secure_filename(file.filename)}"
+    output_path = PAGE_IMAGES_DIR / output_name
+
+    try:
+        file.save(str(tmp_path))
+        new_size = optimize_image(tmp_path, output_path)
+        section["image"] = output_name
+        save_page_config(config)
+        flash(f"Image updated for {product_id} — {new_size[0]}x{new_size[1]}", "success")
+    except Exception as e:
+        flash(f"Error processing image: {e}", "error")
+    finally:
+        if tmp_path.exists():
+            tmp_path.unlink()
+
+    return redirect(url_for("page_images", page=page_key))
+
+
+@app.route("/api/page-config/<path:page_name>")
+def api_page_config(page_name):
+    config = load_page_config()
+    page_data = config.get(page_name, {})
+    if not page_data:
+        return jsonify({})
+
+    hero = page_data.get("hero_image", "")
+    hero_path = (
+        f"/images/pages/{hero}" if hero and (PAGE_IMAGES_DIR / hero).exists()
+        else f"/images/{hero}"
+    )
+
+    sections = {}
+    for s in page_data.get("sections", []):
+        img = s.get("image", "")
+        if not img:
+            continue
+        img_path = (
+            f"/images/pages/{img}" if (PAGE_IMAGES_DIR / img).exists()
+            else f"/images/{img}"
+        )
+        sections[s["product_id"]] = {"image": img_path}
+
+    return jsonify({"hero_image": hero_path, "sections": sections})
+
+
 @app.route("/settings")
 @login_required
 def settings():

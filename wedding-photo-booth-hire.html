@@ -118,7 +118,7 @@
         </a>
       </div>
       <div class="product-hero-img">
-        <img fetchpriority="high" src="images/selfie-mirror.webp" alt="Selfie mirror at an Irish wedding reception" width="600" height="450" loading="eager" sizes="(max-width: 768px) 100vw, 50vw">
+        <img fetchpriority="high" src="images/selfie-mirror.webp" alt="Selfie mirror at an Irish wedding reception" width="600" height="450" loading="eager" sizes="(max-width: 768px) 100vw, 50vw" data-page-hero>
       </div>
     </div>
   </div>
@@ -133,7 +133,7 @@
 
       <a href="services/open-air-photo-booth-hire.html" class="service-card-enhanced reveal">
         <div class="service-card-img-wrap">
-          <img src="images/open-air-booth.webp" alt="Open Air Photo Booth" loading="lazy" decoding="async" width="1200" height="675">
+          <img src="images/open-air-booth.webp" alt="Open Air Photo Booth" loading="lazy" decoding="async" width="1200" height="675" data-page-product="open-air-photo-booth">
           <span class="service-card-badge">Photo Booth</span>
         </div>
         <div class="service-card-body">
@@ -150,7 +150,7 @@
 
       <a href="services/selfie-mirror-hire.html" class="service-card-enhanced reveal">
         <div class="service-card-img-wrap">
-          <img src="images/selfie-mirror.webp" alt="Selfie Mirror" loading="lazy" decoding="async" width="400" height="300">
+          <img src="images/selfie-mirror.webp" alt="Selfie Mirror" loading="lazy" decoding="async" width="400" height="300" data-page-product="selfie-mirror">
           <span class="service-card-badge">Photo Booth</span>
         </div>
         <div class="service-card-body">
@@ -167,7 +167,7 @@
 
       <a href="services/360-photo-booth-hire.html" class="service-card-enhanced reveal">
         <div class="service-card-img-wrap">
-          <img src="images/360-booth.webp" alt="360 Photo Booth" loading="lazy" decoding="async" width="400" height="300">
+          <img src="images/360-booth.webp" alt="360 Photo Booth" loading="lazy" decoding="async" width="400" height="300" data-page-product="360-photo-booth">
           <span class="service-card-badge">Video Booth</span>
         </div>
         <div class="service-card-body">
@@ -184,7 +184,7 @@
 
       <a href="services/vintage-tripod-photo-booth-hire.html" class="service-card-enhanced reveal">
         <div class="service-card-img-wrap">
-          <img src="images/vintage-tripod.webp" alt="Vintage Tripod Photo Booth" loading="lazy" decoding="async" width="400" height="300">
+          <img src="images/vintage-tripod.webp" alt="Vintage Tripod Photo Booth" loading="lazy" decoding="async" width="400" height="300" data-page-product="vintage-tripod">
           <span class="service-card-badge">Photo Booth</span>
         </div>
         <div class="service-card-body">
@@ -201,7 +201,7 @@
 
       <a href="services/glam-photo-booth-hire.html" class="service-card-enhanced reveal">
         <div class="service-card-img-wrap">
-          <img src="images/glam-booth.webp" alt="Glam Photo Booth" loading="lazy" decoding="async" width="1200" height="800">
+          <img src="images/glam-booth.webp" alt="Glam Photo Booth" loading="lazy" decoding="async" width="1200" height="800" data-page-product="glam-booth">
           <span class="service-card-badge">Photo Booth</span>
         </div>
         <div class="service-card-body">
@@ -218,7 +218,7 @@
 
       <a href="services/audio-phone-guestbook-hire.html" class="service-card-enhanced reveal">
         <div class="service-card-img-wrap">
-          <img src="images/vintage-tripod.webp" alt="Audio Phone Guestbook" loading="lazy" decoding="async" width="400" height="300">
+          <img src="images/vintage-tripod.webp" alt="Audio Phone Guestbook" loading="lazy" decoding="async" width="400" height="300" data-page-product="audio-guestbook">
           <span class="service-card-badge">Add-on</span>
         </div>
         <div class="service-card-body">
@@ -394,6 +394,7 @@
 </footer>
 
 <script src="js/main.min.js?v=6" defer></script>
+<script>(function(){fetch("/admin/api/page-config/wedding-photo-booth-hire.html").then(function(r){return r.json()}).then(function(d){if(d.hero_image){var h=document.querySelector("[data-page-hero]");if(h)h.src=d.hero_image}if(d.sections){Object.keys(d.sections).forEach(function(id){var img=document.querySelector('[data-page-product="'+id+'"]');if(img)img.src=d.sections[id].image})}}).catch(function(){})})()</script>
 <script>(function(){var p=location.pathname,st=performance.now(),mx=0,vt=0,lv=st,sent=0;function snd(d){if(navigator.sendBeacon)navigator.sendBeacon("/admin/track",new Blob([JSON.stringify(d)],{type:"application/json"}))}snd({t:"pv",p:p,r:document.referrer,w:screen.width});var stm;addEventListener("scroll",function(){if(stm)return;stm=setTimeout(function(){stm=null;var pct=Math.round((scrollY+innerHeight)/Math.max(document.body.scrollHeight,1)*100);if(pct>mx)mx=Math.min(pct,100)},500)},{passive:true});function eng(){if(sent)return;sent=1;vt+=performance.now()-lv;snd({t:"eng",p:p,d:mx,s:Math.round(vt/1000)})}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden"){eng()}else{lv=performance.now()}});addEventListener("beforeunload",eng);document.addEventListener("click",function(e){var el=e.target.closest("a[href*=contact],a[href*=quote],.btn-primary,.btn-book,.btn-book-mobile,.hero-btn,button[type=submit]");if(el)snd({t:"click",p:p,l:(el.dataset.track||el.textContent.trim().slice(0,50))})})})()</script>
 </body>
 </html>

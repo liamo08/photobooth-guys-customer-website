@@ -1,0 +1,54 @@
+{
+  "wedding-photo-booth-hire.html": {
+    "name": "Wedding Photo Booth Hire",
+    "hero_image": "selfie-mirror.webp",
+    "sections": [
+      {
+        "product_id": "open-air-photo-booth",
+        "image": "open-air-booth.webp"
+      },
+      {
+        "product_id": "selfie-mirror",
+        "image": "selfie-mirror.webp"
+      },
+      {
+        "product_id": "360-photo-booth",
+        "image": "360-booth.webp"
+      },
+      {
+        "product_id": "vintage-tripod",
+        "image": "vintage-tripod.webp"
+      },
+      {
+        "product_id": "glam-booth",
+        "image": "glam-booth.webp"
+      },
+      {
+        "product_id": "audio-guestbook",
+        "image": "vintage-tripod.webp"
+      }
+    ]
+  },
+  "corporate-events.html": {
+    "name": "Corporate Events",
+    "hero_image": "brand-activation.webp",
+    "sections": [
+      {
+        "product_id": "360-photo-booth",
+        "image": "360-booth.webp"
+      },
+      {
+        "product_id": "open-air-photo-booth",
+        "image": "open-air-booth.webp"
+      },
+      {
+        "product_id": "ai-photo-booth",
+        "image": "ai-photo-booth.webp"
+      },
+      {
+        "product_id": "guinness-pint-printer",
+        "image": "brand-activation.webp"
+      }
+    ]
+  }
+}
