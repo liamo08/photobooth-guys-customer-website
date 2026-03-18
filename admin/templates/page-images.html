@@ -191,7 +191,7 @@ body{
       <div>
         <div class="hero-preview">
           {% if hero_info.exists %}
-          <img src="/images/{{ page_data.hero_image }}?v={{ range(1000,9999) | random }}" alt="Hero image" id="heroPreviewImg"
+          <img src="/images/pages/{{ page_data.hero_image }}?v={{ range(1000,9999) | random }}" alt="Hero image" id="heroPreviewImg"
             onerror="this.onerror=null;this.src='/images/{{ page_data.hero_image }}?v={{ range(1000,9999) | random }}'">
           {% else %}
           <span class="no-img">No hero image</span>
