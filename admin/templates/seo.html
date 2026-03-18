@@ -286,6 +286,28 @@ body{
   </div>
   {% endif %}
 
+  <!-- Action bar (always visible) -->
+  <div class="action-bar">
+    <div class="sub-tabs">
+      {% if report %}
+      <button class="sub-tab active" onclick="switchTab('recommendations')">Recommendations</button>
+      <button class="sub-tab" onclick="switchTab('technical')">Technical</button>
+      {% if report.keywords %}
+      <button class="sub-tab" onclick="switchTab('keywords')">Keywords</button>
+      {% endif %}
+      {% endif %}
+      <button class="sub-tab {% if not report %}active{% endif %}" onclick="switchTab('serp')">SERP</button>
+      <button class="sub-tab" onclick="switchTab('pagespeed')">PageSpeed</button>
+      {% if report %}
+      <button class="sub-tab" onclick="switchTab('changes')">Changes</button>
+      <button class="sub-tab" onclick="switchTab('history')">History</button>
+      {% endif %}
+    </div>
+    <form method="POST" action="{{ url_for('seo_run_analysis') }}" style="margin:0">
+      <button type="submit" class="run-btn" onclick="this.textContent='Analysing...';this.disabled=true;this.form.submit()">Run Analysis</button>
+    </form>
+  </div>
+
   {% if report %}
   <!-- Stats -->
   {% set score = report.overall_score or report.summary.overall_score or 0 %}
@@ -308,24 +330,6 @@ body{
       <div class="stat-number" style="font-size:1rem;color:var(--text-muted)">{{ report.created_at[:16]|replace('T',' ') }}</div>
       <div class="stat-label">Last Analysis</div>
     </div>
-  </div>
-
-  <!-- Action bar -->
-  <div class="action-bar">
-    <div class="sub-tabs">
-      <button class="sub-tab active" onclick="switchTab('recommendations')">Recommendations</button>
-      <button class="sub-tab" onclick="switchTab('technical')">Technical</button>
-      {% if report.keywords %}
-      <button class="sub-tab" onclick="switchTab('keywords')">Keywords</button>
-      {% endif %}
-      <button class="sub-tab" onclick="switchTab('serp')">SERP</button>
-      <button class="sub-tab" onclick="switchTab('pagespeed')">PageSpeed</button>
-      <button class="sub-tab" onclick="switchTab('changes')">Changes</button>
-      <button class="sub-tab" onclick="switchTab('history')">History</button>
-    </div>
-    <form method="POST" action="{{ url_for('seo_run_analysis') }}" style="margin:0">
-      <button type="submit" class="run-btn" onclick="this.textContent='Analysing...';this.disabled=true;this.form.submit()">Run Analysis</button>
-    </form>
   </div>
 
   <!-- Tab: Recommendations -->
@@ -424,9 +428,10 @@ body{
     </div>
   </div>
   {% endif %}
+  {% endif %}{# end if report — keywords/technical/recommendations tabs #}
 
   <!-- Tab: SERP -->
-  <div id="tab-serp" class="tab-content">
+  <div id="tab-serp" class="tab-content {% if not report %}active{% endif %}">
     {% if has_serper %}
     <div class="rec-card" style="margin-bottom:24px">
       <h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:12px">Check SERP Position</h3>
@@ -635,6 +640,7 @@ body{
     {% endif %}
   </div>
 
+  {% if report %}
   <!-- Tab: Changes -->
   <div id="tab-changes" class="tab-content">
     {% if changes %}
@@ -679,17 +685,7 @@ body{
     </div>
     {% endif %}
   </div>
-
-  {% else %}
-  <!-- No report yet -->
-  <div class="empty-state">
-    <h2>No SEO analysis yet</h2>
-    <p>Run your first analysis to get actionable recommendations for improving your site's SEO.</p>
-    <form method="POST" action="{{ url_for('seo_run_analysis') }}" style="margin:0">
-      <button type="submit" class="run-btn" onclick="this.textContent='Analysing...';this.disabled=true;this.form.submit()">Run First Analysis</button>
-    </form>
-  </div>
-  {% endif %}
+  {% endif %}{# end if report — changes/history tabs #}
 </div>
 
 <script>
