@@ -290,17 +290,17 @@ body{
   <div class="action-bar">
     <div class="sub-tabs">
       {% if report %}
-      <button class="sub-tab active" onclick="switchTab('recommendations')">Recommendations</button>
-      <button class="sub-tab" onclick="switchTab('technical')">Technical</button>
+      <button class="sub-tab {{ 'active' if active_tab == 'recommendations' }}" onclick="switchTab('recommendations')">Recommendations</button>
+      <button class="sub-tab {{ 'active' if active_tab == 'technical' }}" onclick="switchTab('technical')">Technical</button>
       {% if report.keywords %}
-      <button class="sub-tab" onclick="switchTab('keywords')">Keywords</button>
+      <button class="sub-tab {{ 'active' if active_tab == 'keywords' }}" onclick="switchTab('keywords')">Keywords</button>
       {% endif %}
       {% endif %}
-      <button class="sub-tab {% if not report %}active{% endif %}" onclick="switchTab('serp')">SERP</button>
-      <button class="sub-tab" onclick="switchTab('pagespeed')">PageSpeed</button>
+      <button class="sub-tab {{ 'active' if active_tab == 'serp' }}" onclick="switchTab('serp')">SERP</button>
+      <button class="sub-tab {{ 'active' if active_tab == 'pagespeed' }}" onclick="switchTab('pagespeed')">PageSpeed</button>
       {% if report %}
-      <button class="sub-tab" onclick="switchTab('changes')">Changes</button>
-      <button class="sub-tab" onclick="switchTab('history')">History</button>
+      <button class="sub-tab {{ 'active' if active_tab == 'changes' }}" onclick="switchTab('changes')">Changes</button>
+      <button class="sub-tab {{ 'active' if active_tab == 'history' }}" onclick="switchTab('history')">History</button>
       {% endif %}
     </div>
     <form method="POST" action="{{ url_for('seo_run_analysis') }}" style="margin:0">
@@ -333,7 +333,7 @@ body{
   </div>
 
   <!-- Tab: Recommendations -->
-  <div id="tab-recommendations" class="tab-content active">
+  <div id="tab-recommendations" class="tab-content {{ 'active' if active_tab == 'recommendations' }}">
     {% if report.recommendations %}
     {% for rec in report.recommendations %}
     <div class="rec-card">
@@ -431,14 +431,14 @@ body{
   {% endif %}{# end if report — keywords/technical/recommendations tabs #}
 
   <!-- Tab: SERP -->
-  <div id="tab-serp" class="tab-content {% if not report %}active{% endif %}">
+  <div id="tab-serp" class="tab-content {{ 'active' if active_tab == 'serp' }}">
     {% if has_serper %}
     <div class="rec-card" style="margin-bottom:24px">
       <h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:12px">Check SERP Position</h3>
       <form method="POST" action="{{ url_for('seo_serp_check') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
         <div style="flex:1;min-width:200px">
           <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Keyword</label>
-          <input type="text" name="keyword" value="photo booth dublin" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
+          <input type="text" name="keyword" value="{{ serp_data.keyword if serp_data else 'photo booth dublin' }}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--charcoal);color:var(--white);font-family:var(--font-body);font-size:.85rem">
         </div>
         <div style="min-width:160px">
           <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:4px">Location</label>
@@ -585,7 +585,7 @@ body{
   </div>
 
   <!-- Tab: PageSpeed -->
-  <div id="tab-pagespeed" class="tab-content">
+  <div id="tab-pagespeed" class="tab-content {{ 'active' if active_tab == 'pagespeed' }}">
     {% if has_pagespeed %}
     <div class="rec-card" style="margin-bottom:24px">
       <h3 style="font-family:var(--font-display);font-size:1rem;margin-bottom:12px">Run PageSpeed Check</h3>

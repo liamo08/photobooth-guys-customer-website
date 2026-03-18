@@ -2071,10 +2071,17 @@ def seo_dashboard():
         for h in history
     ]
 
-    # Get latest SERP check
-    serp_row = conn.execute(
-        "SELECT results_json, created_at FROM serp_checks ORDER BY created_at DESC LIMIT 1"
-    ).fetchone()
+    # Get latest SERP check (for specific keyword if provided, otherwise most recent)
+    serp_keyword = request.args.get("keyword")
+    if serp_keyword:
+        serp_row = conn.execute(
+            "SELECT results_json, created_at FROM serp_checks WHERE keyword = ? ORDER BY created_at DESC LIMIT 1",
+            (serp_keyword,),
+        ).fetchone()
+    else:
+        serp_row = conn.execute(
+            "SELECT results_json, created_at FROM serp_checks ORDER BY created_at DESC LIMIT 1"
+        ).fetchone()
     serp_data = None
     if serp_row:
         serp_data = json.loads(serp_row[0])
@@ -2111,6 +2118,7 @@ def seo_dashboard():
         serp_data=serp_data,
         serp_history=serp_history_list,
         pagespeed_data=pagespeed_data,
+        active_tab=request.args.get("tab", "recommendations" if report else "serp"),
     )
 
 
@@ -2332,7 +2340,7 @@ def seo_serp_check():
         error_msg = result.get("error", "Unknown error") if result else "No response"
         flash(f"SERP check failed: {error_msg}", "error")
 
-    return redirect(url_for("seo_dashboard"))
+    return redirect(url_for("seo_dashboard", tab="serp", keyword=keyword))
 
 
 # ── PageSpeed Insights ───────────────────────────────────────────
@@ -2366,7 +2374,7 @@ def seo_pagespeed_check():
         error_msg = result.get("error", "Unknown error") if result else "No response"
         flash(f"PageSpeed check failed: {error_msg}", "error")
 
-    return redirect(url_for("seo_dashboard"))
+    return redirect(url_for("seo_dashboard", tab="pagespeed"))
 
 
 # ── Undo/Rollback ───────────────────────────────────────────────
