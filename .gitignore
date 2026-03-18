@@ -5,4 +5,5 @@ admin/enquiries.json
 .env
 *.pyc
 admin/analytics.db
+admin/gsc-token.json
 scraped/

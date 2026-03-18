@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Analysis | Photobooth Guys Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coal:#0e0e18;--charcoal:#1a1a2e;--surface:#16162a;
+  --teal:#5f94a4;--teal-light:#7ab8cc;--gold:#e8b83d;
+  --white:#f4f4f5;--text-muted:rgba(244,244,245,.6);
+  --border:rgba(95,148,164,.15);--border-hover:rgba(95,148,164,.35);
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --success-bg:rgba(34,197,94,.12);--success-border:rgba(34,197,94,.3);--success-text:#4ade80;
+  --error-bg:rgba(220,53,69,.12);--error-border:rgba(220,53,69,.3);--error-text:#f87171;
+  --warning-bg:rgba(232,184,61,.1);--warning-border:rgba(232,184,61,.3);--warning-text:#e8b83d;
+  --info-bg:rgba(59,130,246,.1);--info-border:rgba(59,130,246,.3);--info-text:#60a5fa;
+}
+body{
+  min-height:100vh;background:var(--coal);font-family:var(--font-body);color:var(--white);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(95,148,164,.06) 0%,transparent 60%);
+}
+.admin-header{
+  position:sticky;top:0;z-index:100;padding:16px 32px;
+  background:rgba(14,14,24,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header .logo{display:flex;align-items:center;gap:12px}
+.admin-header .logo img{height:40px;width:auto}
+.admin-header .logo span{font-family:var(--font-display);font-size:1.1rem;font-weight:700}
+.admin-header .logo small{color:var(--teal);font-family:var(--font-body);font-size:.75rem;font-weight:500;margin-left:8px}
+.header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-sm:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-sm.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-sm.danger:hover{background:rgba(220,53,69,.1)}
+.btn-sm.active{border-color:var(--teal);color:var(--teal-light)}
+.main{max-width:1200px;margin:0 auto;padding:32px 24px}
+.page-title{font-family:var(--font-display);font-size:1.6rem;margin-bottom:6px}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px}
+.flash{
+  padding:14px 20px;border-radius:10px;margin-bottom:24px;font-size:.88rem;
+  display:flex;align-items:center;gap:10px;
+}
+.flash.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.flash.error{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.flash::before{font-size:1.1rem}
+.flash.success::before{content:"\2713"}
+.flash.error::before{content:"\2717"}
+.visit-site{color:var(--teal-light);text-decoration:none;font-size:.82rem;transition:color .2s}
+.visit-site:hover{color:var(--white)}
+
+/* GSC Connection Banner */
+.gsc-banner{
+  padding:14px 20px;border-radius:10px;margin-bottom:24px;font-size:.88rem;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.gsc-banner.connected{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.gsc-banner.disconnected{background:var(--info-bg);border:1px solid var(--info-border);color:var(--info-text)}
+.gsc-banner.no-config{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text-muted)}
+.gsc-btn{
+  padding:6px 14px;border-radius:6px;font-size:.78rem;font-weight:600;
+  font-family:var(--font-body);cursor:pointer;border:none;text-decoration:none;transition:all .2s;
+}
+.gsc-btn.connect{background:var(--teal);color:var(--coal)}
+.gsc-btn.connect:hover{opacity:.9}
+.gsc-btn.disconnect{background:transparent;border:1px solid var(--error-border);color:var(--error-text);font-size:.72rem}
+.gsc-btn.disconnect:hover{background:var(--error-bg)}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  padding:24px;text-align:center;
+}
+.stat-card .stat-number{font-family:var(--font-display);font-size:2rem;margin-bottom:4px}
+.stat-card .stat-label{color:var(--text-muted);font-size:.82rem}
+.stat-card.good .stat-number{color:var(--success-text)}
+.stat-card.warn .stat-number{color:var(--warning-text)}
+.stat-card.critical .stat-number{color:var(--error-text)}
+.stat-card.info .stat-number{color:var(--info-text)}
+
+/* Score circle */
+.score-circle{
+  width:80px;height:80px;border-radius:50%;margin:0 auto 8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-size:1.8rem;font-weight:700;
+}
+.score-high{border:3px solid var(--success-text);color:var(--success-text)}
+.score-mid{border:3px solid var(--warning-text);color:var(--warning-text)}
+.score-low{border:3px solid var(--error-text);color:var(--error-text)}
+
+/* Sub-tabs */
+.sub-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border)}
+.sub-tab{
+  padding:12px 20px;font-size:.85rem;font-weight:500;color:var(--text-muted);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;
+  font-family:var(--font-body);
+}
+.sub-tab:hover{color:var(--white)}
+.sub-tab.active{color:var(--teal-light);border-bottom-color:var(--teal)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Action bar */
+.action-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+.run-btn{
+  padding:10px 24px;border:none;border-radius:8px;cursor:pointer;
+  font-size:.85rem;font-weight:600;font-family:var(--font-body);
+  background:linear-gradient(135deg,var(--teal),var(--teal-light));
+  color:var(--coal);transition:all .2s;
+}
+.run-btn:hover{opacity:.9;transform:translateY(-1px)}
+
+/* Recommendation cards */
+.rec-card{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  padding:20px 24px;margin-bottom:16px;
+}
+.rec-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.severity-badge{
+  padding:3px 10px;border-radius:4px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;
+}
+.severity-badge.critical{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.severity-badge.high{background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);color:#fb923c}
+.severity-badge.medium{background:var(--warning-bg);border:1px solid var(--warning-border);color:var(--warning-text)}
+.severity-badge.low{background:var(--info-bg);border:1px solid var(--info-border);color:var(--info-text)}
+.rec-title{font-weight:600;font-size:.95rem}
+.rec-desc{color:var(--text-muted);font-size:.85rem;margin-bottom:12px}
+.rec-category{
+  display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;
+  background:rgba(255,255,255,.05);color:var(--text-muted);margin-left:auto;
+}
+.copy-btn{
+  padding:8px 16px;border:1px solid var(--teal);border-radius:6px;
+  background:transparent;color:var(--teal-light);font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;transition:all .2s;
+}
+.copy-btn:hover{background:rgba(95,148,164,.1)}
+.copy-btn.copied{border-color:var(--success-text);color:var(--success-text);background:var(--success-bg)}
+
+/* Technical issues - page groups */
+.page-group{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  margin-bottom:16px;overflow:hidden;
+}
+.page-group-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;cursor:pointer;transition:background .2s;
+}
+.page-group-header:hover{background:rgba(95,148,164,.04)}
+.page-group-header h3{font-family:var(--font-display);font-size:.95rem}
+.page-group-header .issue-count{
+  display:flex;gap:6px;
+}
+.issue-pill{
+  padding:3px 8px;border-radius:4px;font-size:.68rem;font-weight:600;
+}
+.issue-pill.critical{background:var(--error-bg);color:var(--error-text)}
+.issue-pill.high{background:rgba(249,115,22,.12);color:#fb923c}
+.issue-pill.medium{background:var(--warning-bg);color:var(--warning-text)}
+.issue-pill.low{background:var(--info-bg);color:var(--info-text)}
+.page-group-body{display:none;border-top:1px solid var(--border)}
+.page-group-body.open{display:block}
+.issue-row{
+  padding:12px 20px;border-bottom:1px solid rgba(95,148,164,.06);
+  display:flex;align-items:center;gap:12px;font-size:.85rem;
+}
+.issue-row:last-child{border-bottom:none}
+
+/* Keywords table */
+.kw-table{width:100%;border-collapse:collapse}
+.kw-table th{
+  padding:10px 14px;text-align:left;font-size:.78rem;font-weight:600;
+  color:var(--text-muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;
+}
+.kw-table td{
+  padding:10px 14px;font-size:.85rem;border-bottom:1px solid rgba(95,148,164,.06);
+}
+.kw-table tr:hover td{background:rgba(95,148,164,.03)}
+.pos-good{color:var(--success-text)}
+.pos-mid{color:var(--warning-text)}
+.pos-low{color:var(--error-text)}
+
+/* Changes timeline */
+.change-item{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:10px;
+  padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.change-info{flex:1}
+.change-msg{font-size:.88rem;margin-bottom:4px}
+.change-date{font-size:.75rem;color:var(--text-muted)}
+.change-files{font-size:.72rem;color:var(--teal-light)}
+.undo-btn{
+  padding:6px 14px;border:1px solid var(--error-border);border-radius:6px;
+  background:transparent;color:var(--error-text);font-size:.75rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.undo-btn:hover{background:var(--error-bg)}
+.undo-btn.reverted{opacity:.4;cursor:default;pointer-events:none}
+
+/* History list */
+.history-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid rgba(95,148,164,.06);
+  text-decoration:none;color:var(--white);transition:background .2s;font-size:.85rem;
+}
+.history-item:hover{background:rgba(95,148,164,.04)}
+.history-score{font-weight:600;font-family:var(--font-display)}
+
+/* Empty state */
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--text-muted);
+}
+.empty-state h2{font-family:var(--font-display);font-size:1.3rem;color:var(--white);margin-bottom:10px}
+.empty-state p{font-size:.9rem;margin-bottom:24px}
+
+.hidden{display:none !important}
+
+@media(max-width:768px){
+  .admin-header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .main{padding:20px 16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .page-title{font-size:1.3rem}
+  .sub-tabs{overflow-x:auto}
+  .change-item{flex-direction:column;align-items:flex-start}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">
+    <img src="/logo.webp" alt="Photobooth Guys">
+    <span>Photobooth Guys</span>
+    <small>ADMIN</small>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-sm">Images</a>
+    <a href="{{ url_for('page_images') }}" class="btn-sm">Page Images</a>
+    <a href="{{ url_for('enquiries') }}" class="btn-sm">Enquiries</a>
+    <a href="{{ url_for('image_seo') }}" class="btn-sm">Image SEO</a>
+    <a href="{{ url_for('seo_dashboard') }}" class="btn-sm active">SEO</a>
+    <a href="{{ url_for('analytics') }}" class="btn-sm">Analytics</a>
+    <a href="/" class="btn-sm visit-site" target="_blank">View Site</a>
+    <a href="{{ url_for('settings') }}" class="btn-sm">Settings</a>
+    <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <h1 class="page-title">SEO Analysis</h1>
+  <p class="page-subtitle">Automated SEO analysis with actionable recommendations. Runs daily at 7am.</p>
+
+  <!-- GSC Connection Status -->
+  {% if gsc_connected %}
+  <div class="gsc-banner connected">
+    <span>Google Search Console connected - photoboothguys.ie</span>
+    <form method="POST" action="{{ url_for('seo_disconnect_gsc') }}" style="margin:0" onsubmit="return confirm('Disconnect Google Search Console?')">
+      <button type="submit" class="gsc-btn disconnect">Disconnect</button>
+    </form>
+  </div>
+  {% elif has_gsc_config %}
+  <div class="gsc-banner disconnected">
+    <span>Google Search Console not connected. Connect to get keyword rankings and traffic data.</span>
+    <a href="{{ url_for('seo_connect_gsc') }}" class="gsc-btn connect">Connect GSC</a>
+  </div>
+  {% else %}
+  <div class="gsc-banner no-config">
+    <span>To enable keyword tracking, add GSC_CLIENT_ID and GSC_CLIENT_SECRET to your .env file, then connect.</span>
+  </div>
+  {% endif %}
+
+  {% if report %}
+  <!-- Stats -->
+  {% set score = report.overall_score or report.summary.overall_score or 0 %}
+  {% set score_class = 'good' if score >= 70 else ('warn' if score >= 40 else 'critical') %}
+  {% set circle_class = 'score-high' if score >= 70 else ('score-mid' if score >= 40 else 'score-low') %}
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="score-circle {{ circle_class }}">{{ score }}</div>
+      <div class="stat-label">SEO Score</div>
+    </div>
+    <div class="stat-card {{ 'critical' if report.summary.severity_counts.critical|default(0) > 0 else ('warn' if report.summary.severity_counts.high|default(0) > 0 else 'good') }}">
+      <div class="stat-number">{{ report.summary.total_issues|default(0) }}</div>
+      <div class="stat-label">Issues Found</div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-number">{% if report.keywords %}{{ report.keywords|length }}{% else %}--{% endif %}</div>
+      <div class="stat-label">Keywords Tracked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" style="font-size:1rem;color:var(--text-muted)">{{ report.created_at[:16]|replace('T',' ') }}</div>
+      <div class="stat-label">Last Analysis</div>
+    </div>
+  </div>
+
+  <!-- Action bar -->
+  <div class="action-bar">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchTab('recommendations')">Recommendations</button>
+      <button class="sub-tab" onclick="switchTab('technical')">Technical</button>
+      {% if report.keywords %}
+      <button class="sub-tab" onclick="switchTab('keywords')">Keywords</button>
+      {% endif %}
+      <button class="sub-tab" onclick="switchTab('changes')">Changes</button>
+      <button class="sub-tab" onclick="switchTab('history')">History</button>
+    </div>
+    <form method="POST" action="{{ url_for('seo_run_analysis') }}" style="margin:0">
+      <button type="submit" class="run-btn" onclick="this.textContent='Analysing...';this.disabled=true;this.form.submit()">Run Analysis</button>
+    </form>
+  </div>
+
+  <!-- Tab: Recommendations -->
+  <div id="tab-recommendations" class="tab-content active">
+    {% if report.recommendations %}
+    {% for rec in report.recommendations %}
+    <div class="rec-card">
+      <div class="rec-header">
+        <span class="severity-badge {{ rec.severity }}">{{ rec.severity }}</span>
+        <span class="rec-title">{{ rec.title }}</span>
+        <span class="rec-category">{{ rec.category }}</span>
+      </div>
+      <div class="rec-desc">{{ rec.description }}</div>
+      {% if rec.claude_prompt %}
+      <button class="copy-btn" data-prompt="{{ rec.claude_prompt|e }}" onclick="copyPrompt(this)">Copy Claude Code Prompt</button>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <h2>No recommendations</h2>
+      <p>Your site looks great! No SEO issues detected.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Tab: Technical -->
+  <div id="tab-technical" class="tab-content">
+    {% if report.technical %}
+    {% for page in report.technical %}
+    {% set crits = page.issues|selectattr('severity','equalto','critical')|list|length %}
+    {% set highs = page.issues|selectattr('severity','equalto','high')|list|length %}
+    {% set meds = page.issues|selectattr('severity','equalto','medium')|list|length %}
+    {% set lows = page.issues|selectattr('severity','equalto','low')|list|length %}
+    <div class="page-group">
+      <div class="page-group-header" onclick="toggleGroup(this)">
+        <h3>{{ page.page_url }}</h3>
+        <div class="issue-count">
+          {% if crits %}<span class="issue-pill critical">{{ crits }} critical</span>{% endif %}
+          {% if highs %}<span class="issue-pill high">{{ highs }} high</span>{% endif %}
+          {% if meds %}<span class="issue-pill medium">{{ meds }} medium</span>{% endif %}
+          {% if lows %}<span class="issue-pill low">{{ lows }} low</span>{% endif %}
+        </div>
+      </div>
+      <div class="page-group-body">
+        {% for issue in page.issues %}
+        <div class="issue-row">
+          <span class="severity-badge {{ issue.severity }}">{{ issue.severity }}</span>
+          <span>{{ issue.message }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <h2>No technical issues</h2>
+      <p>All pages pass technical SEO checks.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Tab: Keywords -->
+  {% if report.keywords %}
+  <div id="tab-keywords" class="tab-content">
+    <div style="overflow-x:auto">
+      <table class="kw-table">
+        <thead>
+          <tr>
+            <th>Keyword</th>
+            <th>Page</th>
+            <th>Position</th>
+            <th>Clicks</th>
+            <th>Impressions</th>
+            <th>CTR</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for kw in report.keywords[:50] %}
+          <tr>
+            <td><strong>{{ kw.keyword }}</strong></td>
+            <td style="font-size:.78rem;color:var(--teal-light)">{{ kw.page|replace('https://www.photoboothguys.ie','')|truncate(40) }}</td>
+            <td>
+              {% set pos = kw.position|round|int %}
+              <span class="{{ 'pos-good' if pos <= 3 else ('pos-mid' if pos <= 10 else 'pos-low') }}">
+                {{ '%.1f'|format(kw.position) }}
+              </span>
+            </td>
+            <td>{{ kw.clicks }}</td>
+            <td>{{ kw.impressions }}</td>
+            <td>{{ '%.1f'|format(kw.ctr * 100) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Tab: Changes -->
+  <div id="tab-changes" class="tab-content">
+    {% if changes %}
+    {% for change in changes %}
+    <div class="change-item">
+      <div class="change-info">
+        <div class="change-msg">{{ change.commit_message }}</div>
+        <div class="change-date">{{ change.commit_date[:16]|replace('T',' ') }} &middot; {{ change.commit_hash[:8] }}</div>
+        <div class="change-files">{{ change.files_changed|join(', ')|truncate(100) }}</div>
+      </div>
+      {% if change.reverted %}
+      <button class="undo-btn reverted" disabled>Reverted</button>
+      {% else %}
+      <form method="POST" action="{{ url_for('seo_undo_change', commit_hash=change.commit_hash) }}" style="margin:0" onsubmit="return confirm('Undo this change? This will restore the affected files to their state before this commit.')">
+        <button type="submit" class="undo-btn">Undo Change</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <h2>No changes tracked yet</h2>
+      <p>Recent git commits affecting HTML files will appear here after the first analysis.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Tab: History -->
+  <div id="tab-history" class="tab-content">
+    {% if history %}
+    <div class="page-group">
+      {% for h in history %}
+      <a href="{{ url_for('seo_report', report_id=h.id) }}" class="history-item">
+        <span>{{ h.created_at[:16]|replace('T',' ') }} &middot; {{ h.report_type }}</span>
+        <span class="history-score {{ 'pos-good' if h.score >= 70 else ('pos-mid' if h.score >= 40 else 'pos-low') }}">{{ h.score }}/100</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>No historical reports yet.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% else %}
+  <!-- No report yet -->
+  <div class="empty-state">
+    <h2>No SEO analysis yet</h2>
+    <p>Run your first analysis to get actionable recommendations for improving your site's SEO.</p>
+    <form method="POST" action="{{ url_for('seo_run_analysis') }}" style="margin:0">
+      <button type="submit" class="run-btn" onclick="this.textContent='Analysing...';this.disabled=true;this.form.submit()">Run First Analysis</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(function(el){el.classList.remove('active')});
+  document.querySelectorAll('.sub-tab').forEach(function(el){el.classList.remove('active')});
+  var tab=document.getElementById('tab-'+name);
+  if(tab) tab.classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleGroup(header){
+  header.nextElementSibling.classList.toggle('open');
+}
+
+function copyPrompt(btn){
+  var text=btn.getAttribute('data-prompt');
+  navigator.clipboard.writeText(text).then(function(){
+    btn.textContent='Copied!';
+    btn.classList.add('copied');
+    setTimeout(function(){
+      btn.textContent='Copy Claude Code Prompt';
+      btn.classList.remove('copied');
+    },2000);
+  }).catch(function(){
+    // Fallback for older browsers
+    var ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.position='fixed';
+    ta.style.left='-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent='Copied!';
+    btn.classList.add('copied');
+    setTimeout(function(){
+      btn.textContent='Copy Claude Code Prompt';
+      btn.classList.remove('copied');
+    },2000);
+  });
+}
+
+document.querySelectorAll('.flash').forEach(function(el){
+  setTimeout(function(){el.style.opacity='0';el.style.transition='opacity .5s';setTimeout(function(){el.remove()},500)},5000);
+});
+</script>
+</body>
+</html>

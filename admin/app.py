@@ -43,7 +43,11 @@ if ENV_FILE.exists():
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
             key, _, value = line.partition("=")
-            os.environ.setdefault(key.strip(), value.strip())
+            value = value.strip()
+            # Strip surrounding quotes
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+                value = value[1:-1]
+            os.environ.setdefault(key.strip(), value)
 PRODUCTS_FILE = ADMIN_DIR / "products.json"
 USERS_FILE = ADMIN_DIR / "users.json"
 ENQUIRIES_FILE = ADMIN_DIR / "enquiries.json"
@@ -242,6 +246,50 @@ def init_analytics_db():
         CREATE INDEX IF NOT EXISTS idx_pe_session_type ON page_events(session_id, event_type);
         CREATE INDEX IF NOT EXISTS idx_pe_page ON page_events(page_path);
         CREATE INDEX IF NOT EXISTS idx_pe_created ON page_events(created_at);
+
+        CREATE TABLE IF NOT EXISTS seo_reports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now')),
+            report_type TEXT NOT NULL,
+            overall_score INTEGER,
+            summary_json TEXT NOT NULL,
+            keywords_json TEXT,
+            technical_json TEXT NOT NULL,
+            content_json TEXT,
+            recommendations_json TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_seo_created ON seo_reports(created_at);
+
+        CREATE TABLE IF NOT EXISTS seo_keywords (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recorded_at TEXT DEFAULT (strftime('%Y-%m-%d','now')),
+            keyword TEXT NOT NULL,
+            page TEXT,
+            position REAL,
+            clicks INTEGER,
+            impressions INTEGER,
+            ctr REAL
+        );
+        CREATE INDEX IF NOT EXISTS idx_seo_kw_date ON seo_keywords(recorded_at);
+
+        CREATE TABLE IF NOT EXISTS seo_changes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            commit_hash TEXT UNIQUE,
+            commit_date TEXT,
+            commit_message TEXT,
+            files_changed TEXT,
+            reverted INTEGER DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS seo_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            commit_hash TEXT NOT NULL,
+            file_path TEXT NOT NULL,
+            previous_content TEXT NOT NULL,
+            created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now')),
+            restored INTEGER DEFAULT 0,
+            UNIQUE(commit_hash, file_path)
+        );
     """)
     conn.close()
 
@@ -1843,8 +1891,435 @@ def image_seo_bulk_update():
     return jsonify({"success": True, "changed": changed})
 
 
+# ── SEO Analysis ─────────────────────────────────────────────────
+
+from seo_analyzer import run_full_analysis, get_git_changes, get_file_at_commit
+
+GSC_TOKEN_FILE = ADMIN_DIR / "gsc-token.json"
+
+
+def _gsc_connected():
+    return GSC_TOKEN_FILE.exists()
+
+
+def _get_gsc_credentials():
+    if not GSC_TOKEN_FILE.exists():
+        return None
+    try:
+        from google.oauth2.credentials import Credentials
+        token_data = json.loads(GSC_TOKEN_FILE.read_text())
+        creds = Credentials(
+            token=token_data.get("token"),
+            refresh_token=token_data.get("refresh_token"),
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=os.environ.get("GSC_CLIENT_ID", ""),
+            client_secret=os.environ.get("GSC_CLIENT_SECRET", ""),
+        )
+        return creds
+    except Exception:
+        return None
+
+
+def _save_report(report, report_type="manual"):
+    conn = get_analytics_db()
+    conn.execute(
+        """INSERT INTO seo_reports
+           (report_type, overall_score, summary_json, keywords_json,
+            technical_json, content_json, recommendations_json)
+           VALUES (?, ?, ?, ?, ?, ?, ?)""",
+        (
+            report_type,
+            report["score"],
+            json.dumps(report["summary"]),
+            json.dumps(report.get("keywords")),
+            json.dumps(report["technical"]),
+            json.dumps(report.get("content")),
+            json.dumps(report["recommendations"]),
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def _save_git_changes():
+    """Detect and store git commits, saving file snapshots for undo."""
+    conn = get_analytics_db()
+    changes = get_git_changes(str(BASE_DIR), since_days=30)
+    for change in changes:
+        try:
+            conn.execute(
+                """INSERT OR IGNORE INTO seo_changes
+                   (commit_hash, commit_date, commit_message, files_changed)
+                   VALUES (?, ?, ?, ?)""",
+                (
+                    change["commit_hash"],
+                    change["commit_date"],
+                    change["commit_message"],
+                    json.dumps(change["files_changed"]),
+                ),
+            )
+            # Save file snapshots for undo
+            for fpath in change["files_changed"]:
+                if fpath.endswith(".html") and not fpath.startswith("admin"):
+                    prev = get_file_at_commit(str(BASE_DIR), change["commit_hash"], fpath)
+                    if prev:
+                        try:
+                            conn.execute(
+                                """INSERT OR IGNORE INTO seo_snapshots
+                                   (commit_hash, file_path, previous_content)
+                                   VALUES (?, ?, ?)""",
+                                (change["commit_hash"], fpath, prev),
+                            )
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+    conn.commit()
+    conn.close()
+
+
+def _run_scheduled_analysis():
+    """Run the daily scheduled SEO analysis."""
+    with app.app_context():
+        creds = _get_gsc_credentials()
+        report = run_full_analysis(str(BASE_DIR), gsc_credentials=creds)
+        _save_report(report, report_type="scheduled")
+        _save_git_changes()
+        # Save keyword snapshots
+        if report.get("keywords"):
+            conn = get_analytics_db()
+            for kw in report["keywords"]:
+                conn.execute(
+                    """INSERT INTO seo_keywords
+                       (keyword, page, position, clicks, impressions, ctr)
+                       VALUES (?, ?, ?, ?, ?, ?)""",
+                    (kw["keyword"], kw.get("page", ""), kw["position"],
+                     kw["clicks"], kw["impressions"], kw.get("ctr", 0)),
+                )
+            conn.commit()
+            conn.close()
+
+
+@app.route("/seo")
+@login_required
+def seo_dashboard():
+    conn = get_analytics_db()
+    row = conn.execute(
+        "SELECT * FROM seo_reports ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+
+    report = None
+    if row:
+        report = {
+            "id": row[0],
+            "created_at": row[1],
+            "report_type": row[2],
+            "overall_score": row[3],
+            "summary": json.loads(row[4]) if row[4] else {},
+            "keywords": json.loads(row[5]) if row[5] else None,
+            "technical": json.loads(row[6]) if row[6] else [],
+            "content": json.loads(row[7]) if row[7] else None,
+            "recommendations": json.loads(row[8]) if row[8] else [],
+        }
+
+    # Get recent changes for timeline
+    changes = conn.execute(
+        "SELECT * FROM seo_changes ORDER BY commit_date DESC LIMIT 20"
+    ).fetchall()
+    change_list = []
+    for c in changes:
+        change_list.append({
+            "id": c[0],
+            "commit_hash": c[1],
+            "commit_date": c[2],
+            "commit_message": c[3],
+            "files_changed": json.loads(c[4]) if c[4] else [],
+            "reverted": c[5],
+        })
+
+    # Get report history
+    history = conn.execute(
+        "SELECT id, created_at, report_type, overall_score FROM seo_reports ORDER BY created_at DESC LIMIT 20"
+    ).fetchall()
+    history_list = [
+        {"id": h[0], "created_at": h[1], "report_type": h[2], "score": h[3]}
+        for h in history
+    ]
+
+    conn.close()
+    return render_template(
+        "seo.html",
+        report=report,
+        changes=change_list,
+        history=history_list,
+        gsc_connected=_gsc_connected(),
+        has_gsc_config=bool(os.environ.get("GSC_CLIENT_ID")),
+    )
+
+
+@app.route("/seo/report/<int:report_id>")
+@login_required
+def seo_report(report_id):
+    conn = get_analytics_db()
+    row = conn.execute(
+        "SELECT * FROM seo_reports WHERE id = ?", (report_id,)
+    ).fetchone()
+    conn.close()
+
+    if not row:
+        flash("Report not found", "error")
+        return redirect(url_for("seo_dashboard"))
+
+    report = {
+        "id": row[0],
+        "created_at": row[1],
+        "report_type": row[2],
+        "overall_score": row[3],
+        "summary": json.loads(row[4]) if row[4] else {},
+        "keywords": json.loads(row[5]) if row[5] else None,
+        "technical": json.loads(row[6]) if row[6] else [],
+        "content": json.loads(row[7]) if row[7] else None,
+        "recommendations": json.loads(row[8]) if row[8] else [],
+    }
+
+    conn2 = get_analytics_db()
+    history = conn2.execute(
+        "SELECT id, created_at, report_type, overall_score FROM seo_reports ORDER BY created_at DESC LIMIT 20"
+    ).fetchall()
+    history_list = [
+        {"id": h[0], "created_at": h[1], "report_type": h[2], "score": h[3]}
+        for h in history
+    ]
+    conn2.close()
+
+    return render_template(
+        "seo.html",
+        report=report,
+        changes=[],
+        history=history_list,
+        gsc_connected=_gsc_connected(),
+        has_gsc_config=bool(os.environ.get("GSC_CLIENT_ID")),
+    )
+
+
+@app.route("/seo/run-analysis", methods=["POST"])
+@login_required
+def seo_run_analysis():
+    # Rate limit: max once per hour
+    conn = get_analytics_db()
+    last = conn.execute(
+        "SELECT created_at FROM seo_reports WHERE report_type='manual' ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+
+    if last:
+        last_time = datetime.fromisoformat(last[0])
+        now = datetime.now()
+        if (now - last_time).total_seconds() < 3600:
+            mins_left = 60 - int((now - last_time).total_seconds() / 60)
+            flash(f"Rate limited. Try again in {mins_left} minutes.", "error")
+            return redirect(url_for("seo_dashboard"))
+
+    creds = _get_gsc_credentials()
+    report = run_full_analysis(str(BASE_DIR), gsc_credentials=creds)
+    _save_report(report, report_type="manual")
+    _save_git_changes()
+
+    # Save keyword snapshots
+    if report.get("keywords"):
+        conn = get_analytics_db()
+        for kw in report["keywords"]:
+            conn.execute(
+                """INSERT INTO seo_keywords
+                   (keyword, page, position, clicks, impressions, ctr)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (kw["keyword"], kw.get("page", ""), kw["position"],
+                 kw["clicks"], kw["impressions"], kw.get("ctr", 0)),
+            )
+        conn.commit()
+        conn.close()
+
+    flash(f"Analysis complete. SEO Score: {report['score']}/100", "success")
+    return redirect(url_for("seo_dashboard"))
+
+
+# ── Google Search Console OAuth ──────────────────────────────────
+# Allow OAuth over HTTP behind reverse proxy (actual traffic is HTTPS)
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+@app.route("/seo/connect-gsc")
+@login_required
+def seo_connect_gsc():
+    client_id = os.environ.get("GSC_CLIENT_ID")
+    client_secret = os.environ.get("GSC_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        flash("GSC_CLIENT_ID and GSC_CLIENT_SECRET must be set in .env", "error")
+        return redirect(url_for("seo_dashboard"))
+
+    from google_auth_oauthlib.flow import Flow
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
+        redirect_uri="https://www.photoboothguys.ie/admin/seo/oauth-callback",
+    )
+
+    auth_url, state = flow.authorization_url(
+        access_type="offline", prompt="consent"
+    )
+    session["gsc_oauth_state"] = state
+    # Store PKCE code verifier for the callback
+    session["gsc_code_verifier"] = flow.code_verifier
+    return redirect(auth_url)
+
+
+@app.route("/seo/oauth-callback")
+@login_required
+def seo_oauth_callback():
+    from google_auth_oauthlib.flow import Flow
+
+    client_id = os.environ.get("GSC_CLIENT_ID", "")
+    client_secret = os.environ.get("GSC_CLIENT_SECRET", "")
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=["https://www.googleapis.com/auth/webmasters.readonly"],
+        redirect_uri="https://www.photoboothguys.ie/admin/seo/oauth-callback",
+        state=session.get("gsc_oauth_state"),
+    )
+
+    try:
+        # Behind reverse proxy, request.url is http:// but Google expects https://
+        auth_response = request.url.replace("http://", "https://", 1)
+        flow.code_verifier = session.get("gsc_code_verifier")
+        flow.fetch_token(authorization_response=auth_response)
+        creds = flow.credentials
+
+        token_data = {
+            "token": creds.token,
+            "refresh_token": creds.refresh_token,
+            "token_uri": creds.token_uri,
+            "client_id": creds.client_id,
+            "client_secret": creds.client_secret,
+        }
+        GSC_TOKEN_FILE.write_text(json.dumps(token_data))
+
+        flash("Google Search Console connected successfully!", "success")
+    except Exception as e:
+        import traceback
+        app.logger.error(f"GSC OAuth callback error: {e}\n{traceback.format_exc()}")
+        flash(f"Failed to connect GSC: {e}", "error")
+    return redirect(url_for("seo_dashboard"))
+
+
+@app.route("/seo/disconnect-gsc", methods=["POST"])
+@login_required
+def seo_disconnect_gsc():
+    if GSC_TOKEN_FILE.exists():
+        GSC_TOKEN_FILE.unlink()
+    flash("Google Search Console disconnected.", "success")
+    return redirect(url_for("seo_dashboard"))
+
+
+# ── Undo/Rollback ───────────────────────────────────────────────
+
+@app.route("/seo/undo/<commit_hash>", methods=["POST"])
+@login_required
+def seo_undo_change(commit_hash):
+    conn = get_analytics_db()
+
+    # Get snapshots for this commit
+    snapshots = conn.execute(
+        "SELECT file_path, previous_content FROM seo_snapshots WHERE commit_hash = ? AND restored = 0",
+        (commit_hash,),
+    ).fetchall()
+
+    if not snapshots:
+        conn.close()
+        flash("No snapshots available for this commit or already restored.", "error")
+        return redirect(url_for("seo_dashboard"))
+
+    restored_files = []
+    for fpath, content in snapshots:
+        target = BASE_DIR / fpath
+        if target.exists():
+            target.write_text(content)
+            restored_files.append(fpath)
+
+    if restored_files:
+        # Mark snapshots as restored
+        conn.execute(
+            "UPDATE seo_snapshots SET restored = 1 WHERE commit_hash = ?",
+            (commit_hash,),
+        )
+        conn.execute(
+            "UPDATE seo_changes SET reverted = 1 WHERE commit_hash = ?",
+            (commit_hash,),
+        )
+        conn.commit()
+
+        # Create a revert git commit
+        try:
+            import subprocess
+            for fpath in restored_files:
+                subprocess.run(
+                    ["git", "add", fpath],
+                    cwd=str(BASE_DIR), capture_output=True, timeout=10,
+                )
+            change_row = conn.execute(
+                "SELECT commit_message FROM seo_changes WHERE commit_hash = ?",
+                (commit_hash,),
+            ).fetchone()
+            msg = change_row[0] if change_row else commit_hash[:8]
+            subprocess.run(
+                ["git", "commit", "-m", f"revert: Undo SEO change '{msg}'"],
+                cwd=str(BASE_DIR), capture_output=True, timeout=10,
+            )
+        except Exception:
+            pass
+
+        flash(f"Reverted {len(restored_files)} file(s) to pre-change state.", "success")
+    else:
+        flash("Could not restore files.", "error")
+
+    conn.close()
+    return redirect(url_for("seo_dashboard"))
+
+
+# ── Scheduler ────────────────────────────────────────────────────
+
 ensure_users_file()
 init_analytics_db()
+
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from apscheduler.triggers.cron import CronTrigger
+    import pytz
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        _run_scheduled_analysis,
+        CronTrigger(hour=7, minute=0, timezone=pytz.timezone("Europe/Dublin")),
+        id="daily_seo_analysis",
+        replace_existing=True,
+    )
+    scheduler.start()
+except Exception:
+    pass
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5050, debug=True)

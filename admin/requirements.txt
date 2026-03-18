@@ -2,3 +2,7 @@ flask
 Pillow
 werkzeug
 gunicorn
+google-api-python-client
+google-auth-oauthlib
+APScheduler
+pytz
