@@ -165,12 +165,17 @@ def analyze_page(rel_path, html, all_pages):
 
     # 2. Meta description
     desc_match = re.search(
-        r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']',
+        r'<meta\s+name="description"\s+content="([^"]*)"',
         head, re.IGNORECASE
     )
     if not desc_match:
         desc_match = re.search(
-            r'<meta\s+content=["\'](.*?)["\']\s+name=["\']description["\']',
+            r"<meta\s+name='description'\s+content='([^']*)'",
+            head, re.IGNORECASE
+        )
+    if not desc_match:
+        desc_match = re.search(
+            r'<meta\s+content="([^"]*)"\s+name="description"',
             head, re.IGNORECASE
         )
     if not desc_match:
