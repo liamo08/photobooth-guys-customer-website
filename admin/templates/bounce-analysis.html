@@ -209,6 +209,7 @@ body{
     <input type="date" name="end" value="{{ end_date }}">
     <button type="submit" class="preset-btn" style="background:var(--teal);color:var(--coal);border-color:var(--teal)">Apply</button>
     <button type="button" class="preset-btn" onclick="setRange(0)">Today</button>
+    <button type="button" class="preset-btn" onclick="setRange(-1)">Yesterday</button>
     <button type="button" class="preset-btn" onclick="setRange(7)">7 days</button>
     <button type="button" class="preset-btn" onclick="setRange(30)">30 days</button>
     <button type="button" class="preset-btn" onclick="setRange(90)">90 days</button>
@@ -400,7 +401,12 @@ body{
 function setRange(days) {
   var end = new Date();
   var start = new Date();
-  if (days > 0) start.setDate(start.getDate() - days);
+  if (days < 0) {
+    start.setDate(start.getDate() + days);
+    end.setDate(end.getDate() + days);
+  } else if (days > 0) {
+    start.setDate(start.getDate() - days);
+  }
   var fmt = function(d) { return d.toISOString().split('T')[0]; };
   window.location.href = '?start=' + fmt(start) + '&end=' + fmt(end);
 }

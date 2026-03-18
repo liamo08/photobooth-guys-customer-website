@@ -239,6 +239,7 @@ def init_analytics_db():
             created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now'))
         );
         CREATE INDEX IF NOT EXISTS idx_pe_session ON page_events(session_id);
+        CREATE INDEX IF NOT EXISTS idx_pe_session_type ON page_events(session_id, event_type);
         CREATE INDEX IF NOT EXISTS idx_pe_page ON page_events(page_path);
         CREATE INDEX IF NOT EXISTS idx_pe_created ON page_events(created_at);
     """)
@@ -418,12 +419,15 @@ def analytics():
 
         bounce = conn.execute(
             """SELECT COALESCE(
-                   CAST(SUM(CASE WHEN pv_count = 1 THEN 1 ELSE 0 END) AS FLOAT) /
+                   CAST(SUM(CASE WHEN pv_count = 1 AND has_clicks = 0 THEN 1 ELSE 0 END) AS FLOAT) /
                    NULLIF(COUNT(*), 0) * 100, 0
                ) AS bounce_rate
-               FROM (SELECT session_id, COUNT(*) AS pv_count
-                     FROM pageviews WHERE created_at BETWEEN ? AND ?
-                     GROUP BY session_id)""",
+               FROM (SELECT pv.session_id, COUNT(*) AS pv_count,
+                            COALESCE((SELECT COUNT(*) FROM page_events pe
+                                      WHERE pe.session_id = pv.session_id
+                                      AND pe.event_type = 'click'), 0) AS has_clicks
+                     FROM pageviews pv WHERE pv.created_at BETWEEN ? AND ?
+                     GROUP BY pv.session_id)""",
             (start_ts, end_ts),
         ).fetchone()
 
@@ -500,28 +504,39 @@ def analytics():
 
 def generate_bounce_advice(page_bounces, device_bounces, engagement, cta_clicks, exit_pages):
     advice = []
+    clicked_pages = {r["page_path"] for r in cta_clicks}
 
     for row in page_bounces:
         page = row["entry_page"]
         rate = row["bounce_rate"]
         sessions = row["total_sessions"]
-        if sessions < 3:
+        bounced = row["bounced_sessions"]
+        if sessions < 10:
             continue
+        has_cta = page in clicked_pages
         if page in ("/", "/index.html") and rate > 60:
-            advice.append({"severity": "high", "page": page,
-                "message": f"Your homepage has a {rate}% bounce rate. Consider adding a stronger call-to-action above the fold, or feature your most popular services more prominently."})
+            msg = f"Your homepage has a {rate}% bounce rate ({bounced}/{sessions} sessions)."
+            if has_cta:
+                msg += " CTAs are getting clicks but visitors still leave. Consider stronger above-the-fold content or featured services."
+            else:
+                msg += " Consider adding a stronger call-to-action above the fold, or feature your most popular services more prominently."
+            advice.append({"severity": "high", "page": page, "message": msg})
         elif "/services/" in page and rate > 70:
-            advice.append({"severity": "high", "page": page,
-                "message": f"{page} has a {rate}% bounce rate. Consider adding pricing info, related services, or a prominent 'Get a Quote' button."})
+            msg = f"{page} has a {rate}% bounce rate ({bounced}/{sessions} entry sessions)."
+            if has_cta:
+                msg += " The page gets CTA clicks from internal visitors but direct-landing visitors leave. Consider improving the page intro for search visitors."
+            else:
+                msg += " Consider adding pricing info, related services, or a prominent 'Get a Quote' button."
+            advice.append({"severity": "high", "page": page, "message": msg})
         elif "/locations/" in page and rate > 65:
             advice.append({"severity": "medium", "page": page,
-                "message": f"{page} loses {rate}% of visitors. Add local testimonials, a map, or a direct booking link to keep them engaged."})
+                "message": f"{page} loses {rate}% of entry visitors ({bounced}/{sessions}). Add local testimonials, a map, or a direct booking link to keep them engaged."})
         elif "/blog/" in page and rate > 80:
             advice.append({"severity": "medium", "page": page,
                 "message": f"{page} has a {rate}% bounce rate. Add internal links to your services and a CTA at the end of the post."})
         elif rate > 75:
             advice.append({"severity": "medium", "page": page,
-                "message": f"{page} has a {rate}% bounce rate ({sessions} sessions). Review the page content and add clear next steps for visitors."})
+                "message": f"{page} has a {rate}% bounce rate ({bounced}/{sessions} sessions). Review the page content and add clear next steps for visitors."})
 
     mobile_rate = next((r["bounce_rate"] for r in device_bounces if r["device_type"] == "mobile"), 0)
     desktop_rate = next((r["bounce_rate"] for r in device_bounces if r["device_type"] == "desktop"), 0)
@@ -530,7 +545,7 @@ def generate_bounce_advice(page_bounces, device_bounces, engagement, cta_clicks,
             "message": f"Mobile users bounce {round(mobile_rate - desktop_rate, 1)}% more than desktop ({mobile_rate}% vs {desktop_rate}%). Check mobile page speed, button sizes, and overall usability."})
 
     for row in engagement:
-        if row["sample_count"] < 3:
+        if row["sample_count"] < 5:
             continue
         if row["avg_scroll_depth"] and row["avg_scroll_depth"] < 40:
             advice.append({"severity": "medium", "page": row["page_path"],
@@ -540,11 +555,10 @@ def generate_bounce_advice(page_bounces, device_bounces, engagement, cta_clicks,
                 "message": f"Users spend only {round(row['avg_time_on_page'])}s on {row['page_path']}. The content may not match their search intent."})
 
     top_entry_pages = {r["entry_page"] for r in page_bounces[:5]}
-    clicked_pages = {r["page_path"] for r in cta_clicks}
     for page in top_entry_pages:
         if page not in clicked_pages:
             sessions = next((r["total_sessions"] for r in page_bounces if r["entry_page"] == page), 0)
-            if sessions >= 3:
+            if sessions >= 10:
                 advice.append({"severity": "high", "page": page,
                     "message": f"{page} receives {sessions} sessions but has zero CTA clicks. Add a prominent call-to-action button."})
 
@@ -581,10 +595,13 @@ def bounce_analysis():
                         WHERE p2.session_id = sub.session_id
                         ORDER BY p2.created_at ASC LIMIT 1) as entry_page,
                        COUNT(*) as total_sessions,
-                       SUM(CASE WHEN pv_count = 1 THEN 1 ELSE 0 END) as bounced_sessions
+                       SUM(CASE WHEN pv_count = 1 AND has_clicks = 0 THEN 1 ELSE 0 END) as bounced_sessions
                    FROM (
-                       SELECT session_id, COUNT(*) as pv_count
-                       FROM pageviews WHERE created_at BETWEEN ? AND ?
+                       SELECT session_id, COUNT(*) as pv_count,
+                              COALESCE((SELECT COUNT(*) FROM page_events pe
+                                        WHERE pe.session_id = pv.session_id
+                                        AND pe.event_type = 'click'), 0) AS has_clicks
+                       FROM pageviews pv WHERE pv.created_at BETWEEN ? AND ?
                        GROUP BY session_id
                    ) sub
                    GROUP BY entry_page
@@ -666,13 +683,16 @@ def bounce_analysis():
         device_bounces = conn.execute(
             """SELECT device_type,
                       COUNT(*) as sessions,
-                      SUM(CASE WHEN pv_count = 1 THEN 1 ELSE 0 END) as bounced,
-                      ROUND(CAST(SUM(CASE WHEN pv_count = 1 THEN 1 ELSE 0 END) AS FLOAT) /
+                      SUM(CASE WHEN pv_count = 1 AND has_clicks = 0 THEN 1 ELSE 0 END) as bounced,
+                      ROUND(CAST(SUM(CASE WHEN pv_count = 1 AND has_clicks = 0 THEN 1 ELSE 0 END) AS FLOAT) /
                             NULLIF(COUNT(*), 0) * 100, 1) as bounce_rate
                FROM (
                    SELECT session_id, COUNT(*) as pv_count,
                           (SELECT device_type FROM pageviews p2
-                           WHERE p2.session_id = p1.session_id LIMIT 1) as device_type
+                           WHERE p2.session_id = p1.session_id LIMIT 1) as device_type,
+                          COALESCE((SELECT COUNT(*) FROM page_events pe
+                                    WHERE pe.session_id = p1.session_id
+                                    AND pe.event_type = 'click'), 0) AS has_clicks
                    FROM pageviews p1 WHERE created_at BETWEEN ? AND ?
                    GROUP BY session_id
                )
@@ -682,12 +702,15 @@ def bounce_analysis():
 
         overall_bounce = conn.execute(
             """SELECT COALESCE(
-                   CAST(SUM(CASE WHEN pv_count = 1 THEN 1 ELSE 0 END) AS FLOAT) /
+                   CAST(SUM(CASE WHEN pv_count = 1 AND has_clicks = 0 THEN 1 ELSE 0 END) AS FLOAT) /
                    NULLIF(COUNT(*), 0) * 100, 0
                ) AS bounce_rate, COUNT(*) as total_sessions
-               FROM (SELECT session_id, COUNT(*) AS pv_count
-                     FROM pageviews WHERE created_at BETWEEN ? AND ?
-                     GROUP BY session_id)""",
+               FROM (SELECT pv.session_id, COUNT(*) AS pv_count,
+                            COALESCE((SELECT COUNT(*) FROM page_events pe
+                                      WHERE pe.session_id = pv.session_id
+                                      AND pe.event_type = 'click'), 0) AS has_clicks
+                     FROM pageviews pv WHERE pv.created_at BETWEEN ? AND ?
+                     GROUP BY pv.session_id)""",
             (start_ts, end_ts),
         ).fetchone()
     finally:
