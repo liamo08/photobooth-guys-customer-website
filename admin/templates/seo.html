@@ -479,19 +479,42 @@ body{
     </div>
     {% endif %}
 
+    {% if serp_data.our_position %}
+    <div class="rec-card" style="margin-bottom:24px;border-color:var(--teal)">
+      <h3 style="font-family:var(--font-display);font-size:.95rem;margin-bottom:10px">SERP Analysis</h3>
+      <div style="font-size:.85rem;color:var(--text-muted);line-height:1.7">
+        <div style="margin-bottom:6px"><strong style="color:var(--white)">Ranking URL:</strong> <span style="color:var(--teal-light)">{{ serp_data.our_url }}</span></div>
+        {% set our = serp_data.organic|selectattr('domain','equalto','photoboothguys.ie')|first %}
+        {% if our %}
+        <div style="margin-bottom:6px"><strong style="color:var(--white)">Our Title:</strong> {{ our.title }}</div>
+        <div style="margin-bottom:6px"><strong style="color:var(--white)">Our Snippet:</strong> {{ our.snippet }}</div>
+        {% endif %}
+        {% set top = serp_data.organic|first %}
+        {% if top and top.domain != 'photoboothguys.ie' %}
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="margin-bottom:6px"><strong style="color:var(--white)">#1 Competitor:</strong> {{ top.domain }}</div>
+          <div style="margin-bottom:6px"><strong style="color:var(--white)">Their Title:</strong> {{ top.title }}</div>
+          <div><strong style="color:var(--white)">Their Snippet:</strong> {{ top.snippet }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
     <h3 style="font-family:var(--font-display);font-size:.95rem;margin-bottom:12px">Organic Results</h3>
     <div style="overflow-x:auto">
       <table class="kw-table">
-        <thead><tr><th>#</th><th>Title</th><th>Domain</th></tr></thead>
+        <thead><tr><th style="width:40px">#</th><th>Result</th><th style="width:100px">Domain</th></tr></thead>
         <tbody>
           {% for item in serp_data.organic %}
           <tr style="{% if item.domain == 'photoboothguys.ie' %}background:rgba(95,148,164,.08){% endif %}">
-            <td><span class="{{ 'pos-good' if item.position <= 3 else ('pos-mid' if item.position <= 10 else 'pos-low') }}">{{ item.position }}</span></td>
+            <td><span class="{{ 'pos-good' if item.position <= 3 else ('pos-mid' if item.position <= 10 else 'pos-low') }}" style="font-weight:700">{{ item.position }}</span></td>
             <td>
-              <div style="font-weight:{% if item.domain == 'photoboothguys.ie' %}700{% else %}400{% endif %};font-size:.85rem">{{ item.title|truncate(60) }}</div>
-              <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">{{ item.snippet|truncate(100) }}</div>
+              <div style="font-weight:{% if item.domain == 'photoboothguys.ie' %}700{% else %}500{% endif %};font-size:.88rem;color:{% if item.domain == 'photoboothguys.ie' %}var(--teal-light){% else %}var(--white){% endif %}">{{ item.title }}</div>
+              <div style="font-size:.78rem;color:var(--text-muted);margin-top:3px;line-height:1.4">{{ item.snippet }}</div>
+              <div style="font-size:.7rem;color:rgba(244,244,245,.3);margin-top:2px">{{ item.link|truncate(80) }}</div>
             </td>
-            <td style="font-size:.78rem;color:{% if item.domain == 'photoboothguys.ie' %}var(--teal-light){% else %}var(--text-muted){% endif %};white-space:nowrap">{{ item.domain }}</td>
+            <td style="font-size:.78rem;color:{% if item.domain == 'photoboothguys.ie' %}var(--teal-light){% else %}var(--text-muted){% endif %};white-space:nowrap;font-weight:{% if item.domain == 'photoboothguys.ie' %}600{% else %}400{% endif %}">{{ item.domain }}</td>
           </tr>
           {% endfor %}
         </tbody>
