@@ -251,6 +251,7 @@ body{
     <a href="{{ url_for('image_seo') }}" class="btn-sm">Image SEO</a>
     <a href="{{ url_for('seo_dashboard') }}" class="btn-sm active">SEO</a>
     <a href="{{ url_for('analytics') }}" class="btn-sm">Analytics</a>
+    <a href="{{ url_for('backups_page') }}" class="btn-sm">Backups</a>
     <a href="/" class="btn-sm visit-site" target="_blank">View Site</a>
     <a href="{{ url_for('settings') }}" class="btn-sm">Settings</a>
     <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
@@ -554,15 +555,17 @@ body{
 
     {% if serp_history and serp_history|length > 1 %}
     <h3 style="font-family:var(--font-display);font-size:.95rem;margin:24px 0 12px">Position History</h3>
-    <div class="rec-card" style="padding:20px">
-      <canvas id="serpChart" height="260"></canvas>
+    <div class="rec-card" style="padding:20px;position:relative;height:300px">
+      <canvas id="serpChart"></canvas>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <script>
     (function(){
       var history = [
         {% for sh in serp_history %}
-        {keyword: {{ sh.keyword|tojson }}, position: {{ sh.position|default('null') }}, date: {{ sh.date[:16]|tojson }} },
+        {% if sh.position is not none %}
+        {keyword: {{ sh.keyword|tojson }}, position: {{ sh.position }}, date: {{ sh.date[:16]|tojson }} },
+        {% endif %}
         {% endfor %}
       ].reverse();
 
@@ -602,7 +605,7 @@ body{
 
       allDates.sort();
 
-      new Chart(document.getElementById('serpChart'), {
+      var chartConfig = {
         type: 'line',
         data: {labels: allDates, datasets: datasets},
         options: {
@@ -647,7 +650,24 @@ body{
             }
           }
         }
-      });
+      };
+
+      // If the SERP tab is visible, render immediately; otherwise render on tab switch
+      var canvas = document.getElementById('serpChart');
+      var serpTab = document.getElementById('tab-serp');
+      if(serpTab.classList.contains('active')){
+        new Chart(canvas, chartConfig);
+      } else {
+        var rendered = false;
+        document.querySelectorAll('.tab-btn').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            if(!rendered && btn.dataset.tab === 'tab-serp'){
+              rendered = true;
+              setTimeout(function(){ new Chart(canvas, chartConfig); }, 50);
+            }
+          });
+        });
+      }
     })();
     </script>
     {% endif %}

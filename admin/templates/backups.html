@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backups | Photobooth Guys Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coal:#0e0e18;--charcoal:#1a1a2e;--surface:#16162a;
+  --teal:#5f94a4;--teal-light:#7ab8cc;--gold:#e8b83d;
+  --white:#f4f4f5;--text-muted:rgba(244,244,245,.6);
+  --border:rgba(95,148,164,.15);--border-hover:rgba(95,148,164,.35);
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --success-bg:rgba(34,197,94,.12);--success-border:rgba(34,197,94,.3);--success-text:#4ade80;
+  --error-bg:rgba(220,53,69,.12);--error-border:rgba(220,53,69,.3);--error-text:#f87171;
+  --warning-bg:rgba(232,184,61,.1);--warning-border:rgba(232,184,61,.3);--warning-text:#e8b83d;
+  --info-bg:rgba(59,130,246,.1);--info-border:rgba(59,130,246,.3);--info-text:#60a5fa;
+}
+body{
+  min-height:100vh;background:var(--coal);font-family:var(--font-body);color:var(--white);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(95,148,164,.06) 0%,transparent 60%);
+}
+.admin-header{
+  position:sticky;top:0;z-index:100;padding:16px 32px;
+  background:rgba(14,14,24,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header .logo{display:flex;align-items:center;gap:12px}
+.admin-header .logo img{height:40px;width:auto}
+.admin-header .logo span{font-family:var(--font-display);font-size:1.1rem;font-weight:700}
+.admin-header .logo small{color:var(--teal);font-family:var(--font-body);font-size:.75rem;font-weight:500;margin-left:8px}
+.header-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-sm:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-sm.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-sm.danger:hover{background:rgba(220,53,69,.1)}
+.btn-sm.active{border-color:var(--teal);color:var(--teal-light)}
+.main{max-width:1100px;margin:0 auto;padding:32px 24px}
+.page-title{font-family:var(--font-display);font-size:1.6rem;margin-bottom:6px}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:32px}
+.flash{
+  padding:14px 20px;border-radius:10px;margin-bottom:24px;font-size:.88rem;
+  display:flex;align-items:center;gap:10px;
+}
+.flash.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.flash.error{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.flash::before{font-size:1.1rem}
+.flash.success::before{content:"\2713"}
+.flash.error::before{content:"\2717"}
+.visit-site{color:var(--teal-light);text-decoration:none;font-size:.82rem;transition:color .2s}
+.visit-site:hover{color:var(--white)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:28px;border-bottom:1px solid var(--border);padding-bottom:0}
+.tab-btn{
+  padding:10px 20px;background:transparent;border:none;border-bottom:2px solid transparent;
+  color:var(--text-muted);font-family:var(--font-body);font-size:.85rem;font-weight:500;
+  cursor:pointer;transition:all .2s;
+}
+.tab-btn:hover{color:var(--white)}
+.tab-btn.active{color:var(--teal-light);border-bottom-color:var(--teal)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Cards */
+.card{
+  background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;
+  padding:28px;margin-bottom:24px;
+}
+.card h2{font-family:var(--font-display);font-size:1.15rem;margin-bottom:4px}
+.card .card-desc{color:var(--text-muted);font-size:.82rem;margin-bottom:24px}
+
+/* Google Drive banner */
+.gdrive-banner{
+  padding:18px 24px;border-radius:12px;margin-bottom:24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.gdrive-banner.connected{background:var(--success-bg);border:1px solid var(--success-border)}
+.gdrive-banner.disconnected{background:var(--warning-bg);border:1px solid var(--warning-border)}
+.gdrive-banner .label{font-size:.9rem;font-weight:500}
+.gdrive-banner.connected .label{color:var(--success-text)}
+.gdrive-banner.disconnected .label{color:var(--warning-text)}
+.gdrive-banner .sub{font-size:.78rem;color:var(--text-muted);margin-top:2px}
+
+/* Buttons */
+.btn{
+  padding:11px 24px;border:none;border-radius:8px;cursor:pointer;
+  font-size:.85rem;font-weight:600;font-family:var(--font-body);transition:all .2s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal-light));color:var(--coal)}
+.btn-primary:hover{opacity:.9}
+.btn-danger{background:rgba(220,53,69,.15);border:1px solid rgba(220,53,69,.3);color:#f87171}
+.btn-danger:hover{background:rgba(220,53,69,.25)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-muted)}
+.btn-outline:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-success{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:var(--success-text)}
+.btn-success:hover{background:rgba(34,197,94,.25)}
+.btn-gold{background:rgba(232,184,61,.15);border:1px solid rgba(232,184,61,.3);color:var(--gold)}
+.btn-gold:hover{background:rgba(232,184,61,.25)}
+.btn-sm-action{
+  padding:6px 14px;border-radius:6px;font-size:.78rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;transition:all .2s;
+  text-decoration:none;display:inline-flex;align-items:center;gap:4px;
+}
+
+/* Top action bar */
+.action-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.action-bar .info{font-size:.82rem;color:var(--text-muted)}
+
+/* Backup list */
+.backup-list{list-style:none}
+.backup-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border:1px solid var(--border);border-radius:10px;
+  margin-bottom:10px;transition:border-color .2s;gap:12px;flex-wrap:wrap;
+}
+.backup-item:hover{border-color:var(--border-hover)}
+.backup-meta{flex:1;min-width:200px}
+.backup-name{font-weight:600;font-size:.9rem;margin-bottom:2px}
+.backup-details{font-size:.78rem;color:var(--text-muted);display:flex;gap:12px;flex-wrap:wrap}
+.backup-badge{
+  font-size:.68rem;padding:2px 8px;border-radius:4px;font-weight:500;
+}
+.badge-manual{background:rgba(95,148,164,.12);border:1px solid rgba(95,148,164,.25);color:var(--teal-light)}
+.badge-scheduled{background:rgba(232,184,61,.12);border:1px solid rgba(232,184,61,.25);color:var(--gold)}
+.badge-gdrive{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:var(--success-text)}
+.backup-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.backup-actions form{display:inline}
+
+.empty-state{
+  text-align:center;padding:48px 24px;color:var(--text-muted);
+}
+.empty-state .icon{font-size:2.5rem;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:.9rem}
+
+/* Form elements */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.82rem;font-weight:500;margin-bottom:6px;color:var(--text-muted)}
+.form-group input,.form-group select{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:8px;color:var(--white);
+  font-size:.9rem;font-family:var(--font-body);transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--teal)}
+.form-group select option{background:var(--charcoal);color:var(--white)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* Toggle switch */
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;border-bottom:1px solid var(--border);
+}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:.88rem;font-weight:500}
+.toggle-desc{font-size:.78rem;color:var(--text-muted);margin-top:2px}
+.toggle{
+  position:relative;width:44px;height:24px;flex-shrink:0;
+}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{
+  position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;
+  background:rgba(255,255,255,.1);border-radius:24px;transition:.3s;
+}
+.toggle .slider::before{
+  content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;
+  background:var(--white);border-radius:50%;transition:.3s;
+}
+.toggle input:checked + .slider{background:var(--teal)}
+.toggle input:checked + .slider::before{transform:translateX(20px)}
+
+/* Includes grid */
+.includes-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;
+}
+.include-item{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  border:1px solid var(--border);border-radius:8px;transition:border-color .2s;
+}
+.include-item:hover{border-color:var(--border-hover)}
+.include-item label{font-size:.85rem;cursor:pointer;flex:1}
+.include-item input[type="checkbox"]{
+  width:18px;height:18px;accent-color:var(--teal);cursor:pointer;
+}
+
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+/* Spinner */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--white);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.loading .spinner{margin-right:4px}
+.btn.loading{pointer-events:none;opacity:.7}
+
+@media(max-width:768px){
+  .admin-header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+  .main{padding:20px 16px}
+  .form-row,.form-row-3{grid-template-columns:1fr}
+  .includes-grid{grid-template-columns:1fr}
+  .page-title{font-size:1.3rem}
+  .backup-item{flex-direction:column;align-items:flex-start}
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">
+    <img src="/logo.webp" alt="Photobooth Guys">
+    <span>Photobooth Guys</span>
+    <small>ADMIN</small>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-sm">Images</a>
+    <a href="{{ url_for('page_images') }}" class="btn-sm">Page Images</a>
+    <a href="{{ url_for('enquiries') }}" class="btn-sm">Enquiries</a>
+    <a href="{{ url_for('image_seo') }}" class="btn-sm">Image SEO</a>
+    <a href="{{ url_for('seo_dashboard') }}" class="btn-sm">SEO</a>
+    <a href="{{ url_for('analytics') }}" class="btn-sm">Analytics</a>
+    <a href="{{ url_for('backups_page') }}" class="btn-sm active">Backups</a>
+    <a href="/" class="btn-sm visit-site" target="_blank">View Site</a>
+    <a href="{{ url_for('settings') }}" class="btn-sm">Settings</a>
+    <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <h1 class="page-title">Backups</h1>
+  <p class="page-subtitle">Automatic and manual backups of your website, database and images</p>
+
+  <!-- Google Drive Connection Banner -->
+  {% if gdrive_connected %}
+  <div class="gdrive-banner connected">
+    <div>
+      <div class="label">Google Drive Connected</div>
+      <div class="sub">Backups can be automatically uploaded to your Google Drive</div>
+    </div>
+    <form method="POST" action="{{ url_for('backups_disconnect_gdrive') }}"
+          onsubmit="return confirm('Disconnect Google Drive? Existing uploads will remain.')">
+      <button type="submit" class="btn btn-outline" style="font-size:.8rem;padding:8px 16px">Disconnect</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="gdrive-banner disconnected">
+    <div>
+      <div class="label">Google Drive Not Connected</div>
+      <div class="sub">Connect to automatically upload backups to Google Drive</div>
+    </div>
+    <a href="{{ url_for('backups_connect_gdrive') }}" class="btn btn-gold" style="font-size:.8rem;padding:8px 16px">Connect Google Drive</a>
+  </div>
+  {% endif %}
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="backups-tab">Backups</button>
+    <button class="tab-btn" data-tab="settings-tab">Schedule & Settings</button>
+  </div>
+
+  <!-- ═══ Backups Tab ═══ -->
+  <div id="backups-tab" class="tab-content active">
+    <div class="action-bar">
+      <div class="info">
+        {{ backups|length }} backup{{ 's' if backups|length != 1 else '' }} stored locally
+      </div>
+      <form method="POST" action="{{ url_for('backups_create') }}" id="create-form">
+        <button type="submit" class="btn btn-primary" id="create-btn" onclick="this.classList.add('loading');this.innerHTML='<span class=spinner></span> Creating...'">
+          Create Backup Now
+        </button>
+      </form>
+    </div>
+
+    {% if backups %}
+    <ul class="backup-list">
+      {% for b in backups %}
+      <li class="backup-item">
+        <div class="backup-meta">
+          <div class="backup-name">
+            {{ b.filename }}
+            <span class="backup-badge {{ 'badge-scheduled' if b.type == 'scheduled' else 'badge-manual' }}">
+              {{ b.type }}
+            </span>
+            {% if b.get('gdrive_uploaded') %}
+            <span class="backup-badge badge-gdrive">Google Drive</span>
+            {% endif %}
+          </div>
+          <div class="backup-details">
+            <span>{{ b.created_at[:19].replace('T', ' ') }} UTC</span>
+            <span>{{ "%.1f"|format(b.size_bytes / 1048576) }} MB</span>
+            {% if b.get('include_images') %}<span>Images</span>{% endif %}
+            {% if b.get('include_database') %}<span>Database</span>{% endif %}
+            {% if b.get('include_config') %}<span>Config</span>{% endif %}
+            {% if b.get('include_website') %}<span>Website</span>{% endif %}
+            {% if b.get('include_admin_code') %}<span>Admin Code</span>{% endif %}
+            {% if b.get('include_system_config') %}<span>System</span>{% endif %}
+          </div>
+        </div>
+        <div class="backup-actions">
+          <a href="{{ url_for('backups_download', filename=b.filename) }}"
+             class="btn-sm-action btn-outline">Download</a>
+          {% if gdrive_connected and not b.get('gdrive_uploaded') %}
+          <form method="POST" action="{{ url_for('backups_upload_gdrive', filename=b.filename) }}">
+            <button type="submit" class="btn-sm-action btn-gold">Upload to Drive</button>
+          </form>
+          {% endif %}
+          <form method="POST" action="{{ url_for('backups_restore', filename=b.filename) }}"
+                onsubmit="return confirm('Restore from this backup? This will overwrite current files with the backup contents.')">
+            <button type="submit" class="btn-sm-action btn-success">Restore</button>
+          </form>
+          <form method="POST" action="{{ url_for('backups_delete', filename=b.filename) }}"
+                onsubmit="return confirm('Delete this backup? This cannot be undone.')">
+            <button type="submit" class="btn-sm-action btn-danger" style="background:transparent;border:1px solid rgba(220,53,69,.25);color:rgba(248,113,113,.7)">Delete</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">&#128230;</div>
+      <p>No backups yet. Create your first backup to protect your data.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ═══ Settings Tab ═══ -->
+  <div id="settings-tab" class="tab-content">
+    <form method="POST" action="{{ url_for('backups_save_settings') }}">
+
+      <!-- Automatic Backups -->
+      <div class="card">
+        <h2>Automatic Backups</h2>
+        <p class="card-desc">Schedule automatic backups to run on a regular basis</p>
+
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Enable Automatic Backups</div>
+            <div class="toggle-desc">Backups will run automatically on the schedule below</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" name="auto_enabled" {{ 'checked' if settings.auto_enabled }}>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div style="margin-top:20px">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="schedule">Frequency</label>
+              <select id="schedule" name="schedule">
+                <option value="daily" {{ 'selected' if settings.schedule == 'daily' }}>Daily</option>
+                <option value="weekly" {{ 'selected' if settings.schedule == 'weekly' }}>Weekly (Sunday)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="time">Time (Dublin timezone)</label>
+              <input type="time" id="time" name="time" value="{{ settings.time }}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- What to Include -->
+      <div class="card">
+        <h2>Backup Contents</h2>
+        <p class="card-desc">Choose what to include in each backup</p>
+
+        <div class="includes-grid">
+          <div class="include-item">
+            <input type="checkbox" id="inc_config" name="include_config" {{ 'checked' if settings.include_config }}>
+            <label for="inc_config">
+              <strong>Configuration Files</strong><br>
+              <span style="font-size:.78rem;color:var(--text-muted)">Products, users, enquiries, page config</span>
+            </label>
+          </div>
+          <div class="include-item">
+            <input type="checkbox" id="inc_db" name="include_database" {{ 'checked' if settings.include_database }}>
+            <label for="inc_db">
+              <strong>Database</strong><br>
+              <span style="font-size:.78rem;color:var(--text-muted)">Analytics, SEO reports, SERP history</span>
+            </label>
+          </div>
+          <div class="include-item">
+            <input type="checkbox" id="inc_images" name="include_images" {{ 'checked' if settings.include_images }}>
+            <label for="inc_images">
+              <strong>Images</strong><br>
+              <span style="font-size:.78rem;color:var(--text-muted)">All product and page images</span>
+            </label>
+          </div>
+          <div class="include-item">
+            <input type="checkbox" id="inc_website" name="include_website" {{ 'checked' if settings.include_website }}>
+            <label for="inc_website">
+              <strong>Website Files</strong><br>
+              <span style="font-size:.78rem;color:var(--text-muted)">HTML, CSS, JS, sitemap, robots.txt</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storage Settings -->
+      <div class="card">
+        <h2>Storage</h2>
+        <p class="card-desc">Configure backup retention and cloud storage</p>
+
+        <div class="form-group">
+          <label for="max_local">Maximum Local Backups</label>
+          <input type="number" id="max_local" name="max_local_backups" value="{{ settings.max_local_backups }}" min="1" max="100"
+                 style="max-width:160px">
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">Oldest backups are automatically deleted when this limit is reached</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="toggle-row" style="border-bottom:none">
+          <div>
+            <div class="toggle-label">Auto-Upload to Google Drive</div>
+            <div class="toggle-desc">
+              {% if gdrive_connected %}
+              Automatically upload new backups to Google Drive after creation
+              {% else %}
+              <span style="color:var(--warning-text)">Connect Google Drive first to enable this option</span>
+              {% endif %}
+            </div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" name="auto_upload_gdrive"
+                   {{ 'checked' if settings.auto_upload_gdrive }}
+                   {{ 'disabled' if not gdrive_connected }}>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        {% if gdrive_connected %}
+        <div class="form-group" style="margin-top:16px">
+          <label for="gdrive_folder">Google Drive Folder ID <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
+          <input type="text" id="gdrive_folder" name="gdrive_folder_id" value="{{ settings.gdrive_folder_id }}"
+                 placeholder="Leave blank for root, or paste a folder ID from the Drive URL">
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">
+            Find the folder ID in the URL: drive.google.com/drive/folders/<strong>FOLDER_ID_HERE</strong>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary">Save Settings</button>
+    </form>
+  </div>
+</div>
+
+<script>
+// Flash auto-dismiss
+document.querySelectorAll('.flash').forEach(el => {
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .5s'; setTimeout(() => el.remove(), 500); }, 5000);
+});
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

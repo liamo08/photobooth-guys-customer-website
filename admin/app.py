@@ -5,8 +5,12 @@ import logging
 import os
 import re
 import secrets
+import shutil
 import smtplib
 import sqlite3
+import subprocess
+import tarfile
+import tempfile
 import time
 import urllib.request
 from collections import Counter
@@ -2442,6 +2446,604 @@ def seo_undo_change(commit_hash):
     return redirect(url_for("seo_dashboard"))
 
 
+# ── Backups ──────────────────────────────────────────────────────
+
+BACKUPS_DIR = ADMIN_DIR / "backups"
+BACKUPS_DIR.mkdir(exist_ok=True)
+BACKUP_SETTINGS_FILE = ADMIN_DIR / "backup-settings.json"
+GDRIVE_TOKEN_FILE = ADMIN_DIR / "gdrive-token.json"
+
+# Files and directories to back up
+BACKUP_JSON_FILES = [
+    PRODUCTS_FILE, USERS_FILE, ENQUIRIES_FILE, SPAM_FILE,
+    ADMIN_DIR / "page-config.json", ADMIN_DIR / "gsc-token.json",
+    GDRIVE_TOKEN_FILE, BACKUP_SETTINGS_FILE,
+]
+BACKUP_DB_FILES = [ANALYTICS_DB]
+
+# System/server config files to include
+BACKUP_SYSTEM_FILES = [
+    Path("/etc/nginx/sites-available/photobooth-guys"),
+    Path("/etc/systemd/system/pbg-admin.service"),
+    Path("/etc/systemd/system/checkout.service"),
+    BASE_DIR / "nginx-redirects.conf",
+]
+
+
+def _load_backup_settings():
+    if BACKUP_SETTINGS_FILE.exists():
+        return json.loads(BACKUP_SETTINGS_FILE.read_text())
+    return {
+        "auto_enabled": False,
+        "schedule": "daily",
+        "time": "03:00",
+        "include_images": True,
+        "include_website": False,
+        "include_database": True,
+        "include_config": True,
+        "max_local_backups": 10,
+        "gdrive_folder_id": "",
+        "auto_upload_gdrive": False,
+    }
+
+
+def _save_backup_settings(settings):
+    BACKUP_SETTINGS_FILE.write_text(json.dumps(settings, indent=2))
+
+
+def _list_local_backups():
+    """Return list of backup metadata sorted newest first."""
+    backups = []
+    for f in sorted(BACKUPS_DIR.glob("backup-*.tar.gz"), reverse=True):
+        meta_file = f.with_suffix("").with_suffix(".json")
+        if meta_file.exists():
+            meta = json.loads(meta_file.read_text())
+        else:
+            meta = {
+                "filename": f.name,
+                "created_at": datetime.fromtimestamp(
+                    f.stat().st_mtime, tz=timezone.utc
+                ).isoformat(),
+                "type": "unknown",
+            }
+        meta["filename"] = f.name
+        meta["size_bytes"] = f.stat().st_size
+        backups.append(meta)
+    return backups
+
+
+def _create_backup(backup_type="manual"):
+    """Create a tar.gz backup and return (filename, metadata)."""
+    settings = _load_backup_settings()
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    archive_name = f"backup-{ts}.tar.gz"
+    archive_path = BACKUPS_DIR / archive_name
+
+    with tarfile.open(archive_path, "w:gz") as tar:
+        # Always include config JSON files
+        if settings.get("include_config", True):
+            for jf in BACKUP_JSON_FILES:
+                if jf.exists():
+                    tar.add(str(jf), arcname=f"config/{jf.name}")
+
+        # Database
+        if settings.get("include_database", True):
+            for db in BACKUP_DB_FILES:
+                if db.exists():
+                    # Create a safe copy of SQLite DB
+                    tmp_db = BACKUPS_DIR / f"_tmp_{db.name}"
+                    try:
+                        conn = sqlite3.connect(str(db))
+                        bak = sqlite3.connect(str(tmp_db))
+                        conn.backup(bak)
+                        bak.close()
+                        conn.close()
+                        tar.add(str(tmp_db), arcname=f"database/{db.name}")
+                    finally:
+                        if tmp_db.exists():
+                            tmp_db.unlink()
+
+        # Images
+        if settings.get("include_images", True):
+            if IMAGES_DIR.exists():
+                for img in IMAGES_DIR.rglob("*"):
+                    if img.is_file():
+                        tar.add(
+                            str(img),
+                            arcname=f"images/{img.relative_to(IMAGES_DIR)}",
+                        )
+
+        # Website HTML/CSS/JS
+        if settings.get("include_website", False):
+            for pattern in ["*.html", "css/*.css", "css/*.min.css",
+                            "js/*.js", "js/*.min.js", "sitemap.xml",
+                            "robots.txt"]:
+                for f in BASE_DIR.glob(pattern):
+                    if f.is_file():
+                        tar.add(
+                            str(f), arcname=f"website/{f.relative_to(BASE_DIR)}"
+                        )
+            # Include services/ and locations/ HTML
+            for subdir in ["services", "locations", "blog"]:
+                sd = BASE_DIR / subdir
+                if sd.exists():
+                    for f in sd.rglob("*.html"):
+                        tar.add(
+                            str(f),
+                            arcname=f"website/{f.relative_to(BASE_DIR)}",
+                        )
+
+            # Fonts
+            fonts_dir = BASE_DIR / "fonts"
+            if fonts_dir.exists():
+                for f in fonts_dir.rglob("*"):
+                    if f.is_file():
+                        tar.add(
+                            str(f),
+                            arcname=f"website/fonts/{f.relative_to(fonts_dir)}",
+                        )
+
+            # Root-level assets (favicons, logos)
+            for pattern in ["*.png", "*.jpg", "*.ico", "*.webp"]:
+                for f in BASE_DIR.glob(pattern):
+                    if f.is_file():
+                        tar.add(
+                            str(f), arcname=f"website/{f.name}"
+                        )
+
+        # Admin application code (always included)
+        for py_file in ADMIN_DIR.glob("*.py"):
+            tar.add(str(py_file), arcname=f"admin/{py_file.name}")
+        templates_dir = ADMIN_DIR / "templates"
+        if templates_dir.exists():
+            for tmpl in templates_dir.rglob("*"):
+                if tmpl.is_file():
+                    tar.add(
+                        str(tmpl),
+                        arcname=f"admin/templates/{tmpl.relative_to(templates_dir)}",
+                    )
+        static_dir = ADMIN_DIR / "static"
+        if static_dir.exists():
+            for sf in static_dir.rglob("*"):
+                if sf.is_file():
+                    tar.add(
+                        str(sf),
+                        arcname=f"admin/static/{sf.relative_to(static_dir)}",
+                    )
+        req_file = ADMIN_DIR / "requirements.txt"
+        if req_file.exists():
+            tar.add(str(req_file), arcname="admin/requirements.txt")
+
+        # System/server config files
+        for sys_file in BACKUP_SYSTEM_FILES:
+            if sys_file.exists():
+                tar.add(str(sys_file), arcname=f"system/{sys_file.name}")
+
+    meta = {
+        "filename": archive_name,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "type": backup_type,
+        "size_bytes": archive_path.stat().st_size,
+        "include_images": settings.get("include_images", True),
+        "include_website": settings.get("include_website", False),
+        "include_database": settings.get("include_database", True),
+        "include_config": settings.get("include_config", True),
+        "include_admin_code": True,
+        "include_system_config": True,
+        "gdrive_uploaded": False,
+    }
+    meta_path = archive_path.with_suffix("").with_suffix(".json")
+    meta_path.write_text(json.dumps(meta, indent=2))
+
+    # Enforce max local backups
+    max_keep = settings.get("max_local_backups", 10)
+    all_backups = sorted(BACKUPS_DIR.glob("backup-*.tar.gz"))
+    while len(all_backups) > max_keep:
+        oldest = all_backups.pop(0)
+        oldest.unlink(missing_ok=True)
+        oldest.with_suffix("").with_suffix(".json").unlink(missing_ok=True)
+
+    return archive_name, meta
+
+
+def _get_gdrive_service():
+    """Build a Google Drive API service from stored token."""
+    if not GDRIVE_TOKEN_FILE.exists():
+        return None
+    try:
+        from google.oauth2.credentials import Credentials
+        from googleapiclient.discovery import build
+
+        token_data = json.loads(GDRIVE_TOKEN_FILE.read_text())
+        creds = Credentials(
+            token=token_data.get("token"),
+            refresh_token=token_data.get("refresh_token"),
+            token_uri=token_data.get("token_uri", "https://oauth2.googleapis.com/token"),
+            client_id=token_data.get("client_id"),
+            client_secret=token_data.get("client_secret"),
+        )
+        return build("drive", "v3", credentials=creds, cache_discovery=False)
+    except Exception:
+        return None
+
+
+def _upload_to_gdrive(filepath, folder_id=""):
+    """Upload a file to Google Drive. Returns file ID or None."""
+    service = _get_gdrive_service()
+    if not service:
+        return None
+    try:
+        from googleapiclient.http import MediaFileUpload
+
+        file_metadata = {"name": Path(filepath).name}
+        if folder_id:
+            file_metadata["parents"] = [folder_id]
+
+        media = MediaFileUpload(str(filepath), mimetype="application/gzip", resumable=True)
+        result = service.files().create(
+            body=file_metadata, media_body=media, fields="id"
+        ).execute()
+        return result.get("id")
+    except Exception as e:
+        app.logger.error(f"Google Drive upload failed: {e}")
+        return None
+
+
+@app.route("/backups")
+@login_required
+def backups_page():
+    settings = _load_backup_settings()
+    local_backups = _list_local_backups()
+    gdrive_connected = GDRIVE_TOKEN_FILE.exists()
+    return render_template(
+        "backups.html",
+        settings=settings,
+        backups=local_backups,
+        gdrive_connected=gdrive_connected,
+    )
+
+
+@app.route("/backups/create", methods=["POST"])
+@login_required
+def backups_create():
+    try:
+        filename, meta = _create_backup("manual")
+        settings = _load_backup_settings()
+
+        # Auto-upload to Google Drive if enabled
+        if settings.get("auto_upload_gdrive") and GDRIVE_TOKEN_FILE.exists():
+            gdrive_id = _upload_to_gdrive(
+                BACKUPS_DIR / filename,
+                folder_id=settings.get("gdrive_folder_id", ""),
+            )
+            if gdrive_id:
+                meta["gdrive_uploaded"] = True
+                meta["gdrive_file_id"] = gdrive_id
+                meta_path = (BACKUPS_DIR / filename).with_suffix("").with_suffix(".json")
+                meta_path.write_text(json.dumps(meta, indent=2))
+                flash(f"Backup created and uploaded to Google Drive", "success")
+            else:
+                flash(f"Backup created but Google Drive upload failed", "error")
+        else:
+            size_mb = meta["size_bytes"] / (1024 * 1024)
+            flash(f"Backup created: {filename} ({size_mb:.1f} MB)", "success")
+    except Exception as e:
+        flash(f"Backup failed: {e}", "error")
+    return redirect(url_for("backups_page"))
+
+
+@app.route("/backups/download/<filename>")
+@login_required
+def backups_download(filename):
+    """Download a backup file."""
+    safe_name = secure_filename(filename)
+    filepath = BACKUPS_DIR / safe_name
+    if not filepath.exists() or not safe_name.startswith("backup-"):
+        flash("Backup not found", "error")
+        return redirect(url_for("backups_page"))
+
+    from flask import send_file
+    return send_file(str(filepath), as_attachment=True, download_name=safe_name)
+
+
+@app.route("/backups/delete/<filename>", methods=["POST"])
+@login_required
+def backups_delete(filename):
+    safe_name = secure_filename(filename)
+    filepath = BACKUPS_DIR / safe_name
+    if filepath.exists() and safe_name.startswith("backup-"):
+        filepath.unlink(missing_ok=True)
+        filepath.with_suffix("").with_suffix(".json").unlink(missing_ok=True)
+        flash(f"Backup deleted: {safe_name}", "success")
+    else:
+        flash("Backup not found", "error")
+    return redirect(url_for("backups_page"))
+
+
+@app.route("/backups/restore/<filename>", methods=["POST"])
+@login_required
+def backups_restore(filename):
+    """Restore files from a backup archive."""
+    safe_name = secure_filename(filename)
+    filepath = BACKUPS_DIR / safe_name
+    if not filepath.exists() or not safe_name.startswith("backup-"):
+        flash("Backup not found", "error")
+        return redirect(url_for("backups_page"))
+
+    restored = []
+    try:
+        with tarfile.open(filepath, "r:gz") as tar:
+            # Security: check for path traversal
+            for member in tar.getmembers():
+                if member.name.startswith("/") or ".." in member.name:
+                    flash("Backup contains unsafe paths, aborting", "error")
+                    return redirect(url_for("backups_page"))
+
+            for member in tar.getmembers():
+                if not member.isfile():
+                    continue
+
+                if member.name.startswith("config/"):
+                    dest = ADMIN_DIR / Path(member.name).name
+                    f = tar.extractfile(member)
+                    if f:
+                        dest.write_bytes(f.read())
+                        restored.append(member.name)
+
+                elif member.name.startswith("database/"):
+                    dest = ADMIN_DIR / Path(member.name).name
+                    f = tar.extractfile(member)
+                    if f:
+                        dest.write_bytes(f.read())
+                        restored.append(member.name)
+
+                elif member.name.startswith("images/"):
+                    rel = member.name[len("images/"):]
+                    dest = IMAGES_DIR / rel
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    f = tar.extractfile(member)
+                    if f:
+                        dest.write_bytes(f.read())
+                        restored.append(member.name)
+
+                elif member.name.startswith("website/"):
+                    rel = member.name[len("website/"):]
+                    dest = BASE_DIR / rel
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    f = tar.extractfile(member)
+                    if f:
+                        dest.write_bytes(f.read())
+                        restored.append(member.name)
+
+                elif member.name.startswith("admin/"):
+                    rel = member.name[len("admin/"):]
+                    dest = ADMIN_DIR / rel
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    f = tar.extractfile(member)
+                    if f:
+                        dest.write_bytes(f.read())
+                        restored.append(member.name)
+
+                elif member.name.startswith("system/"):
+                    # Map system config files back to their original locations
+                    fname = Path(member.name).name
+                    dest_map = {
+                        "photobooth-guys": Path("/etc/nginx/sites-available/photobooth-guys"),
+                        "pbg-admin.service": Path("/etc/systemd/system/pbg-admin.service"),
+                        "checkout.service": Path("/etc/systemd/system/checkout.service"),
+                        "nginx-redirects.conf": BASE_DIR / "nginx-redirects.conf",
+                    }
+                    dest = dest_map.get(fname)
+                    if dest:
+                        f = tar.extractfile(member)
+                        if f:
+                            try:
+                                dest.write_bytes(f.read())
+                                restored.append(member.name)
+                            except PermissionError:
+                                restored.append(f"{member.name} (skipped - permission denied)")
+
+        flash(f"Restored {len(restored)} files from {safe_name}", "success")
+    except Exception as e:
+        flash(f"Restore failed: {e}", "error")
+    return redirect(url_for("backups_page"))
+
+
+@app.route("/backups/upload-gdrive/<filename>", methods=["POST"])
+@login_required
+def backups_upload_gdrive(filename):
+    """Upload a specific backup to Google Drive."""
+    safe_name = secure_filename(filename)
+    filepath = BACKUPS_DIR / safe_name
+    if not filepath.exists() or not safe_name.startswith("backup-"):
+        flash("Backup not found", "error")
+        return redirect(url_for("backups_page"))
+
+    settings = _load_backup_settings()
+    gdrive_id = _upload_to_gdrive(filepath, folder_id=settings.get("gdrive_folder_id", ""))
+    if gdrive_id:
+        # Update metadata
+        meta_path = filepath.with_suffix("").with_suffix(".json")
+        if meta_path.exists():
+            meta = json.loads(meta_path.read_text())
+            meta["gdrive_uploaded"] = True
+            meta["gdrive_file_id"] = gdrive_id
+            meta_path.write_text(json.dumps(meta, indent=2))
+        flash(f"Uploaded {safe_name} to Google Drive", "success")
+    else:
+        flash("Google Drive upload failed. Check your connection.", "error")
+    return redirect(url_for("backups_page"))
+
+
+@app.route("/backups/settings", methods=["POST"])
+@login_required
+def backups_save_settings():
+    settings = _load_backup_settings()
+    settings["auto_enabled"] = request.form.get("auto_enabled") == "on"
+    settings["schedule"] = request.form.get("schedule", "daily")
+    settings["time"] = request.form.get("time", "03:00")
+    settings["include_images"] = request.form.get("include_images") == "on"
+    settings["include_website"] = request.form.get("include_website") == "on"
+    settings["include_database"] = request.form.get("include_database") == "on"
+    settings["include_config"] = request.form.get("include_config") == "on"
+    settings["max_local_backups"] = int(request.form.get("max_local_backups", 10))
+    settings["gdrive_folder_id"] = request.form.get("gdrive_folder_id", "").strip()
+    settings["auto_upload_gdrive"] = request.form.get("auto_upload_gdrive") == "on"
+    _save_backup_settings(settings)
+
+    # Reschedule backup job
+    _reschedule_backup_job(settings)
+
+    flash("Backup settings saved", "success")
+    return redirect(url_for("backups_page"))
+
+
+@app.route("/backups/connect-gdrive")
+@login_required
+def backups_connect_gdrive():
+    client_id = os.environ.get("GDRIVE_CLIENT_ID") or os.environ.get("GSC_CLIENT_ID")
+    client_secret = os.environ.get("GDRIVE_CLIENT_SECRET") or os.environ.get("GSC_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        flash("GDRIVE_CLIENT_ID and GDRIVE_CLIENT_SECRET (or GSC_CLIENT_ID/GSC_CLIENT_SECRET) must be set in .env", "error")
+        return redirect(url_for("backups_page"))
+
+    from google_auth_oauthlib.flow import Flow
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=["https://www.googleapis.com/auth/drive.file"],
+        redirect_uri="https://www.photoboothguys.ie/admin/backups/gdrive-callback",
+    )
+
+    auth_url, state = flow.authorization_url(
+        access_type="offline", prompt="consent"
+    )
+    session["gdrive_oauth_state"] = state
+    session["gdrive_code_verifier"] = flow.code_verifier
+    return redirect(auth_url)
+
+
+@app.route("/backups/gdrive-callback")
+@login_required
+def backups_gdrive_callback():
+    from google_auth_oauthlib.flow import Flow
+
+    client_id = os.environ.get("GDRIVE_CLIENT_ID") or os.environ.get("GSC_CLIENT_ID", "")
+    client_secret = os.environ.get("GDRIVE_CLIENT_SECRET") or os.environ.get("GSC_CLIENT_SECRET", "")
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+            }
+        },
+        scopes=["https://www.googleapis.com/auth/drive.file"],
+        redirect_uri="https://www.photoboothguys.ie/admin/backups/gdrive-callback",
+        state=session.get("gdrive_oauth_state"),
+    )
+
+    try:
+        auth_response = request.url.replace("http://", "https://", 1)
+        flow.code_verifier = session.get("gdrive_code_verifier")
+        flow.fetch_token(authorization_response=auth_response)
+        creds = flow.credentials
+
+        token_data = {
+            "token": creds.token,
+            "refresh_token": creds.refresh_token,
+            "token_uri": creds.token_uri,
+            "client_id": creds.client_id,
+            "client_secret": creds.client_secret,
+        }
+        GDRIVE_TOKEN_FILE.write_text(json.dumps(token_data))
+        flash("Google Drive connected successfully!", "success")
+    except Exception as e:
+        app.logger.error(f"Google Drive OAuth error: {e}")
+        flash(f"Failed to connect Google Drive: {e}", "error")
+    return redirect(url_for("backups_page"))
+
+
+@app.route("/backups/disconnect-gdrive", methods=["POST"])
+@login_required
+def backups_disconnect_gdrive():
+    if GDRIVE_TOKEN_FILE.exists():
+        GDRIVE_TOKEN_FILE.unlink()
+    flash("Google Drive disconnected.", "success")
+    return redirect(url_for("backups_page"))
+
+
+def _run_scheduled_backup():
+    """Run a scheduled automatic backup."""
+    with app.app_context():
+        try:
+            filename, meta = _create_backup("scheduled")
+            settings = _load_backup_settings()
+            if settings.get("auto_upload_gdrive") and GDRIVE_TOKEN_FILE.exists():
+                gdrive_id = _upload_to_gdrive(
+                    BACKUPS_DIR / filename,
+                    folder_id=settings.get("gdrive_folder_id", ""),
+                )
+                if gdrive_id:
+                    meta["gdrive_uploaded"] = True
+                    meta["gdrive_file_id"] = gdrive_id
+                    meta_path = (BACKUPS_DIR / filename).with_suffix("").with_suffix(".json")
+                    meta_path.write_text(json.dumps(meta, indent=2))
+            app.logger.info(f"Scheduled backup created: {filename}")
+        except Exception as e:
+            app.logger.error(f"Scheduled backup failed: {e}")
+
+
+def _reschedule_backup_job(settings=None):
+    """Update the APScheduler backup job based on current settings."""
+    if settings is None:
+        settings = _load_backup_settings()
+    try:
+        from apscheduler.triggers.cron import CronTrigger
+
+        if hasattr(app, "_scheduler") and app._scheduler:
+            # Remove existing job if any
+            try:
+                app._scheduler.remove_job("scheduled_backup")
+            except Exception:
+                pass
+
+            if settings.get("auto_enabled"):
+                hour, minute = 3, 0
+                time_str = settings.get("time", "03:00")
+                if ":" in time_str:
+                    parts = time_str.split(":")
+                    hour, minute = int(parts[0]), int(parts[1])
+
+                schedule = settings.get("schedule", "daily")
+                if schedule == "weekly":
+                    trigger = CronTrigger(
+                        day_of_week="sun", hour=hour, minute=minute,
+                        timezone=pytz.timezone("Europe/Dublin"),
+                    )
+                else:
+                    trigger = CronTrigger(
+                        hour=hour, minute=minute,
+                        timezone=pytz.timezone("Europe/Dublin"),
+                    )
+
+                app._scheduler.add_job(
+                    _run_scheduled_backup, trigger,
+                    id="scheduled_backup", replace_existing=True,
+                )
+    except Exception:
+        pass
+
+
 # ── Scheduler ────────────────────────────────────────────────────
 
 ensure_users_file()
@@ -2459,9 +3061,11 @@ try:
         id="daily_seo_analysis",
         replace_existing=True,
     )
+    app._scheduler = scheduler
+    _reschedule_backup_job()
     scheduler.start()
 except Exception:
-    pass
+    app._scheduler = None
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5050, debug=True)
