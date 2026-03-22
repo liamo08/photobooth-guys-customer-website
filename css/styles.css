@@ -1432,7 +1432,7 @@ body::before {
    PAGE HERO (compact, for inner pages)
    ═══════════════════════════════════ */
 .page-hero {
-  padding: 140px 0 60px;
+  padding: 100px 0 60px;
   position: relative;
   overflow: hidden;
 }
@@ -1469,42 +1469,6 @@ body::before {
   max-width: 640px;
   margin-bottom: 32px;
 }
-
-/* ═══════════════════════════════════
-   BREADCRUMBS
-   ═══════════════════════════════════ */
-nav.breadcrumb {
-  padding-top: 96px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.product-hero nav.breadcrumb,
-.breadcrumb-section nav.breadcrumb {
-  padding-top: 0;
-}
-.breadcrumb-list {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  list-style: none;
-  flex-wrap: wrap;
-}
-.breadcrumb-separator {
-  color: var(--text-muted);
-  opacity: 0.4;
-}
-.breadcrumb a {
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-.breadcrumb a:hover { color: var(--teal-light); }
-.breadcrumb .sep { color: var(--text-muted); opacity: 0.4; }
-.breadcrumb .current { color: var(--cream); }
 
 /* ═══════════════════════════════════
    ENHANCED SERVICE CARDS (services page)
@@ -1681,7 +1645,7 @@ nav.breadcrumb {
    PRODUCT DETAIL PAGE
    ═══════════════════════════════════ */
 .product-hero {
-  padding: 140px 0 80px;
+  padding: 100px 0 80px;
   position: relative;
   overflow: hidden;
 }
