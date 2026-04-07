@@ -1659,18 +1659,18 @@ body::before {
         </div>
       </div>
       <div class="hero-visual">
-        <div class="hero-card">
+        <a href="selfie-mirror-hire" class="hero-card" title="Selfie mirror hire">
           <img fetchpriority="high" src="images/thumb/selfie-mirror.webp" alt="Selfie Mirror Photo Booth with LED lights" class="hero-card-img" width="400" height="533" sizes="(max-width: 1024px) 40vw, 220px">
           <span class="hero-card-label">Selfie Mirror</span>
-        </div>
-        <div class="hero-card">
+        </a>
+        <a href="360-photo-booth-hire" class="hero-card" title="360 video booth hire">
           <img loading="lazy" decoding="async" src="images/thumb/360-booth.webp" alt="360 Video Photo Booth with colorful lighting" class="hero-card-img" width="400" height="300" sizes="(max-width: 1024px) 35vw, 180px">
           <span class="hero-card-label">360° Booth</span>
-        </div>
-        <div class="hero-card">
+        </a>
+        <a href="open-air-photo-booth-hire" class="hero-card" title="Open air photo booth hire">
           <img loading="lazy" decoding="async" src="images/thumb/glam-booth.webp" alt="Couple having fun in the glam photo booth" class="hero-card-img" width="1200" height="800" sizes="(max-width: 1024px) 30vw, 160px">
           <span class="hero-card-label">Open Air</span>
-        </div>
+        </a>
         <div class="hero-stat">
           <div class="hero-stat-number">2,500+</div>
           <div class="hero-stat-label">Events Covered Nationwide</div>
@@ -1711,7 +1711,6 @@ body::before {
       <p class="section-subtitle reveal reveal-delay-2">From intimate weddings to large-scale corporate activations, we have the perfect booth to match your vision and wow your guests.</p>
     </div>
     <div class="services-grid">
-
       <a href="open-air-photo-booth-hire" class="service-card reveal" style="overflow:hidden;" title="Open air photo booth hire">
         <img loading="lazy" decoding="async" src="images/thumb/open-air-booth.webp" alt="Open air photo booth hire Ireland" class="service-card-bg" width="400" height="225" sizes="(max-width: 768px) 90vw, (max-width: 1024px) 45vw, 380px">
         <div class="service-icon teal">
@@ -2224,6 +2223,7 @@ document.querySelectorAll('.service-card').forEach(card => {
     card.style.transform = '';
   });
 });
+
 </script>
 <script>(function(){var p=location.pathname,st=performance.now(),mx=0,vt=0,lv=st,sent=0;function snd(d){if(navigator.sendBeacon)navigator.sendBeacon("/admin/track",new Blob([JSON.stringify(d)],{type:"application/json"}))}snd({t:"pv",p:p,r:document.referrer,w:screen.width});var stm;addEventListener("scroll",function(){if(stm)return;stm=setTimeout(function(){stm=null;var pct=Math.round((scrollY+innerHeight)/Math.max(document.body.scrollHeight,1)*100);if(pct>mx)mx=Math.min(pct,100)},500)},{passive:true});function eng(){if(sent)return;sent=1;vt+=performance.now()-lv;snd({t:"eng",p:p,d:mx,s:Math.round(vt/1000)})}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden"){eng()}else{lv=performance.now()}});addEventListener("beforeunload",eng);document.addEventListener("click",function(e){var el=e.target.closest("a[href*=contact],a[href*=quote],.btn-primary,.btn-book,.btn-book-mobile,.hero-btn,button[type=submit]");if(el)snd({t:"click",p:p,l:(el.dataset.track||el.textContent.trim().slice(0,50))})})})()</script>
 </body>

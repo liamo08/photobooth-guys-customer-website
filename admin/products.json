@@ -285,6 +285,32 @@
       "services/roaming-photographer-hire.html",
       "services.html"
     ],
-    "features": []
+    "features": [
+      {
+        "id": "e35ab4cc5cd9",
+        "title": "Roaming Photographer",
+        "description": "A professional photographer roams your event, interacting with guests and capturing natural, candid moments as they happen. Perfect for creating relaxed, authentic photos that showcase the true atmosphere of your event\u2014ideal for corporate functions, weddings, and brand activations.",
+        "image": "roaming-photographer_e35ab4cc5cd9.webp",
+        "video": "",
+        "media_type": "image"
+      },
+      {
+        "id": "d97659365338",
+        "title": "Digital Downloads",
+        "description": "Guests can download the photos there and then from the photographer, no waiting until after the event",
+        "image": "roaming-photographer_d97659365338.webp",
+        "video": "",
+        "media_type": "image"
+      },
+      {
+        "id": "8da1d241f72c",
+        "title": "Printing",
+        "description": "Guests can receive high-quality prints within seconds of their photo being taken. Each print is fully customised with your event branding or theme\u2014creating a memorable takeaway they can keep and share.",
+        "image": "roaming-photographer_8da1d241f72c.webp",
+        "video": "",
+        "media_type": "image"
+      }
+    ],
+    "carousel_speed": 10
   }
 ]

@@ -2104,3 +2104,39 @@ body::before {
 
 /* FAQ answer-inner alias */
 .faq-answer-inner { font-size: 0.92rem; line-height: 1.7; color: var(--text-muted); }
+
+/* ── Mobile product showcase: single tab + arrows on image ── */
+.showcase-arrow { display: none; }
+
+@media (max-width: 640px) {
+  /* Only show the active tab summary below the image */
+  .showcase-tab { display: none; }
+  .showcase-tab.active { display: flex; }
+
+  /* Arrows overlaid on the image */
+  .showcase-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .showcase-arrow:active {
+    background: rgba(0,0,0,0.65);
+    border-color: rgba(255,255,255,0.4);
+  }
+  .showcase-arrow-prev { left: 12px; }
+  .showcase-arrow-next { right: 12px; }
+}

@@ -1474,6 +1474,7 @@ def save_enquiry(data):
         "event_type": data.get("event_type", "").strip(),
         "booth_type": data.get("booth_type", "").strip(),
         "venue": data.get("venue", "").strip(),
+        "venue_full_address": data.get("venue_full_address", "").strip(),
         "message": data.get("message", "").strip(),
         "submitted_at": datetime.now(timezone.utc).isoformat(),
         "read": False,
@@ -1500,6 +1501,7 @@ def save_spam(data, reason):
         "event_type": data.get("event_type", "").strip(),
         "booth_type": data.get("booth_type", "").strip(),
         "venue": data.get("venue", "").strip(),
+        "venue_full_address": data.get("venue_full_address", "").strip(),
         "message": data.get("message", "").strip(),
         "submitted_at": datetime.now(timezone.utc).isoformat(),
         "blocked_reason": reason,
@@ -1535,6 +1537,8 @@ def send_enquiry_email(enquiry):
         lines.append(f"Booth Type: {enquiry['booth_type']}")
     if enquiry.get("venue"):
         lines.append(f"Venue: {enquiry['venue']}")
+    if enquiry.get("venue_full_address") and enquiry["venue_full_address"] != enquiry.get("venue", ""):
+        lines.append(f"Venue Address: {enquiry['venue_full_address']}")
     if enquiry.get("message"):
         lines.extend(["", "Message:", enquiry["message"]])
 

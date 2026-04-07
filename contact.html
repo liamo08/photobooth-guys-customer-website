@@ -66,8 +66,8 @@
   line-gap-override: 0%;
 }
 </style>
-<link rel="preload" href="css/styles.min.css?v=4" as="style">
-<link rel="stylesheet" href="css/styles.min.css?v=4">
+<link rel="preload" href="css/styles.min.css?v=6" as="style">
+<link rel="stylesheet" href="css/styles.min.css?v=6">
 <style>
 /* Google Places Autocomplete dark theme */
 .pac-container{background:#1a1a2e;border:1px solid rgba(255,255,255,0.08);border-radius:8px;margin-top:4px;box-shadow:0 8px 32px rgba(0,0,0,0.4);font-family:'DM Sans',-apple-system,sans-serif}
@@ -182,8 +182,6 @@
 </header>
 <div class="mobile-menu" id="mobileMenu"><a href="services">Services</a><a href="wedding-photo-booth-hire">Wedding Booths</a><a href="locations/">Locations</a>
   <a href="faq">FAQ</a><a href="contact">Contact</a><a href="blog">Blog</a><a href="contact" class="btn-book-mobile">Book Now</a></div>
-
-
 <section class="page-hero">
   <div class="container">
     <div class="page-hero-content">
@@ -271,6 +269,7 @@
           <div class="form-group">
             <label for="venue">Venue / Address <span class="req">*</span></label>
             <input type="text" id="venue" name="venue" placeholder="Start typing your venue address..." autocomplete="off" required>
+            <input type="hidden" id="venue_full_address" name="venue_full_address">
           </div>
 
           <div class="form-group">
@@ -391,7 +390,7 @@
     <div class="footer-bottom"><span>&copy; 2026 Photobooth Guys. All rights reserved.</span><span>Premium Photo Booth Hire — Nationwide, Ireland</span></div>
   </div>
 </footer>
-<script src="js/main.min.js?v=6" defer></script>
+<script src="js/main.min.js?v=8" defer></script>
 <script>
 (function(){
   var form=document.getElementById('contactForm');
@@ -417,6 +416,7 @@
         booth_type:form.booth_type.value,
         partner_name:form.partner_name?form.partner_name.value:'',
         venue:form.venue.value,
+        venue_full_address:document.getElementById("venue_full_address").value||form.venue.value,
         message:form.message.value,
         website:document.getElementById('website').value,
         form_token:document.getElementById('form_token').value
@@ -457,11 +457,17 @@ function initAutocomplete(){
       new google.maps.LatLng(55.4,-5.4)
     )
   });
-  ac.setFields(['formatted_address','name']);
-  ac.addListener('place_changed',function(){
+  ac.setFields(['formatted_address','name','address_components']);
+  ac.addListener("place_changed",function(){
     var place=ac.getPlace();
     if(place&&place.formatted_address){
-      input.value=place.name?place.name+', '+place.formatted_address:place.formatted_address;
+      var full=place.formatted_address;
+      var county="";
+      if(place.address_components){place.address_components.forEach(function(c){if(c.types.indexOf("administrative_area_level_1")>-1)county=c.long_name})}
+      var display=place.name||full.split(",")[0].trim();
+      if(county&&display.indexOf(county)===-1)display+=", "+county;
+      input.value=display;
+      document.getElementById("venue_full_address").value=full;
     }
   });
 }

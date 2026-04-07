@@ -123,6 +123,66 @@ document.querySelectorAll('.faq-question').forEach(btn => {
   });
 });
 
+// ── Mobile showcase arrows (waits for dynamic tabs to load) ──
+(function() {
+  var showcase = document.querySelector('.product-showcase');
+  if (!showcase) return;
+
+  var imgWrap = showcase.querySelector('.showcase-image-wrap');
+  var tabsEl = showcase.querySelector('.showcase-tabs');
+  if (!imgWrap || !tabsEl) return;
+
+  function setup() {
+    if (imgWrap.querySelector('.showcase-arrow')) return; // already set up
+
+    var prevBtn = document.createElement('button');
+    prevBtn.className = 'showcase-arrow showcase-arrow-prev';
+    prevBtn.setAttribute('aria-label', 'Previous feature');
+    prevBtn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+
+    var nextBtn = document.createElement('button');
+    nextBtn.className = 'showcase-arrow showcase-arrow-next';
+    nextBtn.setAttribute('aria-label', 'Next feature');
+    nextBtn.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
+
+    imgWrap.appendChild(prevBtn);
+    imgWrap.appendChild(nextBtn);
+
+    function navigateShowcase(direction) {
+      var tabs = tabsEl.querySelectorAll('.showcase-tab');
+      if (tabs.length === 0) return;
+      var currentIdx = -1;
+      tabs.forEach(function(t, i) { if (t.classList.contains('active')) currentIdx = i; });
+      if (currentIdx === -1) currentIdx = 0;
+      var nextIdx = (currentIdx + direction + tabs.length) % tabs.length;
+      tabs[nextIdx].click();
+    }
+
+    prevBtn.addEventListener('click', function(e) { e.stopPropagation(); navigateShowcase(-1); });
+    nextBtn.addEventListener('click', function(e) { e.stopPropagation(); navigateShowcase(1); });
+
+    // Swipe support on the image
+    var touchStartX = 0;
+    imgWrap.addEventListener('touchstart', function(e) { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+    imgWrap.addEventListener('touchend', function(e) {
+      if (!window.matchMedia('(max-width: 640px)').matches) return;
+      var diff = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(diff) > 50) {
+        navigateShowcase(diff > 0 ? -1 : 1);
+      }
+    }, { passive: true });
+  }
+
+  // Watch for tabs to be populated dynamically
+  var observer = new MutationObserver(function() {
+    if (tabsEl.querySelectorAll('.showcase-tab').length > 0) {
+      observer.disconnect();
+      setup();
+    }
+  });
+  observer.observe(tabsEl, { childList: true });
+})();
+
 // ── Category filter tabs ──
 document.querySelectorAll('.filter-tab').forEach(tab => {
   tab.addEventListener('click', () => {
