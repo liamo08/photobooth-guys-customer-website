@@ -81,6 +81,9 @@ body{
   border-radius:3px 3px 0 0;position:relative;transition:opacity .2s;cursor:default;
 }
 .chart-bar:hover{opacity:.8}
+.chart-bar-group:hover>div:not(.tooltip){opacity:.8}
+.chart-bar-group .tooltip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--charcoal);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.72rem;white-space:nowrap;z-index:10}
+.chart-bar-group:hover .tooltip{display:block}
 .chart-bar .tooltip{
   display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
   background:var(--charcoal);border:1px solid var(--border);border-radius:6px;
@@ -209,15 +212,21 @@ body{
     </div>
   </div>
 
-  <!-- Daily Chart -->
+  <!-- Daily Traffic Chart -->
   <div class="chart-card">
     <h3>Daily Traffic</h3>
+    <div style="display:flex;gap:16px;margin-bottom:16px;">
+      <span style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text-muted);"><span style="width:12px;height:12px;border-radius:3px;background:linear-gradient(to top,var(--teal),var(--teal-light));display:inline-block;"></span>Page Views</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text-muted);"><span style="width:12px;height:12px;border-radius:3px;background:linear-gradient(to top,var(--gold),#f5d06b);display:inline-block;"></span>Unique Visitors</span>
+    </div>
     {% if daily %}
     {% set max_views = daily|map(attribute='views')|max %}
     <div class="chart-bars">
       {% for day in daily %}
-      <div class="chart-bar" style="height:{{ (day['views'] / max_views * 100) if max_views > 0 else 0 }}%">
-        <div class="tooltip">{{ day['day'] }}<br>{{ day['views'] }} views &middot; {{ day['visitors'] }} visitors</div>
+      <div style="flex:1;min-width:4px;display:flex;gap:1px;align-items:flex-end;height:100%;position:relative;cursor:default;" class="chart-bar-group">
+        <div style="flex:1;background:linear-gradient(to top,var(--teal),var(--teal-light));border-radius:2px 2px 0 0;height:{{ (day['views'] / max_views * 100) if max_views > 0 else 0 }}%;min-height:{% if day['views'] > 0 %}2px{% else %}0{% endif %};transition:opacity .2s;"></div>
+        <div style="flex:1;background:linear-gradient(to top,var(--gold),#f5d06b);border-radius:2px 2px 0 0;height:{{ (day['visitors'] / max_views * 100) if max_views > 0 else 0 }}%;min-height:{% if day['visitors'] > 0 %}2px{% else %}0{% endif %};transition:opacity .2s;"></div>
+        <div class="tooltip">{{ day['day'] }}<br>{{ day['views'] }} views<br>{{ day['visitors'] }} unique visitors</div>
       </div>
       {% endfor %}
     </div>
