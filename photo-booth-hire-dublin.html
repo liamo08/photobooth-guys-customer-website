@@ -66,13 +66,13 @@
   line-gap-override: 0%;
 }
 </style>
-<link rel="preload" href="css/styles.min.css?v=6" as="style">
-<link rel="stylesheet" href="css/styles.min.css?v=6">
+<link rel="preload" href="css/styles.min.css?v=7" as="style">
+<link rel="stylesheet" href="css/styles.min.css?v=7">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.photoboothguys.ie/"},{"@type":"ListItem","position":2,"name":"Locations","item":"https://www.photoboothguys.ie/locations/"},{"@type":"ListItem","position":3,"name":"Dublin","item":"https://www.photoboothguys.ie/photo-booth-hire-dublin"}]}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LocalBusiness","name":"Photobooth Guys","description":"Premium photo booth hire in Dublin, Ireland. Selfie mirrors, 360 booths, and open air photo booths for weddings, corporate events and parties across Dublin city and county.","url":"https://www.photoboothguys.ie","areaServed":{"@type":"City","name":"Dublin","containedInPlace":{"@type":"Country","name":"Ireland"}},"serviceType":"Photo Booth Hire"}
+{"@context":"https://schema.org","@type":"LocalBusiness","name":"Photobooth Guys","description":"Premium photo booth hire in Dublin, Ireland. Selfie mirrors, 360 booths, and open air photo booths for weddings, corporate events and parties across Dublin city and county.","url":"https://www.photoboothguys.ie","areaServed":{"@type":"City","name":"Dublin","containedInPlace":{"@type":"Country","name":"Ireland"}},"serviceType":"Photo Booth Hire","address":{"@type":"PostalAddress","streetAddress":"77 Camden Street Lower","addressLocality":"Dublin","addressRegion":"Dublin","postalCode":"D02 XE80","addressCountry":"IE"},"telephone":"+353860444180","aggregateRating":{"@type":"AggregateRating","ratingValue":"5.0","bestRating":"5","worstRating":"1","ratingCount":"56"}}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How much does photo booth hire cost in Dublin?","acceptedAnswer":{"@type":"Answer","text":"Photo booth hire in Dublin ranges from €680 to €1,200 depending on booth type and hire duration. Our open air booth starts from €680, selfie mirrors from €730, and 360 booths from €750. Premium magazine booth packages start from €1,200. Contact us for a personalised quote for your Dublin event."}},{"@type":"Question","name":"Which Dublin venues do you cover?","acceptedAnswer":{"@type":"Answer","text":"We cover every venue across Dublin city and county — from Powerscourt Hotel and Luttrellstown Castle to the Convention Centre Dublin, Croke Park, The Shelbourne, and Mansion House. No travel fees apply anywhere in Dublin."}},{"@type":"Question","name":"How far in advance should I book for a Dublin event?","acceptedAnswer":{"@type":"Answer","text":"We recommend booking 4-8 weeks ahead, particularly for Friday and Saturday dates. Peak wedding season (May to September) and December party season fill up quickly. Early booking can unlock discounts of 10-15%."}},{"@type":"Question","name":"Do your photo booths require WiFi at the venue?","acceptedAnswer":{"@type":"Answer","text":"Not at all. We carry our own 4G/5G mobile data connection to every event. Printing operates fully offline, and guests share photos digitally through QR codes — no venue WiFi needed."}},{"@type":"Question","name":"What is included in Dublin photo booth hire?","acceptedAnswer":{"@type":"Answer","text":"Every Dublin booking includes free delivery, professional setup, a dedicated booth attendant for the full duration, unlimited prints (where applicable), digital sharing via QR codes, custom-designed overlays, and complete packdown. There are no hidden fees."}}]}
@@ -84,11 +84,13 @@
   <div class="nav-inner">
     <a href="/" class="logo"><img src="logo.webp" alt="Photobooth Guys" class="logo-img" width="120" height="107"></a>
     <nav><ul class="nav-links"><li><a href="services">Services</a></li><li><a href="wedding-photo-booth-hire">Wedding Booths</a></li><li><a href="locations/">Locations</a></li><li><a href="faq">FAQ</a></li><li><a href="contact">Contact</a></li><li><a href="blog">Blog</a></li><li><a href="gallery">Gallery</a></li><li><a href="pricing">Pricing</a></li></ul></nav>
+    <a href="tel:+353860444180" class="nav-phone" style="display:none;align-items:center;gap:6px;color:#9a9ab0;text-decoration:none;font-size:0.82rem;font-weight:500;letter-spacing:0.04em;transition:color 0.3s" onmouseover="this.style.color=&quot;#fff&quot;" onmouseout="this.style.color=&quot;#9a9ab0&quot;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" transform="scale(0.58)"/></svg>086 044 4180</a>
     <a href="/contact" class="btn-book">Book Now</a>
     <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
   </div>
 </header>
-<div class="mobile-menu" id="mobileMenu"><a href="services">Services</a><a href="wedding-photo-booth-hire">Wedding Booths</a><a href="locations/">Locations</a><a href="faq">FAQ</a><a href="contact">Contact</a><a href="blog">Blog</a><a href="/contact" class="btn-book-mobile">Book Now</a></div>
+<div class="mobile-menu" id="mobileMenu"><a href="services">Services</a><a href="wedding-photo-booth-hire">Wedding Booths</a><a href="locations/">Locations</a><a href="faq">FAQ</a><a href="contact">Contact</a><a href="blog">Blog</a><a href="tel:+353860444180" style="color:#7db8c9;text-decoration:none;font-size:1.2rem;margin-top:8px">086 044 4180</a>
+  <a href="/contact" class="btn-book-mobile">Book Now</a></div>
 
 
 <section class="page-hero">
@@ -248,6 +250,35 @@
   </div>
 </section>
 
+
+<!-- GOOGLE MAP -->
+<section class="content-section" style="padding-bottom:0">
+  <div class="container">
+    <div class="content-header reveal">
+      <p class="section-label">Dublin City Centre</p>
+      <h2 class="section-title">Photo Booth Hire Dublin City Centre</h2>
+      <p class="section-subtitle">Our base is on Camden Street in Dublin 2 — walking distance from The Iveagh Garden Hotel, The Merrion, The Shelbourne, The Westin, The Marker and every major city-centre venue. Zero travel fees anywhere inside the M50, and same-day collection from our Camden Street studio for last-minute bookings.</p>
+    </div>
+    <div class="reveal reveal-delay-1" style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:960px;margin-left:auto;margin-right:auto">
+      <div style="padding:22px;border:1px solid rgba(255,255,255,0.08);border-radius:12px;background:rgba(255,255,255,0.02)">
+        <h3 style="margin:0 0 8px;font-size:1.05rem;color:#f4f0ea">City Centre Hotels</h3>
+        <p style="margin:0;font-size:0.92rem;color:#9a9ab0;line-height:1.6">The Shelbourne, The Merrion, The Westbury, The Marker, The Westin — we know the load-in for every D1, D2 and D4 hotel.</p>
+      </div>
+      <div style="padding:22px;border:1px solid rgba(255,255,255,0.08);border-radius:12px;background:rgba(255,255,255,0.02)">
+        <h3 style="margin:0 0 8px;font-size:1.05rem;color:#f4f0ea">Temple Bar &amp; Docklands</h3>
+        <p style="margin:0;font-size:0.92rem;color:#9a9ab0;line-height:1.6">Christchurch, Fallon &amp; Byrne, The Morrison, The Spencer, The Gibson and every Docklands venue covered.</p>
+      </div>
+      <div style="padding:22px;border:1px solid rgba(255,255,255,0.08);border-radius:12px;background:rgba(255,255,255,0.02)">
+        <h3 style="margin:0 0 8px;font-size:1.05rem;color:#f4f0ea">Private &amp; Members Clubs</h3>
+        <p style="margin:0;font-size:0.92rem;color:#9a9ab0;line-height:1.6">House Dublin, The Dean, The Stella, Vintage Cocktail Club and every private city-centre space.</p>
+      </div>
+    </div>
+    <div class="reveal" style="border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);aspect-ratio:16/7;margin-top:32px">
+      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2382.2!2d-6.2656!3d53.3345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48670e9f3fc5cf13%3A0x!2s77+Camden+Street+Lower%2C+Dublin+2%2C+D02+XE80!5e0!3m2!1sen!2sie!4v1" width="100%" height="100%" style="border:0;filter:invert(90%) hue-rotate(180deg) brightness(0.95) contrast(0.9)" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Photobooth Guys location on Google Maps"></iframe>
+    </div>
+  </div>
+</section>
+
 <section class="cta-banner">
   <div class="container">
     <div class="cta-inner reveal">
@@ -262,7 +293,10 @@
 <footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
-      <div class="footer-brand"><a href="/" class="logo"><img loading="lazy" decoding="async" src="logo.webp" alt="Photobooth Guys" class="logo-img" width="120" height="107"></a><p>Ireland's premium photo booth &amp; selfie mirror hire company. Making events unforgettable with cutting-edge booth technology and impeccable service.</p><div class="social-links"><a href="https://www.instagram.com/photoboothguysathlone" class="social-link" aria-label="Instagram"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" transform="scale(0.78)"/><path d="M11.5 8.3a3.2 3.2 0 110 6.4 3.2 3.2 0 010-6.4" transform="scale(0.78) translate(2.7, 2.7)"/><circle cx="12.6" cy="5.2" r="0.8" transform="scale(0.78)"/></svg></a><a href="https://www.facebook.com/photoboothguysIreland" class="social-link" aria-label="Facebook"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a><a href="https://www.tiktok.com/photoboothguys" class="social-link" aria-label="TikTok"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13.2a8.16 8.16 0 005.58 2.2V12a4.85 4.85 0 01-5.58-2.2V2h3.45a4.83 4.83 0 002.13 4.69z"/></svg></a></div></div>
+      <div class="footer-brand"><a href="/" class="logo"><img loading="lazy" decoding="async" src="logo.webp" alt="Photobooth Guys" class="logo-img" width="120" height="107"></a><p>Ireland's premium photo booth &amp; selfie mirror hire company. Making events unforgettable with cutting-edge booth technology and impeccable service.</p><div class="social-links"><a href="https://www.instagram.com/photoboothguysathlone" class="social-link" aria-label="Instagram"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" transform="scale(0.78)"/><path d="M11.5 8.3a3.2 3.2 0 110 6.4 3.2 3.2 0 010-6.4" transform="scale(0.78) translate(2.7, 2.7)"/><circle cx="12.6" cy="5.2" r="0.8" transform="scale(0.78)"/></svg></a><a href="https://www.facebook.com/photoboothguysIreland" class="social-link" aria-label="Facebook"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a><a href="https://www.tiktok.com/photoboothguys" class="social-link" aria-label="TikTok"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13.2a8.16 8.16 0 005.58 2.2V12a4.85 4.85 0 01-5.58-2.2V2h3.45a4.83 4.83 0 002.13 4.69z"/></svg></a></div>        <div class="footer-contact" style="margin-top:16px;font-size:0.88rem;color:#9a9ab0;line-height:1.8">
+          <a href="tel:+353860444180" style="color:#9a9ab0;text-decoration:none;transition:color 0.3s" onmouseover="this.style.color='#f4f0ea'" onmouseout="this.style.color='#9a9ab0'"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" transform="scale(0.58)"/></svg>086 044 4180</a><br>
+          <span><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" transform="scale(0.58)"/><circle cx="7" cy="5.8" r="1.8" transform="scale(0.58)"/></svg>77 Camden Street Lower, Dublin, D02 XE80</span>
+        </div></div>
       <div class="footer-col"><h4>Navigation</h4><ul><li><a href="/">Home</a></li><li><a href="services">Services</a></li><li><a href="wedding-photo-booth-hire">Wedding Booths</a></li><li><a href="corporate-photo-booth-hire">Corporate Events</a></li><li><a href="locations/">Locations</a></li><li><a href="blog">Blog</a></li><li><a href="gallery">Gallery</a></li><li><a href="pricing">Pricing</a></li></ul></div>
       <div class="footer-col"><h4>Locations</h4><ul><li><a href="photo-booth-hire-dublin">Dublin</a></li><li><a href="photo-booth-hire-galway">Galway</a></li><li><a href="photo-booth-hire-limerick">Limerick</a></li><li><a href="photo-booth-hire-belfast">Belfast</a></li><li><a href="photo-booth-hire-meath">Meath</a></li><li><a href="photo-booth-hire-westmeath">Westmeath</a></li><li><a href="photo-booth-hire-cork">Cork</a></li></ul></div>
       <div class="footer-col">
