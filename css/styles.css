@@ -2140,3 +2140,6 @@ body::before {
   .showcase-arrow-prev { left: 12px; }
   .showcase-arrow-next { right: 12px; }
 }
+
+/* Nav phone link */
+@media (min-width: 1024px) { .nav-phone { display: inline-flex !important; } }
