@@ -233,12 +233,14 @@
   background: linear-gradient(180deg, var(--gold), var(--teal));
 }
 .pbl-mark {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 2.25rem;
-  color: var(--gold);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  display: block;
+  width: 88px;
+  height: 88px;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 10px;
+  object-fit: contain;
+  box-shadow: 0 10px 30px -8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
 }
 .pbl-body { }
 .pbl-eyebrow {
@@ -301,17 +303,17 @@
 @media (max-width: 768px) {
   .powered-by-bl { padding: 48px 0 24px; }
   .pbl-inner { grid-template-columns: 1fr; gap: 18px; padding: 28px 24px; text-align: left; }
-  .pbl-mark { font-size: 1.75rem; }
+  .pbl-mark { width: 64px; height: 64px; border-radius: 12px; }
 }
 </style>
 <section class="powered-by-bl">
   <div class="container">
     <div class="pbl-inner reveal">
-      <div class="pbl-mark">BL.</div>
+      <img src="images/boothledger-logo.png" alt="BoothLedger logo" class="pbl-mark" width="88" height="88" loading="lazy" decoding="async">
       <div class="pbl-body">
         <div class="pbl-eyebrow">Powered by our own software</div>
-        <h3>Runs on <em>BoothLedger</em> — the most powerful AI photobooth app on the market.</h3>
-        <p>Our AI booth is driven by <a href="https://boothledger.com" target="_blank" rel="noopener" class="inline">BoothLedger</a>, proprietary software we built in-house. Two AI engines, Canon DSLR support, instant SMS / email sharing and live cloud galleries — engineered by the same team that's running your event.</p>
+        <h3>Runs on <em><a href="https://boothledger.com" target="_blank" rel="noopener" class="inline">BoothLedger</a></em> — the most powerful AI photobooth app on the market.</h3>
+        <p>Proprietary software we built in-house. Two AI engines, Canon DSLR support, instant SMS &amp; email sharing and live cloud galleries — engineered by the same team running your event.</p>
       </div>
       <a href="https://boothledger.com" target="_blank" rel="noopener" class="pbl-link">
         See BoothLedger
