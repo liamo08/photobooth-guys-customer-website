@@ -207,6 +207,121 @@
 </section>
 
 
+
+<!-- ═══════ POWERED BY BOOTHLEDGER ═══════ -->
+<style>
+.powered-by-bl {
+  padding: 80px 0 40px;
+}
+.pbl-inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 40px;
+  align-items: center;
+  padding: 36px 44px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(26,26,46,0.7), rgba(42,42,66,0.5));
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+}
+.pbl-inner::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--gold), var(--teal));
+}
+.pbl-mark {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 2.25rem;
+  color: var(--gold);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.pbl-body { }
+.pbl-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.pbl-body h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  color: var(--cream);
+  line-height: 1.25;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.pbl-body h3 em {
+  font-style: italic;
+  color: var(--gold-light);
+  font-weight: 400;
+}
+.pbl-body p {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  max-width: 58ch;
+}
+.pbl-body a.inline {
+  color: var(--gold-light);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(232,184,61,0.3);
+}
+.pbl-body a.inline:hover { color: var(--cream); border-bottom-color: var(--cream); }
+.pbl-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--cream);
+  text-decoration: none;
+  padding: 12px 20px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  transition: all 0.3s var(--ease-out-quart);
+  white-space: nowrap;
+}
+.pbl-link:hover {
+  background: var(--gold);
+  color: var(--coal);
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+.pbl-link svg { transition: transform 0.3s ease; }
+.pbl-link:hover svg { transform: translateX(3px); }
+
+@media (max-width: 768px) {
+  .powered-by-bl { padding: 48px 0 24px; }
+  .pbl-inner { grid-template-columns: 1fr; gap: 18px; padding: 28px 24px; text-align: left; }
+  .pbl-mark { font-size: 1.75rem; }
+}
+</style>
+<section class="powered-by-bl">
+  <div class="container">
+    <div class="pbl-inner reveal">
+      <div class="pbl-mark">BL.</div>
+      <div class="pbl-body">
+        <div class="pbl-eyebrow">Powered by our own software</div>
+        <h3>Runs on <em>BoothLedger</em> — the most powerful AI photobooth app on the market.</h3>
+        <p>Our AI booth is driven by <a href="https://boothledger.com" target="_blank" rel="noopener" class="inline">BoothLedger</a>, proprietary software we built in-house. Two AI engines, Canon DSLR support, instant SMS / email sharing and live cloud galleries — engineered by the same team that's running your event.</p>
+      </div>
+      <a href="https://boothledger.com" target="_blank" rel="noopener" class="pbl-link">
+        See BoothLedger
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
 <!-- Product Showcase -->
 <section class="product-showcase" data-product="ai-photo-booth">
   <div class="container">
