@@ -1513,6 +1513,20 @@ def save_spam(data, reason):
     return entry
 
 
+BOOKINGS_JSON_PATH = "/root/Checkout/bookings.json"
+
+def get_bookings_on_date(event_date):
+    if not event_date:
+        return []
+    try:
+        with open(BOOKINGS_JSON_PATH) as f:
+            bookings = json.load(f)
+    except Exception as e:
+        logging.warning(f"Could not load bookings.json: {e}")
+        return []
+    return [b for b in bookings if b.get("event_date") == event_date]
+
+
 def send_enquiry_email(enquiry):
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_pass = os.environ.get("SMTP_PASS", "")
@@ -1539,6 +1553,16 @@ def send_enquiry_email(enquiry):
         lines.append(f"Venue: {enquiry['venue']}")
     if enquiry.get("venue_full_address") and enquiry["venue_full_address"] != enquiry.get("venue", ""):
         lines.append(f"Venue Address: {enquiry['venue_full_address']}")
+
+    existing_bookings = get_bookings_on_date(enquiry.get("event_date", ""))
+    for b in existing_bookings:
+        lines.extend([
+            "",
+            "Currently in Calendar:",
+            f"Product: {b.get('product', '')}",
+            f"Venue: {b.get('venue', '')}",
+        ])
+
     if enquiry.get("message"):
         lines.extend(["", "Message:", enquiry["message"]])
 
