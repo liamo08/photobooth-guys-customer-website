@@ -1528,58 +1528,35 @@ def get_bookings_on_date(event_date):
 
 
 def send_enquiry_email(enquiry):
-    smtp_user = os.environ.get("SMTP_USER", "")
-    smtp_pass = os.environ.get("SMTP_PASS", "")
-    notify_to = os.environ.get("NOTIFY_EMAIL", "info@photoboothguys.ie")
-    if not smtp_user or not smtp_pass:
-        logging.warning("SMTP_USER/SMTP_PASS not set, skipping email notification")
-        return
-
-    lines = [
-        f"New enquiry from {enquiry['name']}",
-        "",
-        f"Name: {enquiry['name']}",
-        f"Email: {enquiry['email']}",
-    ]
-    if enquiry.get("phone"):
-        lines.append(f"Phone: {enquiry['phone']}")
-    if enquiry.get("event_date"):
-        lines.append(f"Event Date: {enquiry['event_date']}")
-    if enquiry.get("event_type"):
-        lines.append(f"Event Type: {enquiry['event_type']}")
-    if enquiry.get("booth_type"):
-        lines.append(f"Booth Type: {enquiry['booth_type']}")
-    if enquiry.get("venue"):
-        lines.append(f"Venue: {enquiry['venue']}")
-    if enquiry.get("venue_full_address") and enquiry["venue_full_address"] != enquiry.get("venue", ""):
-        lines.append(f"Venue Address: {enquiry['venue_full_address']}")
-
-    existing_bookings = get_bookings_on_date(enquiry.get("event_date", ""))
-    for b in existing_bookings:
-        lines.extend([
-            "",
-            "Currently in Calendar:",
-            f"Product: {b.get('product', '')}",
-            f"Venue: {b.get('venue', '')}",
-        ])
-
-    if enquiry.get("message"):
-        lines.extend(["", "Message:", enquiry["message"]])
-
-    body = "\n".join(lines)
-    msg = MIMEText(body)
-    msg["Subject"] = f"New Enquiry: {enquiry['name']} - {enquiry.get('event_type', 'General')}"
-    msg["From"] = smtp_user
-    msg["To"] = notify_to
-    msg["Reply-To"] = enquiry["email"]
-
+    """Forward enquiry to the responses app, which creates a Gmail draft
+    (with full calendar events list + travel info) instead of sending directly."""
+    endpoint = os.environ.get(
+        "ENQUIRY_DRAFT_URL",
+        "http://127.0.0.1:3002/api/create-enquiry-draft",
+    )
+    payload = {
+        "name": enquiry.get("name", ""),
+        "email": enquiry.get("email", ""),
+        "phone": enquiry.get("phone", ""),
+        "event_date": enquiry.get("event_date", ""),
+        "event_type": enquiry.get("event_type", ""),
+        "booth_type": enquiry.get("booth_type", ""),
+        "venue": enquiry.get("venue", ""),
+        "venue_full_address": enquiry.get("venue_full_address", ""),
+        "message": enquiry.get("message", ""),
+    }
     try:
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
+        req = urllib.request.Request(
+            endpoint,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = resp.read().decode("utf-8", errors="replace")
+            logging.info("Enquiry draft created: %s", body)
     except Exception as e:
-        logging.error(f"Failed to send enquiry email: {e}")
+        logging.error("Failed to create enquiry draft: %s", e)
 
 
 # --- Spam protection ---
