@@ -1527,14 +1527,45 @@ def get_bookings_on_date(event_date):
     return [b for b in bookings if b.get("event_date") == event_date]
 
 
+def _post_json(url, payload, timeout=10):
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="replace")
+
+
+def _alert_admin(title, body):
+    """Best-effort push alert to the checkout app (admin's phone)."""
+    try:
+        _post_json(
+            os.environ.get("CHECKOUT_ALERT_URL", "http://127.0.0.1:5000/api/push/alert"),
+            {"title": title, "body": body, "url": "/backend"},
+            timeout=8,
+        )
+    except Exception as e:
+        logging.error("Alert push failed: %s", e)
+
+
 def send_enquiry_email(enquiry):
-    """Forward enquiry to the responses app, which creates a Gmail draft
-    (with full calendar events list + travel info) instead of sending directly."""
-    endpoint = os.environ.get(
+    """Fan out a new enquiry to:
+      1) responses-integration -> Gmail draft (info@photoboothguys.ie Drafts)
+      2) checkout app /api/enquiries -> phone push notification
+    If either step fails, send a warning push so the admin is alerted.
+    """
+    draft_endpoint = os.environ.get(
         "ENQUIRY_DRAFT_URL",
         "http://127.0.0.1:3002/api/create-enquiry-draft",
     )
-    payload = {
+    checkout_endpoint = os.environ.get(
+        "CHECKOUT_ENQUIRY_URL",
+        "http://127.0.0.1:5000/api/enquiries",
+    )
+
+    draft_payload = {
         "name": enquiry.get("name", ""),
         "email": enquiry.get("email", ""),
         "phone": enquiry.get("phone", ""),
@@ -1545,18 +1576,47 @@ def send_enquiry_email(enquiry):
         "venue_full_address": enquiry.get("venue_full_address", ""),
         "message": enquiry.get("message", ""),
     }
+    checkout_payload = {
+        "data": {
+            "Name": enquiry.get("name", ""),
+            "Email": enquiry.get("email", ""),
+            "Phone Number": enquiry.get("phone", ""),
+            "Event Date": enquiry.get("event_date", ""),
+            "Venue": enquiry.get("venue_full_address") or enquiry.get("venue", ""),
+            "Booking Type": enquiry.get("event_type", ""),
+            "Product": enquiry.get("booth_type", ""),
+            "Message": enquiry.get("message", ""),
+            "Found Us": "Website Contact Form",
+            "Submission Date": enquiry.get("submitted_at", ""),
+        }
+    }
+
+    draft_ok = False
     try:
-        req = urllib.request.Request(
-            endpoint,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            body = resp.read().decode("utf-8", errors="replace")
-            logging.info("Enquiry draft created: %s", body)
+        body = _post_json(draft_endpoint, draft_payload, timeout=15)
+        draft_ok = True
+        logging.info("Enquiry draft created: %s", body)
     except Exception as e:
         logging.error("Failed to create enquiry draft: %s", e)
+
+    checkout_ok = False
+    try:
+        body = _post_json(checkout_endpoint, checkout_payload, timeout=10)
+        checkout_ok = True
+        logging.info("Enquiry forwarded to checkout: %s", body)
+    except Exception as e:
+        logging.error("Failed to forward enquiry to checkout: %s", e)
+
+    if not (draft_ok and checkout_ok):
+        broken = []
+        if not draft_ok:
+            broken.append("Gmail draft")
+        if not checkout_ok:
+            broken.append("checkout forward")
+        _alert_admin(
+            "Enquiry pipeline issue",
+            f"{enquiry.get('name','?')} ({enquiry.get('email','?')}) — failed: {', '.join(broken)}. Saved in admin only.",
+        )
 
 
 # --- Spam protection ---
