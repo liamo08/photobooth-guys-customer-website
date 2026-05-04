@@ -506,7 +506,9 @@ function initAutocomplete(){
       var display=place.name||full.split(",")[0].trim();
       if(county&&display.indexOf(county)===-1)display+=", "+county;
       input.value=display;
-      document.getElementById("venue_full_address").value=full;
+      // Prepend the venue name if Google's formatted_address omits it (e.g. "The K Club" vs "Straffan, Co. Kildare, W23 YX53, Ireland")
+      var fullWithName=(place.name && full.toLowerCase().indexOf(place.name.toLowerCase())===-1) ? (place.name+", "+full) : full;
+      document.getElementById("venue_full_address").value=fullWithName;
     }
   });
 }
