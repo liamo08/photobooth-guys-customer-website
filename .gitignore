@@ -11,3 +11,5 @@ admin/gdrive-token.json
 admin/backup-settings.json
 admin/spam.json
 admin/backups/
+
+.env.*

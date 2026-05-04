@@ -1720,6 +1720,17 @@ def receive_enquiry():
     if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
         return jsonify({"success": False, "error": "Invalid email address"}), 400
 
+    # Telemetry: log when a venue full-address is missing so we can see how often
+    # the contact-form fallback fires (Maps script failed, or user picked "venue unknown").
+    if not data.get("venue_full_address", "").strip():
+        logging.warning(
+            "Enquiry without venue_full_address: venue=%r venue_known=%s places_loaded=%s ip=%s",
+            data.get("venue", ""),
+            data.get("venue_known", None),
+            data.get("places_loaded", None),
+            client_ip,
+        )
+
     enquiry = save_enquiry(data)
     send_enquiry_email(enquiry)
     return jsonify({"success": True})

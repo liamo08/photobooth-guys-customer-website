@@ -272,6 +272,10 @@
             <label for="venue">Venue / Address <span class="req">*</span></label>
             <input type="text" id="venue" name="venue" placeholder="Start typing your venue address..." autocomplete="off" required>
             <input type="hidden" id="venue_full_address" name="venue_full_address">
+            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:rgba(244,240,234,.7);cursor:pointer">
+              <input type="checkbox" id="venue_unknown" style="width:16px;height:16px;cursor:pointer">
+              <span>I don't know the venue yet</span>
+            </label>
           </div>
 
           <div class="form-group">
@@ -420,6 +424,12 @@
     e.preventDefault();
     // Check honeypot
     if(document.getElementById('website').value){return}
+    // Require autocomplete-selected venue (Checkout app needs full address for travel calc).
+    // Skip the check if the user said venue is unknown, OR if Google Places failed to load (mobile fallback).
+    var vfa=document.getElementById('venue_full_address').value;
+    var venueUnknown=document.getElementById('venue_unknown').checked;
+    var placesLoaded=window.__placesLoaded===true;
+    if(!vfa && !venueUnknown && placesLoaded){alert('Please click your full address in the autocomplete Venue field so we can quote');form.venue.focus();return}
     var btn=form.querySelector('.form-submit');
     btn.disabled=true;btn.textContent='Sending...';
     fetch('/admin/enquiry',{
@@ -435,6 +445,8 @@
         partner_name:form.partner_name?form.partner_name.value:'',
         venue:form.venue.value,
         venue_full_address:document.getElementById("venue_full_address").value||form.venue.value,
+        venue_known:!document.getElementById('venue_unknown').checked,
+        places_loaded:window.__placesLoaded===true,
         message:form.message.value,
         website:document.getElementById('website').value,
         form_token:document.getElementById('form_token').value
@@ -461,6 +473,13 @@
   // Set min date to today
   var d=document.getElementById('event_date');
   if(d){d.min=new Date().toISOString().split('T')[0]}
+  // Venue-unknown checkbox: disable input + clear required when ticked
+  var vu=document.getElementById('venue_unknown');
+  if(vu){vu.addEventListener('change',function(){
+    var venueInput=document.getElementById('venue');
+    if(this.checked){venueInput.value='';venueInput.disabled=true;venueInput.required=false;document.getElementById('venue_full_address').value='';}
+    else{venueInput.disabled=false;venueInput.required=true;}
+  });}
 })();
 </script>
 <script>
@@ -476,6 +495,8 @@ function initAutocomplete(){
     )
   });
   ac.setFields(['formatted_address','name','address_components']);
+  window.__placesLoaded=true;
+  input.addEventListener('input',function(){document.getElementById('venue_full_address').value='';});
   ac.addListener("place_changed",function(){
     var place=ac.getPlace();
     if(place&&place.formatted_address){
