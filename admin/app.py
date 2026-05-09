@@ -491,25 +491,42 @@ def analytics():
             (start_ts, end_ts),
         ).fetchone()
 
+        # Bounce: session showed <10s of heartbeat engagement on every page AND no clicks.
+        # Robust on small samples and ignores idle-tab inflation.
         bounce = conn.execute(
             """SELECT COALESCE(
-                   CAST(SUM(CASE WHEN pv_count = 1 AND has_clicks = 0 THEN 1 ELSE 0 END) AS FLOAT) /
+                   CAST(SUM(CASE WHEN max_s < 10 AND clicks = 0 THEN 1 ELSE 0 END) AS FLOAT) /
                    NULLIF(COUNT(*), 0) * 100, 0
                ) AS bounce_rate
-               FROM (SELECT pv.session_id, COUNT(*) AS pv_count,
-                            COALESCE((SELECT COUNT(*) FROM page_events pe
-                                      WHERE pe.session_id = pv.session_id
-                                      AND pe.event_type = 'click'), 0) AS has_clicks
-                     FROM pageviews pv WHERE pv.created_at BETWEEN ? AND ?
-                     GROUP BY pv.session_id)""",
-            (start_ts, end_ts),
+               FROM (
+                 SELECT pv.session_id,
+                        COALESCE(MAX(CASE WHEN pe.event_type='eng' THEN CAST(json_extract(pe.event_value, '$.s') AS INTEGER) END), 0) AS max_s,
+                        SUM(CASE WHEN pe.event_type = 'click' THEN 1 ELSE 0 END) AS clicks
+                 FROM pageviews pv
+                 LEFT JOIN page_events pe
+                   ON pe.session_id = pv.session_id
+                  AND pe.created_at BETWEEN ? AND ?
+                 WHERE pv.created_at BETWEEN ? AND ?
+                 GROUP BY pv.session_id
+               )""",
+            (start_ts, end_ts, start_ts, end_ts),
         ).fetchone()
 
+        # Avg session duration: sum of per-page max heartbeat seconds within each session.
+        # Reflects active time on page from the heartbeat (eng) events, not first-vs-last
+        # pageview spread (which is fragile on small samples and skewed by idle reloads).
+        # Averaged across sessions with any engagement; bouncing sessions are excluded.
         avg_duration = conn.execute(
-            """SELECT COALESCE(AVG(duration), 0) as avg_dur FROM (
-                   SELECT (julianday(MAX(created_at)) - julianday(MIN(created_at))) * 86400 AS duration
-                   FROM pageviews WHERE created_at BETWEEN ? AND ?
-                   GROUP BY session_id HAVING COUNT(*) > 1)""",
+            """SELECT COALESCE(AVG(dur), 0) AS avg_dur FROM (
+                   SELECT pe.session_id, SUM(page_max_s) AS dur FROM (
+                     SELECT session_id, page_path,
+                            MAX(CAST(json_extract(event_value, '$.s') AS INTEGER)) AS page_max_s
+                     FROM page_events
+                     WHERE event_type = 'eng'
+                       AND created_at BETWEEN ? AND ?
+                     GROUP BY session_id, page_path
+                   ) pe GROUP BY pe.session_id HAVING dur > 0
+               )""",
             (start_ts, end_ts),
         ).fetchone()
 
