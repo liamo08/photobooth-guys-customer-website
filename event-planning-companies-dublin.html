@@ -85,6 +85,38 @@
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do you offer white-label photo booth hire for event planners?","acceptedAnswer":{"@type":"Answer","text":"Yes. We work as your behind-the-scenes photo booth partner. Our team can operate under your branding, with your logo on overlays and prints. Your clients will never know we are a separate supplier."}},{"@type":"Question","name":"Can we book multiple booths for the same event?","acceptedAnswer":{"@type":"Answer","text":"Absolutely. Many event planners book 2-3 different booth types for larger events. For example, a 360 booth in the main area and a selfie mirror at the entrance. We offer multi-booth discounts."}},{"@type":"Question","name":"Do you offer trade pricing for event planning companies?","acceptedAnswer":{"@type":"Answer","text":"Yes, we offer competitive trade rates for event planning companies with regular bookings. Contact us to set up a trade account and receive preferential pricing on all our booths."}},{"@type":"Question","name":"How do you handle logistics and setup at Dublin venues?","acceptedAnswer":{"@type":"Answer","text":"We manage everything: delivery, setup, operation, and packdown. We coordinate directly with venues on load-in times, power requirements, and placement. You provide the brief, we handle the rest."}}]}
 </script>
 <link rel="preload" as="image" href="images/selfie-mirror.webp" type="image/webp">
+<style>/* MOBILE-SWIPE-LISTS-V1 */
+@media (max-width: 639px) {
+  .use-case-grid:has(> :nth-child(4)),
+  .services-grid-enhanced:has(> :nth-child(4)),
+  .related-grid:has(> :nth-child(4)),
+  .features-grid:has(> :nth-child(4)) {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    grid-template-columns: none !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    margin-left: -20px;
+    margin-right: -20px;
+    padding: 4px 20px 20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .use-case-grid:has(> :nth-child(4))::-webkit-scrollbar,
+  .services-grid-enhanced:has(> :nth-child(4))::-webkit-scrollbar,
+  .related-grid:has(> :nth-child(4))::-webkit-scrollbar,
+  .features-grid:has(> :nth-child(4))::-webkit-scrollbar { display: none; }
+  .use-case-grid:has(> :nth-child(4)) > *,
+  .services-grid-enhanced:has(> :nth-child(4)) > *,
+  .related-grid:has(> :nth-child(4)) > *,
+  .features-grid:has(> :nth-child(4)) > * {
+    flex: 0 0 80% !important;
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+}
+</style>
 </head>
 <body>
 <div class="cursor-glow" id="cursorGlow"></div>
