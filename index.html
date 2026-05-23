@@ -1,14 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-2L4B7DR1YK"></script>
+<!-- Google tag (delayed load for performance) -->
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-2L4B7DR1YK');
-  gtag('config', 'AW-755417118');
+  window.gtag = gtag;
+  (function(){
+    var loaded = 0;
+    function load(){
+      if (loaded) return; loaded = 1;
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-2L4B7DR1YK';
+      document.head.appendChild(s);
+      gtag('js', new Date());
+      gtag('config', 'G-2L4B7DR1YK');
+      gtag('config', 'AW-755417118');
+    }
+    ['scroll','click','keydown','touchstart','mousemove'].forEach(function(e){
+      addEventListener(e, load, {once:true, passive:true});
+    });
+    setTimeout(load, 4000);
+  })();
 </script>
 
 <meta charset="UTF-8">
