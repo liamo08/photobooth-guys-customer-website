@@ -422,7 +422,7 @@
     <div class="footer-bottom"><span>&copy; 2026 Photobooth Guys. All rights reserved.</span><span>Premium Photo Booth Hire — Nationwide, Ireland</span></div>
   </div>
 </footer>
-<script src="js/main.min.js?v=8" defer></script>
+<script src="js/main.min.js?v=9" defer></script>
 <script>
 (function(){
   var form=document.getElementById('contactForm');
@@ -459,7 +459,8 @@
         places_loaded:window.__placesLoaded===true,
         message:form.message.value,
         website:document.getElementById('website').value,
-        form_token:document.getElementById('form_token').value
+        form_token:document.getElementById('form_token').value,
+        gclid:(typeof window.PBG_getGclid==='function'?window.PBG_getGclid():'')
       })
     }).then(function(r){return r.json()}).then(function(data){
       if(data.success){

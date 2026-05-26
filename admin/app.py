@@ -1493,6 +1493,7 @@ def save_enquiry(data):
         "venue": data.get("venue", "").strip(),
         "venue_full_address": data.get("venue_full_address", "").strip(),
         "message": data.get("message", "").strip(),
+        "gclid": (data.get("gclid", "") or "").strip(),
         "submitted_at": datetime.now(timezone.utc).isoformat(),
         "read": False,
     }
@@ -1605,6 +1606,7 @@ def send_enquiry_email(enquiry):
             "Message": enquiry.get("message", ""),
             "Found Us": "Website Contact Form",
             "Submission Date": enquiry.get("submitted_at", ""),
+            "Gclid": enquiry.get("gclid", ""),
         }
     }
 
