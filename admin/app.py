@@ -3139,6 +3139,104 @@ def _reschedule_backup_job(settings=None):
         pass
 
 
+# ── Media Library (email-campaign image hosting) ─────────────────
+MEDIA_DIR = IMAGES_DIR / "media"
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+MEDIA_URL_PREFIX = "/images/media"
+SITE_BASE_URL = "https://www.photoboothguys.ie"
+MEDIA_ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+
+def _media_allowed(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in MEDIA_ALLOWED_EXTENSIONS
+
+
+def _unique_media_name(filename):
+    """Sanitise a filename and de-duplicate it within MEDIA_DIR."""
+    name = secure_filename(filename)
+    if "." in name:
+        stem, ext = name.rsplit(".", 1)
+        ext = "." + ext.lower()
+    else:
+        stem, ext = name, ""
+    stem = stem.lower().strip("-_") or "image"
+    candidate = f"{stem}{ext}"
+    i = 2
+    while (MEDIA_DIR / candidate).exists():
+        candidate = f"{stem}-{i}{ext}"
+        i += 1
+    return candidate
+
+
+def _list_media():
+    items = []
+    for p in sorted(MEDIA_DIR.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
+        if not p.is_file() or p.name.startswith("_tmp_") or p.name.startswith("."):
+            continue
+        if not _media_allowed(p.name):
+            continue
+        st = p.stat()
+        items.append({
+            "name": p.name,
+            "url": f"{SITE_BASE_URL}{MEDIA_URL_PREFIX}/{p.name}",
+            "path": f"{MEDIA_URL_PREFIX}/{p.name}",
+            "size_kb": round(st.st_size / 1024, 1),
+            "mtime": datetime.fromtimestamp(st.st_mtime).strftime("%-d %b %Y, %H:%M"),
+        })
+    return items
+
+
+@app.route("/media")
+@login_required
+def media_library():
+    return render_template("media.html", items=_list_media(), base_url=SITE_BASE_URL)
+
+
+@app.route("/media/upload", methods=["POST"])
+@login_required
+def media_upload():
+    files = request.files.getlist("images")
+    if not files or all(f.filename == "" for f in files):
+        flash("No files selected", "error")
+        return redirect(url_for("media_library"))
+
+    saved, skipped = [], []
+    for file in files:
+        if file.filename == "":
+            continue
+        if not _media_allowed(file.filename):
+            skipped.append(file.filename)
+            continue
+        name = _unique_media_name(file.filename)
+        try:
+            file.save(str(MEDIA_DIR / name))
+            saved.append(name)
+        except Exception as e:
+            skipped.append(f"{file.filename} ({e})")
+
+    if saved:
+        flash(f"Uploaded {len(saved)} image(s): {', '.join(saved)}", "success")
+    if skipped:
+        flash(f"Skipped (not an allowed image): {', '.join(skipped)}", "error")
+    return redirect(url_for("media_library"))
+
+
+@app.route("/media/delete", methods=["POST"])
+@login_required
+def media_delete():
+    safe = secure_filename(request.form.get("name", ""))
+    target = (MEDIA_DIR / safe).resolve() if safe else None
+    if target and target.parent == MEDIA_DIR.resolve() and target.is_file():
+        try:
+            target.unlink()
+            flash(f"Deleted {safe}", "success")
+        except Exception as e:
+            flash(f"Could not delete: {e}", "error")
+    else:
+        flash("File not found", "error")
+    return redirect(url_for("media_library"))
+
+
 # ── Scheduler ────────────────────────────────────────────────────
 
 ensure_users_file()

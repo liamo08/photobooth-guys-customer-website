@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Library | Photobooth Guys Admin</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coal:#0e0e18;--charcoal:#1a1a2e;--surface:#16162a;
+  --teal:#5f94a4;--teal-light:#7ab8cc;--gold:#e8b83d;
+  --white:#f4f4f5;--text-muted:rgba(244,244,245,.6);
+  --border:rgba(95,148,164,.15);--border-hover:rgba(95,148,164,.35);
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --success-bg:rgba(34,197,94,.12);--success-border:rgba(34,197,94,.3);--success-text:#4ade80;
+  --error-bg:rgba(220,53,69,.12);--error-border:rgba(220,53,69,.3);--error-text:#f87171;
+}
+body{
+  min-height:100vh;background:var(--coal);font-family:var(--font-body);color:var(--white);
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(95,148,164,.06) 0%,transparent 60%);
+}
+.admin-header{
+  position:sticky;top:0;z-index:100;padding:16px 32px;
+  background:rgba(14,14,24,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header .logo{display:flex;align-items:center;gap:12px}
+.admin-header .logo img{height:40px;width:auto}
+.admin-header .logo span{font-family:var(--font-display);font-size:1.1rem;font-weight:700}
+.admin-header .logo small{color:var(--teal);font-family:var(--font-body);font-size:.75rem;font-weight:500;margin-left:8px}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.btn-sm{
+  padding:8px 16px;border-radius:6px;font-size:.8rem;font-weight:500;
+  font-family:var(--font-body);cursor:pointer;border:1px solid var(--border);
+  background:transparent;color:var(--text-muted);transition:all .2s;text-decoration:none;
+}
+.btn-sm:hover{border-color:var(--border-hover);color:var(--white)}
+.btn-sm.active{border-color:var(--teal);color:var(--teal-light)}
+.btn-sm.danger{border-color:rgba(220,53,69,.3);color:#f87171}
+.btn-sm.danger:hover{background:rgba(220,53,69,.1)}
+
+.main{max-width:1200px;margin:0 auto;padding:32px 24px}
+.page-title{font-family:var(--font-display);font-size:1.6rem;margin-bottom:6px}
+.page-subtitle{color:var(--text-muted);font-size:.9rem;margin-bottom:28px}
+
+.flash{padding:14px 20px;border-radius:10px;margin-bottom:16px;font-size:.88rem;display:flex;align-items:center;gap:10px}
+.flash.success{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success-text)}
+.flash.error{background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text)}
+.flash::before{font-size:1.1rem}
+.flash.success::before{content:"\2713"}
+.flash.error::before{content:"\2717"}
+
+.card{background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px}
+.card h2{font-family:var(--font-display);font-size:1.15rem;margin-bottom:6px}
+.card-desc{color:var(--text-muted);font-size:.85rem;margin-bottom:18px}
+
+.dropzone{
+  border:1.5px dashed var(--border-hover);border-radius:12px;padding:30px 20px;text-align:center;
+  cursor:pointer;transition:all .2s;background:rgba(95,148,164,.04);
+}
+.dropzone:hover,.dropzone.drag{border-color:var(--teal);background:rgba(95,148,164,.1)}
+.dropzone .dz-icon{font-size:1.8rem;margin-bottom:8px}
+.dropzone .dz-main{font-size:.95rem;font-weight:500}
+.dropzone .dz-sub{color:var(--text-muted);font-size:.8rem;margin-top:4px}
+.dropzone input[type=file]{display:none}
+#fileList{margin-top:14px;font-size:.82rem;color:var(--teal-light);text-align:left}
+#fileList div{padding:3px 0}
+.upload-actions{margin-top:18px;display:flex;gap:12px;align-items:center}
+.btn-primary{
+  padding:11px 22px;border-radius:8px;font-size:.88rem;font-weight:600;font-family:var(--font-body);
+  cursor:pointer;border:none;background:var(--teal);color:var(--coal);transition:all .2s;
+}
+.btn-primary:hover{background:var(--teal-light)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.media-card{background:rgba(22,22,42,.7);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .25s;display:flex;flex-direction:column}
+.media-card:hover{border-color:var(--border-hover)}
+.media-thumb{position:relative;width:100%;aspect-ratio:4/3;background:
+  repeating-conic-gradient(#222 0% 25%,#2c2c2c 0% 50%) 50%/22px 22px;overflow:hidden}
+.media-thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.media-body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}
+.media-name{font-size:.85rem;font-weight:600;word-break:break-all}
+.media-meta{font-size:.74rem;color:var(--text-muted)}
+.url-row{display:flex;gap:6px}
+.url-row input{
+  flex:1;min-width:0;padding:8px 10px;border-radius:7px;border:1px solid var(--border);
+  background:var(--coal);color:var(--text-muted);font-size:.74rem;font-family:ui-monospace,monospace;
+}
+.copy-btn{
+  padding:8px 12px;border-radius:7px;border:1px solid var(--border);background:transparent;
+  color:var(--teal-light);font-size:.76rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;
+}
+.copy-btn:hover{border-color:var(--teal);background:rgba(95,148,164,.1)}
+.copy-btn.copied{color:var(--success-text);border-color:var(--success-border)}
+.media-actions{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+.media-actions a{color:var(--text-muted);font-size:.76rem;text-decoration:none}
+.media-actions a:hover{color:var(--white)}
+.del-btn{background:transparent;border:none;color:#f87171;font-size:.76rem;cursor:pointer;padding:0}
+.del-btn:hover{text-decoration:underline}
+.empty{text-align:center;color:var(--text-muted);padding:40px 0;font-size:.9rem}
+@media(max-width:640px){.admin-header{padding:12px 16px;flex-wrap:wrap;gap:8px}}
+</style>
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="logo">
+    <img src="/logo.webp" alt="Photobooth Guys">
+    <span>Photobooth Guys</span>
+    <small>ADMIN</small>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('dashboard') }}" class="btn-sm">Images</a>
+    <a href="{{ url_for('page_images') }}" class="btn-sm">Page Images</a>
+    <a href="{{ url_for('media_library') }}" class="btn-sm active">Media</a>
+    <a href="{{ url_for('enquiries') }}" class="btn-sm">Enquiries</a>
+    <a href="{{ url_for('seo_dashboard') }}" class="btn-sm">SEO</a>
+    <a href="{{ url_for('analytics') }}" class="btn-sm">Analytics</a>
+    <a href="/" class="btn-sm" target="_blank">View Site</a>
+    <a href="{{ url_for('settings') }}" class="btn-sm">Settings</a>
+    <a href="{{ url_for('logout') }}" class="btn-sm danger">Logout</a>
+  </div>
+</header>
+
+<div class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+  <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% endwith %}
+
+  <h1 class="page-title">Media Library</h1>
+  <p class="page-subtitle">Upload images for email campaigns &amp; get public URLs. Files are served from
+    <code>{{ base_url }}/images/media/</code> — permanent and publicly accessible.</p>
+
+  <div class="card">
+    <h2>Upload images</h2>
+    <p class="card-desc">PNG, JPG, GIF or WebP. JPG/PNG are safest for email clients (Outlook doesn't render WebP). You can select multiple files at once.</p>
+    <form method="POST" action="{{ url_for('media_upload') }}" enctype="multipart/form-data" id="uploadForm">
+      <label class="dropzone" id="dropzone">
+        <div class="dz-icon">&#128247;</div>
+        <div class="dz-main">Click to choose files or drag &amp; drop here</div>
+        <div class="dz-sub">Original quality is preserved — keep files reasonably sized for email</div>
+        <input type="file" name="images" id="fileInput" accept="image/png,image/jpeg,image/gif,image/webp" multiple>
+        <div id="fileList"></div>
+      </label>
+      <div class="upload-actions">
+        <button type="submit" class="btn-primary" id="uploadBtn" disabled>Upload</button>
+      </div>
+    </form>
+  </div>
+
+  <h2 style="font-family:var(--font-display);font-size:1.15rem;margin:0 4px 16px">Hosted images ({{ items|length }})</h2>
+  {% if items %}
+  <div class="grid">
+    {% for it in items %}
+    <div class="media-card">
+      <div class="media-thumb"><img src="{{ it.path }}" alt="{{ it.name }}" loading="lazy"></div>
+      <div class="media-body">
+        <div class="media-name">{{ it.name }}</div>
+        <div class="media-meta">{{ it.size_kb }} KB &middot; {{ it.mtime }}</div>
+        <div class="url-row">
+          <input type="text" value="{{ it.url }}" readonly onclick="this.select()">
+          <button type="button" class="copy-btn" data-url="{{ it.url }}">Copy</button>
+        </div>
+        <div class="media-actions">
+          <a href="{{ it.path }}" target="_blank">Open &#8599;</a>
+          <form method="POST" action="{{ url_for('media_delete') }}"
+                onsubmit="return confirm('Delete {{ it.name }}? Any email already using this URL will break.')">
+            <input type="hidden" name="name" value="{{ it.name }}">
+            <button type="submit" class="del-btn">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">No images yet — upload your first above.</div>
+  {% endif %}
+</div>
+
+<script>
+const fileInput=document.getElementById('fileInput');
+const fileList=document.getElementById('fileList');
+const uploadBtn=document.getElementById('uploadBtn');
+const dropzone=document.getElementById('dropzone');
+
+function refresh(){
+  const files=fileInput.files;
+  fileList.innerHTML='';
+  if(files.length){
+    for(const f of files){
+      const kb=(f.size/1024).toFixed(0);
+      const d=document.createElement('div');
+      d.textContent='• '+f.name+' ('+kb+' KB)';
+      fileList.appendChild(d);
+    }
+    uploadBtn.disabled=false;
+  }else{uploadBtn.disabled=true;}
+}
+fileInput.addEventListener('change',refresh);
+
+['dragenter','dragover'].forEach(e=>dropzone.addEventListener(e,ev=>{ev.preventDefault();dropzone.classList.add('drag');}));
+['dragleave','drop'].forEach(e=>dropzone.addEventListener(e,ev=>{ev.preventDefault();dropzone.classList.remove('drag');}));
+dropzone.addEventListener('drop',ev=>{fileInput.files=ev.dataTransfer.files;refresh();});
+
+document.getElementById('uploadForm').addEventListener('submit',()=>{uploadBtn.disabled=true;uploadBtn.textContent='Uploading…';});
+
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    const url=btn.dataset.url;
+    try{await navigator.clipboard.writeText(url);}
+    catch(e){const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+    const old=btn.textContent;btn.textContent='Copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied');},1500);
+  });
+});
+</script>
+</body>
+</html>
