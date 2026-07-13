@@ -76,8 +76,8 @@
   line-gap-override: 0%;
 }
 </style>
-<link rel="preload" href="css/styles.min.css?v=7" as="style">
-<link rel="stylesheet" href="css/styles.min.css?v=7">
+<link rel="preload" href="css/styles.min.css?v=9" as="style">
+<link rel="stylesheet" href="css/styles.min.css?v=9">
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "Service", "name": "360 Photo Booth Hire", "serviceType": "360 Photo Booth Hire", "provider": {"@type": "LocalBusiness", "name": "Photobooth Guys", "url": "https://www.photoboothguys.ie"}, "areaServed": {"@type": "Country", "name": "Ireland"}, "description": "Captures stunning slow-motion 360-degree videos. Guests step onto the platform while the camera arm spins around them capturing every angle. Includes AI effects, custom overlays, event microsite & instant sharing.", "offers": {"@type": "Offer", "priceCurrency": "EUR", "price": "750", "availability": "https://schema.org/InStock", "url": "https://www.photoboothguys.ie/360-photo-booth-hire"}}
 </script>
@@ -223,7 +223,7 @@
         <a href="/contact" class="btn-primary">Get A Quote <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5-5-5-5"/></svg></a>
       </div>
       <div class="product-hero-img">
-        <video autoplay muted loop playsinline preload="metadata" poster="images/360-booth-hero-poster.webp" width="720" height="720" aria-label="Slow-motion 360 photo booth clip filmed at an Irish event, guests captured by a rotating camera arm" style="width:100%;height:auto;display:block;border-radius:4px;object-fit:cover"><source src="images/360-booth-hero.mp4" type="video/mp4"><img src="images/360-booth-hero-poster.webp" alt="360 photo booth in action at an Irish event, guests posing while a rotating camera arm captures slow-motion video" width="720" height="720"></video>
+        <video autoplay muted loop playsinline preload="metadata" poster="images/360-booth-hero-poster.webp" width="720" height="720" aria-label="Slow-motion 360 photo booth clip filmed at an Irish event, guests captured by a rotating camera arm" style="width:100%;height:auto;display:block;border-radius:4px;object-fit:cover"><source src="images/360-booth-hero.mp4" type="video/mp4"><img src="images/360-booth-hero-poster.webp" alt="360 photo booth in action at an Irish event, guests posing while a rotating camera arm captures slow-motion video" width="720" height="720" loading="lazy" decoding="async"></video>
       </div>
     </div>
   </div>
@@ -506,7 +506,7 @@
     </div>
   </div>
 </footer>
-<script src="js/main.min.js?v=9" defer></script>
+<script src="js/main.min.js?v=10" defer></script>
 <script>(function(){var p=location.pathname,st=performance.now(),mx=0,vt=0,lv=st,sent=0;function snd(d){if(navigator.sendBeacon)navigator.sendBeacon("/admin/track",new Blob([JSON.stringify(d)],{type:"application/json"}))}snd({t:"pv",p:p,r:document.referrer,w:screen.width});var stm;addEventListener("scroll",function(){if(stm)return;stm=setTimeout(function(){stm=null;var pct=Math.round((scrollY+innerHeight)/Math.max(document.body.scrollHeight,1)*100);if(pct>mx)mx=Math.min(pct,100)},500)},{passive:true});function eng(){if(sent)return;sent=1;vt+=performance.now()-lv;snd({t:"eng",p:p,d:mx,s:Math.round(vt/1000)})}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden"){eng()}else{lv=performance.now()}});addEventListener("beforeunload",eng);document.addEventListener("click",function(e){var el=e.target.closest("a[href*=contact],a[href*=quote],a[href*='-hire'],a[href^='/locations'],a[href^='tel:'],a[href^='mailto:'],a[href*='wa.me'],.btn-primary,.btn-book,.btn-book-mobile,.hero-btn,.service-card-enhanced,.service-link,.use-case-card,.feature-card,button[type=submit]");if(el)snd({t:"click",p:p,l:(el.dataset.track||el.textContent.trim().slice(0,50))})})})()</script>
 </body>
 </html>

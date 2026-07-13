@@ -61,9 +61,11 @@ body::before {
 
 /* ── Scroll reveal base ── */
 .reveal {
+  transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo);
+}
+html.js .reveal:not(.visible) {
   opacity: 0;
   transform: translateY(40px);
-  transition: opacity 0.9s var(--ease-out-expo), transform 0.9s var(--ease-out-expo);
 }
 .reveal.visible {
   opacity: 1;
@@ -2077,6 +2079,7 @@ body::before {
 .blog-article img {
   border-radius: 16px;
   width: 100%;
+  height: auto;
   margin: 2rem auto;
   display: block;
 }

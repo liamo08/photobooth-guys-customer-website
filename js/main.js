@@ -1,3 +1,4 @@
+document.documentElement.classList.add("js");
 // ── Header scroll effect ──
 const header = document.getElementById('siteHeader');
 if (header) {
@@ -201,3 +202,5 @@ document.querySelectorAll('.filter-tab').forEach(tab => {
     });
   });
 });
+
+setTimeout(function(){document.querySelectorAll(".reveal:not(.visible)").forEach(function(e){e.classList.add("visible")})},2500);
