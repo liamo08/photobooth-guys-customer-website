@@ -1492,6 +1492,8 @@ def save_enquiry(data):
         "booth_type": data.get("booth_type", "").strip(),
         "venue": data.get("venue", "").strip(),
         "venue_full_address": data.get("venue_full_address", "").strip(),
+        "partner_name": data.get("partner_name", "").strip(),
+        "found_us": data.get("found_us", "").strip(),
         "message": data.get("message", "").strip(),
         "gclid": (data.get("gclid", "") or "").strip(),
         "submitted_at": datetime.now(timezone.utc).isoformat(),
@@ -1592,6 +1594,8 @@ def send_enquiry_email(enquiry):
         "booth_type": enquiry.get("booth_type", ""),
         "venue": enquiry.get("venue", ""),
         "venue_full_address": enquiry.get("venue_full_address", ""),
+        "partner_name": enquiry.get("partner_name", ""),
+        "found_us": enquiry.get("found_us", ""),
         "message": enquiry.get("message", ""),
     }
     checkout_payload = {
@@ -1604,7 +1608,9 @@ def send_enquiry_email(enquiry):
             "Booking Type": enquiry.get("event_type", ""),
             "Product": enquiry.get("booth_type", ""),
             "Message": enquiry.get("message", ""),
-            "Found Us": "Website Contact Form",
+            "Found Us": enquiry.get("found_us", "") or "Website Contact Form",
+            "Source": "Website Contact Form",
+            "Partners": enquiry.get("partner_name", ""),
             "Submission Date": enquiry.get("submitted_at", ""),
             "Gclid": enquiry.get("gclid", ""),
         }

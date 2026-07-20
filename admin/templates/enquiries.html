@@ -289,6 +289,8 @@ body{
           {% if e.event_date %}<div class="detail-item"><label>Event Date</label><span>{{ e.event_date }}</span></div>{% endif %}
           {% if e.event_type %}<div class="detail-item"><label>Event Type</label><span>{{ e.event_type }}</span></div>{% endif %}
           {% if e.booth_type %}<div class="detail-item"><label>Booth Type</label><span>{{ e.booth_type }}</span></div>{% endif %}
+          {% if e.partner_name %}<div class="detail-item"><label>Partner</label><span>{{ e.partner_name }}</span></div>{% endif %}
+          {% if e.found_us %}<div class="detail-item"><label>Heard About Us</label><span>{{ e.found_us }}</span></div>{% endif %}
           {% if e.venue %}<div class="detail-item"><label>Venue / Address</label><span>{{ e.venue }}</span></div>{% endif %}
         </div>
         {% if e.message %}
