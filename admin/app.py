@@ -1617,12 +1617,28 @@ def send_enquiry_email(enquiry):
     }
 
     draft_ok = False
+    draft_info = {}
     try:
         body = _post_json(draft_endpoint, draft_payload, timeout=15)
         draft_ok = True
-        logging.info("Enquiry draft created: %s", body)
+        try:
+            parsed = json.loads(body)
+            if isinstance(parsed, dict):
+                draft_info = parsed
+        except (ValueError, TypeError):
+            pass
+        logging.info("Enquiry notification sent: %s", body)
     except Exception as e:
-        logging.error("Failed to create enquiry draft: %s", e)
+        logging.error("Failed to send enquiry notification: %s", e)
+
+    # Pass the Gmail thread of the notification email through to Checkout so
+    # its AI gate can park a reply draft on the same thread (bridge endpoint
+    # /api/create-reply-draft on :3002). Missing values just mean no draft.
+    if draft_info.get("threadId"):
+        checkout_payload["data"]["Gmail Thread Id"] = draft_info.get("threadId", "")
+        checkout_payload["data"]["Gmail Message Id"] = draft_info.get("messageId", "")
+        checkout_payload["data"]["Gmail Rfc Message Id"] = draft_info.get("rfcMessageId", "") or ""
+        checkout_payload["data"]["Notification Subject"] = draft_info.get("subject", "")
 
     checkout_ok = False
     try:
@@ -1671,7 +1687,17 @@ def _is_spam(data):
         try:
             load_time_ms = int(base64.b64decode(token).decode())
             elapsed_s = (time.time() * 1000 - load_time_ms) / 1000
-            if elapsed_s < 3:
+            # load_time_ms comes from the visitor's own device clock, so a phone
+            # running ahead of the server produces a negative elapsed time. That is
+            # clock skew, not a bot - fail open, because blocking here silently
+            # discards a real enquiry while still showing the customer a success
+            # message. (Cost us at least 3 genuine leads before this was fixed.)
+            if elapsed_s < 0:
+                logging.warning(
+                    "Enquiry form clock skew: elapsed %.1fs (device clock ahead of server) - allowing",
+                    elapsed_s,
+                )
+            elif elapsed_s < 3:
                 logging.info("Spam blocked: form submitted in %.1fs", elapsed_s)
                 return "Submitted too fast (%.1fs)" % elapsed_s
         except (ValueError, Exception):
@@ -1713,6 +1739,13 @@ def _check_rate_limit(ip):
     timestamps.append(now)
     _enquiry_rate_limit[ip] = timestamps
     return False
+
+
+
+@app.route("/health")
+def health():
+    """Liveness probe for monitoring/watchdog — exercises the gunicorn worker."""
+    return jsonify({"ok": True})
 
 
 @app.route("/enquiry", methods=["POST"])
